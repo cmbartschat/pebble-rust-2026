@@ -1,45 +1,50 @@
 #![no_main]
 #![no_std]
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
 #![allow(unused)]
-#![allow(unnecessary_transmutes)]
-#![allow(unsafe_op_in_unsafe_fn)]
+#![allow(clippy::empty_loop)]
 
-use core::{panic::PanicInfo, ptr::null};
+// extern crate alloc;
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+use core::panic::PanicInfo;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use sys::*;
+
+// mod custom_alloc;
+mod layer;
+mod sys;
+mod text_layer;
+mod window;
+
+use crate::window::Window;
+
+use crate::text_layer::TextLayer;
 
 #[unsafe(no_mangle)]
 pub fn main() -> isize {
-    unsafe {
-        let window = window_create();
-        let root_layer = window_get_root_layer(window);
-        let text_layer = text_layer_create(GRect {
-            origin: GPoint { x: 0, y: 0 },
-            size: GSize { w: 200, h: 100 },
-        });
-        let font = fonts_get_system_font(FONT_KEY_GOTHIC_24.as_ptr());
-        text_layer_set_font(text_layer, font);
-        text_layer_set_text(text_layer, c"hello world".as_ptr());
-        text_layer_set_background_color(text_layer, GColor8 { argb: 0xf0 });
-        text_layer_set_text_color(text_layer, GColor8 { argb: 0xa0 });
+    let Ok(mut window) = Window::new() else {
+        return -1;
+    };
 
-        let text_layer_inner = text_layer_get_layer(text_layer);
-        layer_add_child(root_layer, text_layer_inner);
-        window_stack_push(window, true);
+    let bounds = GRect {
+        origin: GPoint { x: 10, y: 10 },
+        size: GSize { w: 180, h: 100 },
+    };
 
-        let filename = c"rust-lib.c".as_ptr();
-        app_log(200, filename, 1, c"window created".as_ptr());
-        app_event_loop();
-        app_log(200, filename, 2, c"event loop ended".as_ptr());
-        window_destroy(window);
-    }
+    let font = unsafe { fonts_get_system_font(FONT_KEY_GOTHIC_24.as_ptr()) };
+
+    let Ok(mut text_layer) = TextLayer::new(bounds) else {
+        return -1;
+    };
+    window.add_child(&text_layer.get_layer());
+
+    text_layer.set_font(font);
+    text_layer.set_text(c"Hello World.");
+    text_layer.set_background_color(GColor8 { argb: 0b11111111 });
+    text_layer.set_text_color(GColor8 { argb: 0b11000000 });
+
+    window.push_animated();
+
+    unsafe { app_event_loop() };
     0
 }
 
@@ -51,7 +56,7 @@ pub extern "C" fn _close(_fd: i32) -> i32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn _fstat(_fd: i32, stat: *mut u8) -> i32 {
     unsafe {
-        *(stat.add(0) as *mut u16) = 0x2000;
+        *(stat as *mut u16) = 0x2000;
     }
     0
 }
@@ -97,9 +102,16 @@ pub extern "C" fn _sbrk(_incr: i32) -> *mut u8 {
 }
 
 #[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
+fn panic(_info: &PanicInfo) -> ! {
     // logs "panicked at '$reason', src/main.rs:27:4" to the host stderr
     // writeln!(host_stderr, "{}", info).ok();
-
     loop {}
 }
+
+// #[global_allocator]
+// static ALLOC: crate::custom_alloc::Allocator = crate::custom_alloc::Allocator;
+
+// #[alloc_error_handler]
+// pub fn error_handler(_layout: core::alloc::Layout) -> ! {
+//     loop {}
+// }
