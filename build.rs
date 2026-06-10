@@ -18,8 +18,8 @@ fn main() {
         )
     });
 
-    println!("cargo:rustc-link-search={}/lib", sdk_root);
-    println!("cargo:rustc-link-lib=pebble");
+    // println!("cargo:rustc-link-search={}/lib", sdk_root);
+    // println!("cargo:rustc-link-lib=pebble");
 
     // let toolchain1 = "/Users/cmb/Library/Application Support/Pebble SDK/SDKs/4.9.169/toolchain/arm-none-eabi/arm-none-eabi/include/ssp/";
     let toolchain2 = "/Users/cmb/Library/Application Support/Pebble SDK/SDKs/4.9.169/toolchain/arm-none-eabi/arm-none-eabi/include";
