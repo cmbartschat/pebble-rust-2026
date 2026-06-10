@@ -45,9 +45,6 @@ fn main() {
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut generated_bindings: Vec<u8> = r#"
-#[allow(unnecessary_transmutes)]
-#[allow(unused)]
-#[allow(unsafe_op_in_unsafe_fn)]
 "#
     .bytes()
     .collect();
