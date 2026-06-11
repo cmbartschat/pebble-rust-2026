@@ -1,10 +1,16 @@
 use crate::{
     layer::Layer,
-    sys::{self, GColor8, window_set_background_color},
+    sys::{self, GColor8, window_destroy, window_set_background_color},
 };
 
 pub struct Window {
     inner: *mut sys::Window,
+}
+
+impl Drop for Window {
+    fn drop(&mut self) {
+        unsafe { window_destroy(self.inner) };
+    }
 }
 
 impl Window {

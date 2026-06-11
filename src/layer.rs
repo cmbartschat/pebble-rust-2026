@@ -1,7 +1,16 @@
-use crate::sys::{self, GRect};
+use crate::sys::{self, GRect, layer_destroy};
 
 pub struct Layer {
     pub(crate) inner: *mut sys::Layer,
+    pub(crate) owned: bool,
+}
+
+impl Drop for Layer {
+    fn drop(&mut self) {
+        if (self.owned) {
+            unsafe { layer_destroy(self.inner) };
+        }
+    }
 }
 
 impl Layer {
@@ -11,7 +20,10 @@ impl Layer {
             if layer.is_null() {
                 return Err(());
             }
-            Ok(Self { inner: layer })
+            Ok(Self {
+                inner: layer,
+                owned: true,
+            })
         }
     }
 

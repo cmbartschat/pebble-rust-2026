@@ -2,6 +2,10 @@
 
 
 cargo build --release
-/Users/cmb/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-ar x target/thumbv7m-none-eabi/release/libpebble_rust_2026.rlib
-mv pebble_rust_2026-6c9c212de4f7645a.pebble_rust_2026.e573b5cef09fdef1-cgu.0.rcgu.o tmp
-rm lib.rmeta
+rm -rf tmp
+mkdir tmp
+cd tmp
+/Users/cmb/Library/Application\ Support/Pebble\ SDK/SDKs/4.9.169/toolchain/arm-none-eabi/bin/arm-none-eabi-ar x "../target/thumbv7m-none-eabi/release/libpebble_rust_2026.a"
+
+
+# cp target/thumbv7m-none-eabi/release/pebble-rust-2026 tmp/pebble-rust-2026.o

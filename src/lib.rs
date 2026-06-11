@@ -3,13 +3,13 @@
 #![allow(unused)]
 #![allow(clippy::empty_loop)]
 
-// extern crate alloc;
+extern crate alloc;
 
 use core::panic::PanicInfo;
 
 use sys::*;
 
-// mod custom_alloc;
+mod custom_alloc;
 mod layer;
 mod sys;
 mod text_layer;
@@ -38,13 +38,16 @@ pub fn main() -> isize {
     window.add_child(&text_layer.get_layer());
 
     text_layer.set_font(font);
-    text_layer.set_text(c"Hello World.");
+    text_layer.set_text("Hello World.");
     text_layer.set_background_color(GColor8 { argb: 0b11111111 });
     text_layer.set_text_color(GColor8 { argb: 0b11000000 });
 
     window.push_animated();
 
     unsafe { app_event_loop() };
+
+    core::mem::drop(text_layer);
+    core::mem::drop(window);
     0
 }
 
@@ -108,8 +111,8 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-// #[global_allocator]
-// static ALLOC: crate::custom_alloc::Allocator = crate::custom_alloc::Allocator;
+#[global_allocator]
+static ALLOC: crate::custom_alloc::Allocator = crate::custom_alloc::Allocator;
 
 // #[alloc_error_handler]
 // pub fn error_handler(_layout: core::alloc::Layout) -> ! {

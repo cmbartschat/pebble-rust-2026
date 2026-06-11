@@ -1,4 +1,9 @@
-// use alloc::{boxed::Box, ffi::CString, vec, vec::Vec};
+use alloc::{
+    borrow::ToOwned,
+    boxed::Box,
+    ffi::CString,
+    vec::{self, Vec},
+};
 use core::{ffi::CStr, ptr::null};
 
 use crate::{
@@ -8,7 +13,7 @@ use crate::{
 
 pub struct TextLayer {
     inner: *mut sys::TextLayer,
-    text: [u8; 60],
+    text_vec: Vec<u8>,
 }
 
 impl TextLayer {
@@ -20,8 +25,7 @@ impl TextLayer {
             }
             Ok(Self {
                 inner: layer,
-                text: [0; 60],
-                // text: CString::new(vec![]).unwrap(),
+                text_vec: alloc::vec![],
             })
         }
     }
@@ -30,13 +34,12 @@ impl TextLayer {
         unsafe { sys::text_layer_set_font(self.inner, font) };
     }
 
-    pub fn set_text(&mut self, text: &'static CStr) {
-        // let bytes: Vec<u8> = text.bytes().collect();
-        self.text[0] = 0x48;
-        self.text[1] = 0x49;
-        self.text[2] = 0x21;
-        // self.text = CString::new(bytes).unwrap();
-        unsafe { sys::text_layer_set_text(self.inner, self.text.as_ptr()) };
+    pub fn set_text(&mut self, text: &str) {
+        self.text_vec.clear();
+        self.text_vec.reserve(text.len() + 1);
+        self.text_vec.extend(text.bytes());
+        self.text_vec.push(0);
+        unsafe { sys::text_layer_set_text(self.inner, self.text_vec.as_ptr()) };
     }
 
     pub fn set_background_color(&mut self, color: GColor) {
@@ -49,6 +52,9 @@ impl TextLayer {
 
     pub fn get_layer(&self) -> Layer {
         let layer = unsafe { sys::text_layer_get_layer(self.inner) };
-        Layer { inner: layer }
+        Layer {
+            inner: layer,
+            owned: false,
+        }
     }
 }

@@ -3,7 +3,18 @@ name = "pebble-rust-2026"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["staticlib"]
+test = false
+
 [dependencies]
 
 [build-dependencies]
 bindgen = "0.72.1"
+
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+test = false
