@@ -27,6 +27,7 @@ use crate::app::APP;
 use crate::bitmap::GBitmap;
 use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_PASTEL_YELLOW, GCOLOR_RED, GCOLOR_WHITE};
 use crate::layer::Layer;
+use crate::log::{log_num, log_str};
 use crate::sys::{GPoint, GRect, GSize, TimeUnits_SECOND_UNIT, tick_timer_service_subscribe};
 use crate::window::Window;
 
@@ -38,6 +39,8 @@ pub fn main() -> isize {
         return -1;
     };
 
+    log_str("starting");
+
     window.set_background_color(GCOLOR_BLUE_MOON);
 
     let bounds = GRect {
@@ -46,13 +49,16 @@ pub fn main() -> isize {
     };
 
     if let Ok(mut custom_layer) = Layer::new(GRect::new(50, 50, 250, 250)) {
-        custom_layer.set_update();
+        log_num(300);
         window.add_child(&custom_layer);
+        custom_layer.set_update();
         custom_layer.mark_dirty();
+        // custom_layer.set_update(|_, ctx| {});
 
-        APP.set_timer(TimeUnits_SECOND_UNIT, move || {
-            custom_layer.mark_dirty();
-        });
+        // APP.set_timer(TimeUnits_SECOND_UNIT, move || {
+        //     log_num(310);
+        //     custom_layer.mark_dirty();
+        // });
     }
 
     let font = unsafe { sys::fonts_get_system_font(sys::FONT_KEY_GOTHIC_24.as_ptr()) };
@@ -92,7 +98,13 @@ pub fn main() -> isize {
 
     APP.show_window(&window);
 
+    log_num(440);
+
     APP.event_loop();
+
+    log_num(450);
+
+    APP.clear_timer();
 
     0
 }
@@ -154,6 +166,7 @@ pub extern "C" fn _sbrk(_incr: i32) -> *mut u8 {
 fn panic(_info: &PanicInfo) -> ! {
     // logs "panicked at '$reason', src/main.rs:27:4" to the host stderr
     // writeln!(host_stderr, "{}", info).ok();
+    log_num(99999999);
     loop {}
 }
 

@@ -1,6 +1,7 @@
 use crate::{
     color::{GCOLOR_ARMY_GREEN, GCOLOR_BLACK},
     context::GContext,
+    log::{log_num, log_str},
     sys::{self, GPoint, GRect, GSize, layer_destroy},
 };
 
@@ -18,15 +19,16 @@ impl Drop for Layer {
 }
 
 extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys::GContext) {
+    log_num(1030);
+
     let Ok(mut ctx) = GContext::from_raw(ctx) else {
+        log_num(1031);
         return;
     };
+    log_num(1040);
 
     ctx.set_fill_color(GCOLOR_BLACK);
-    ctx.fill_rect(GRect {
-        origin: GPoint { x: 3, y: 3 },
-        size: GSize { w: 60, h: 30 },
-    });
+    ctx.fill_rect(GRect::new(50, 50, 250, 250));
 }
 
 impl Layer {
@@ -34,8 +36,10 @@ impl Layer {
         unsafe {
             let layer = sys::layer_create(r);
             if layer.is_null() {
+                log_num(10001);
                 return Err(());
             }
+            log_num(10010);
             Ok(Self {
                 inner: layer,
                 owned: true,
@@ -52,6 +56,7 @@ impl Layer {
     }
 
     pub fn set_update(&mut self) {
+        log_num(5000);
         unsafe { sys::layer_set_update_proc(self.inner, Some(global_layer_update_handler)) };
     }
 }

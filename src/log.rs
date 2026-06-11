@@ -1,32 +1,32 @@
-use alloc::boxed::Box;
+use alloc::{boxed::Box, slice};
 
 use crate::sys;
 
-fn get_heap_alloc(data: &core::ffi::CStr) -> *const core::ffi::c_char {
-    let mut vec = alloc::vec::Vec::<core::ffi::c_char>::new();
-    vec.extend(data.to_bytes());
-    vec.push(0);
-    let start = vec.as_ptr();
-    core::mem::forget(vec);
-    start as *const core::ffi::c_char
+fn get_heap_alloc(data: &str) -> Box<[core::ffi::c_char]> {
+    data.bytes()
+        .map(|b| b as core::ffi::c_char)
+        .take(6)
+        .chain(core::iter::once(0))
+        .collect::<alloc::vec::Vec<_>>()
+        .into_boxed_slice()
 }
 
 pub fn log_str(message: &str) {
     unsafe {
-        // sys::app_log(
-        //     sys::AppLogLevel_APP_LOG_LEVEL_ERROR as u8,
-        //     get_heap_alloc(c"filename.c"),
-        //     1,
-        //     get_heap_alloc(CString::from(message.into())),
-        // );
-        let data: Box<[core::ffi::c_char; 3]> = Box::new([0x41, 0x41, 0x0]);
-        sys::app_log(
-            200,
-            data.as_ptr(),
-            0,
-            data.as_ptr(),
-            c"my message".as_ptr() as *const core::ffi::c_char,
-        );
-        core::mem::forget(data);
+        let filename = get_heap_alloc("idk.c");
+        let format = get_heap_alloc("%s");
+        let message = get_heap_alloc(message);
+        // sys::app_log(200, filename.as_ptr(), 1, format.as_ptr(), message.as_ptr());
+        // core::mem::forget((filename, format, message));
+    };
+}
+
+pub fn log_num(v: core::ffi::c_int) {
+    unsafe {
+        let filename = get_heap_alloc("num.c");
+        let format = get_heap_alloc("%s");
+        let message = get_heap_alloc("");
+        sys::app_log(200, filename.as_ptr(), v, format.as_ptr(), message.as_ptr());
+        // core::mem::forget((filename, format, message));
     };
 }
