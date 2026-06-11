@@ -45,6 +45,18 @@ fn main() {
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut generated_bindings: Vec<u8> = r#"
+#[allow(clippy::all)]
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(unused)]
+#[allow(unnecessary_transmutes)]
+#[allow(clippy::useless_transmute)]
+#[allow(unsafe_op_in_unsafe_fn)]
+#[allow(clippy::upper_case_acronyms)]
+#[allow(clippy::transmute_int_to_bool)]
+#[allow(clippy::ptr_offset_with_cast)]
+mod bindings {
 "#
     .bytes()
     .collect();
@@ -54,6 +66,8 @@ fn main() {
     bindings
         .write(Box::new(&mut generated_bindings))
         .expect("Failed to write");
+
+    generated_bindings.push(b'}');
 
     std::fs::write(out_path.join("bindings.rs"), generated_bindings)
         .expect("Couldn't write bindings!");
