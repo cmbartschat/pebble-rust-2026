@@ -5,20 +5,29 @@
 
 extern crate alloc;
 
+use core::cell::RefCell;
 use core::panic::PanicInfo;
 
+mod app;
 mod bitmap;
 mod color;
 mod context;
 mod custom_alloc;
 mod layer;
+mod log;
+mod rect;
 mod sys;
 mod text_layer;
 mod window;
 
+use alloc::boxed::Box;
+use alloc::rc::Rc;
+
+use crate::app::APP;
 use crate::bitmap::GBitmap;
-use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_RED, GCOLOR_WHITE};
-use crate::sys::{GPoint, GRect, GSize};
+use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_PASTEL_YELLOW, GCOLOR_RED, GCOLOR_WHITE};
+use crate::layer::Layer;
+use crate::sys::{GPoint, GRect, GSize, TimeUnits_SECOND_UNIT, tick_timer_service_subscribe};
 use crate::window::Window;
 
 use crate::text_layer::TextLayer;
@@ -35,6 +44,16 @@ pub fn main() -> isize {
         origin: GPoint { x: 10, y: 10 },
         size: GSize { w: 180, h: 100 },
     };
+
+    if let Ok(mut custom_layer) = Layer::new(GRect::new(50, 50, 250, 250)) {
+        custom_layer.set_update();
+        window.add_child(&custom_layer);
+        custom_layer.mark_dirty();
+
+        APP.set_timer(TimeUnits_SECOND_UNIT, move || {
+            custom_layer.mark_dirty();
+        });
+    }
 
     let font = unsafe { sys::fonts_get_system_font(sys::FONT_KEY_GOTHIC_24.as_ptr()) };
 
@@ -62,9 +81,19 @@ pub fn main() -> isize {
     //     };
     // }
 
-    window.push_animated();
+    // let window_rc = Rc::new(RefCell::new(window));
+    // let other_window_rc = window_rc.clone();
+    // let mut window_borrow = window_rc.borrow_mut();
+    // window_borrow.set_load_handler(move || {
+    //     if let Ok(mut win) = other_window_rc.try_borrow_mut() {
+    //         win.set_background_color(GCOLOR_PASTEL_YELLOW);
+    //     }
+    // });
 
-    unsafe { sys::app_event_loop() };
+    APP.show_window(&window);
+
+    APP.event_loop();
+
     0
 }
 

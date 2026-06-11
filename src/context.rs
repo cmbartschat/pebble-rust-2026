@@ -3,11 +3,18 @@ use crate::bitmap::GBitmap;
 use crate::sys;
 use crate::sys::{GColor, GPoint, GRect};
 
-struct GContext {
+pub struct GContext {
     inner: *mut sys::GContext,
 }
 
 impl GContext {
+    pub fn from_raw(inner: *mut sys::GContext) -> Result<Self, ()> {
+        if (inner.is_null()) {
+            return Err(());
+        }
+        Ok(Self { inner })
+    }
+
     pub fn draw_pixel(&mut self, point: GPoint) {
         unsafe { sys::graphics_draw_pixel(self.inner, point) };
     }
