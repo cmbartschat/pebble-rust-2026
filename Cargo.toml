@@ -6,6 +6,8 @@ edition = "2024"
 [lib]
 crate-type = ["staticlib"]
 test = false
+doctest = false
+bench = false
 
 [dependencies]
 
