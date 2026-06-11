@@ -20,7 +20,6 @@ impl Window {
             if window.is_null() {
                 return Err(());
             }
-            window_set_background_color(window, GColor8 { argb: 0b11001100 });
             Ok(Self { inner: window })
         }
     }
@@ -31,6 +30,10 @@ impl Window {
 
     pub fn push_animated(&mut self) {
         unsafe { sys::window_stack_push(self.inner, true) };
+    }
+
+    pub fn set_background_color(&mut self, color: sys::GColor) {
+        unsafe { sys::window_set_background_color(self.inner, color) };
     }
 
     pub fn add_child(&mut self, other: &Layer) {

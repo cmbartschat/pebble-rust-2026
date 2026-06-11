@@ -9,12 +9,14 @@ use core::panic::PanicInfo;
 
 use sys::*;
 
+mod color;
 mod custom_alloc;
 mod layer;
 mod sys;
 mod text_layer;
 mod window;
 
+use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_RED, GCOLOR_WHITE};
 use crate::window::Window;
 
 use crate::text_layer::TextLayer;
@@ -24,6 +26,8 @@ pub fn main() -> isize {
     let Ok(mut window) = Window::new() else {
         return -1;
     };
+
+    window.set_background_color(GCOLOR_BLUE_MOON);
 
     let bounds = GRect {
         origin: GPoint { x: 10, y: 10 },
@@ -39,15 +43,12 @@ pub fn main() -> isize {
 
     text_layer.set_font(font);
     text_layer.set_text("Hello World.");
-    text_layer.set_background_color(GColor8 { argb: 0b11111111 });
-    text_layer.set_text_color(GColor8 { argb: 0b11000000 });
+    text_layer.set_background_color(GCOLOR_RED);
+    text_layer.set_text_color(GCOLOR_WHITE);
 
     window.push_animated();
 
     unsafe { app_event_loop() };
-
-    core::mem::drop(text_layer);
-    core::mem::drop(window);
     0
 }
 
