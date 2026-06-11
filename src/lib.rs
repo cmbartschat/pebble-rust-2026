@@ -7,16 +7,18 @@ extern crate alloc;
 
 use core::panic::PanicInfo;
 
-use sys::*;
-
+mod bitmap;
 mod color;
+mod context;
 mod custom_alloc;
 mod layer;
 mod sys;
 mod text_layer;
 mod window;
 
+use crate::bitmap::GBitmap;
 use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_RED, GCOLOR_WHITE};
+use crate::sys::{GPoint, GRect, GSize};
 use crate::window::Window;
 
 use crate::text_layer::TextLayer;
@@ -34,7 +36,7 @@ pub fn main() -> isize {
         size: GSize { w: 180, h: 100 },
     };
 
-    let font = unsafe { fonts_get_system_font(FONT_KEY_GOTHIC_24.as_ptr()) };
+    let font = unsafe { sys::fonts_get_system_font(sys::FONT_KEY_GOTHIC_24.as_ptr()) };
 
     let Ok(mut text_layer) = TextLayer::new(bounds) else {
         return -1;
@@ -46,9 +48,23 @@ pub fn main() -> isize {
     text_layer.set_background_color(GCOLOR_RED);
     text_layer.set_text_color(GCOLOR_WHITE);
 
+    // if let Ok(bitmap) = GBitmap::from_resource(0) {
+    //     if let Ok(sub_bitmap) = bitmap.extract(GRect {
+    //         origin: GPoint { x: 0, y: 0 },
+    //         size: GSize { w: 20, h: 20 },
+    //     }) {
+    //         drop(bitmap);
+    //         // sub_bitmap.draw(
+    //         sub_bitmap.extract(GRect {
+    //             origin: GPoint { x: 0, y: 0 },
+    //             size: GSize { w: 20, h: 20 },
+    //         });
+    //     };
+    // }
+
     window.push_animated();
 
-    unsafe { app_event_loop() };
+    unsafe { sys::app_event_loop() };
     0
 }
 

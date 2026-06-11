@@ -1,4 +1,4 @@
-use crate::sys::GColor;
+use crate::sys::{self, GColor};
 
 pub const GCOLOR_BLACK: GColor = GColor { argb: 0b11000000 };
 pub const GCOLOR_OXFORD_BLUE: GColor = GColor { argb: 0b11000001 };
@@ -65,3 +65,15 @@ pub const GCOLOR_ICTERINE: GColor = GColor { argb: 0b11111101 };
 pub const GCOLOR_PASTEL_YELLOW: GColor = GColor { argb: 0b11111110 };
 pub const GCOLOR_WHITE: GColor = GColor { argb: 0b11111111 };
 pub const GCOLOR_CLEAR: GColor = GColor { argb: 0b00000000 };
+
+impl PartialEq for GColor {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { sys::gcolor_equal(*self, *other) }
+    }
+}
+
+impl GColor {
+    pub fn legible_over(other: Self) -> GColor {
+        unsafe { sys::gcolor_legible_over(other) }
+    }
+}
