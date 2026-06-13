@@ -1,8 +1,8 @@
 use crate::{
-    color::{GCOLOR_ARMY_GREEN, GCOLOR_BLACK},
+    color::GCOLOR_BLACK,
     context::GContext,
-    log::{log_num, log_str},
-    sys::{self, GPoint, GRect, GSize, layer_destroy},
+    log::log_c_str,
+    sys::{self, GRect, layer_destroy},
 };
 
 pub struct Layer {
@@ -12,34 +12,33 @@ pub struct Layer {
 
 impl Drop for Layer {
     fn drop(&mut self) {
-        if (self.owned) {
+        if self.owned {
             unsafe { layer_destroy(self.inner) };
         }
     }
 }
 
-extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys::GContext) {
-    log_num(1030);
-
+#[unsafe(no_mangle)]
+extern "C" fn global_layer_update_handler(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
+    log_c_str(c"global_layer_update_handler");
     let Ok(mut ctx) = GContext::from_raw(ctx) else {
-        log_num(1031);
         return;
     };
-    log_num(1040);
 
     ctx.set_fill_color(GCOLOR_BLACK);
     ctx.fill_rect(GRect::new(50, 50, 250, 250));
 }
 
+pub struct LayerCreateFailed;
+
 impl Layer {
-    pub fn new(r: GRect) -> Result<Self, ()> {
+    pub fn new(r: GRect) -> Result<Self, LayerCreateFailed> {
         unsafe {
             let layer = sys::layer_create(r);
             if layer.is_null() {
-                log_num(10001);
-                return Err(());
+                return Err(LayerCreateFailed);
             }
-            log_num(10010);
+
             Ok(Self {
                 inner: layer,
                 owned: true,
@@ -55,8 +54,11 @@ impl Layer {
         unsafe { sys::layer_mark_dirty(self.inner) };
     }
 
+    pub fn set_bounds(&mut self, bounds: GRect) {
+        unsafe { sys::layer_set_bounds(self.inner, bounds) };
+    }
+
     pub fn set_update(&mut self) {
-        log_num(5000);
         unsafe { sys::layer_set_update_proc(self.inner, Some(global_layer_update_handler)) };
     }
 }

@@ -1,10 +1,4 @@
-use alloc::{
-    borrow::ToOwned,
-    boxed::Box,
-    ffi::CString,
-    vec::{self, Vec},
-};
-use core::{ffi::CStr, ptr::null};
+use alloc::vec::Vec;
 
 use crate::{
     layer::Layer,
@@ -23,6 +17,7 @@ impl TextLayer {
             if layer.is_null() {
                 return Err(());
             }
+
             Ok(Self {
                 inner: layer,
                 text_vec: alloc::vec![],

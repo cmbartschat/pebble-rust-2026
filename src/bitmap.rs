@@ -30,10 +30,6 @@ impl GBitmap<'static> {
     pub fn from_resource(resource_id: u32) -> Result<Self, ()> {
         Self::from_ptr(unsafe { sys::gbitmap_create_with_resource(resource_id) })
     }
-
-    // pub fn from_data(resource_id: u32) -> Result<Self, ()> {
-    //     Self::from_ptr(unsafe { sys::gbitmap_create_with_data(resource_id) })
-    // }
 }
 
 impl<'a> Drop for GBitmap<'a> {
@@ -44,7 +40,7 @@ impl<'a> Drop for GBitmap<'a> {
 
 impl<'parent> GBitmap<'parent> {
     fn from_ptr(ptr: *mut sys::GBitmap) -> Result<Self, ()> {
-        if (ptr.is_null()) {
+        if ptr.is_null() {
             return Err(());
         }
         Ok(Self {

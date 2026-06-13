@@ -7,10 +7,12 @@ pub struct GContext {
     inner: *mut sys::GContext,
 }
 
+pub struct NullContextError;
+
 impl GContext {
-    pub fn from_raw(inner: *mut sys::GContext) -> Result<Self, ()> {
-        if (inner.is_null()) {
-            return Err(());
+    pub fn from_raw(inner: *mut sys::GContext) -> Result<Self, NullContextError> {
+        if inner.is_null() {
+            return Err(NullContextError);
         }
         Ok(Self { inner })
     }
