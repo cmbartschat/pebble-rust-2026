@@ -82,6 +82,3 @@ fn panic(info: &PanicInfo) -> ! {
 
     loop {}
 }
-
-#[global_allocator]
-static ALLOC: crate::custom_alloc::Allocator = crate::custom_alloc::Allocator;

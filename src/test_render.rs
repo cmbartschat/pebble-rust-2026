@@ -48,6 +48,13 @@ impl From<TextLayerCreateFailed> for MultiError {
 
 static FRAME_COUNT: Mutex<RefCell<i16>> = Mutex::new(RefCell::new(0));
 
+struct Foo;
+impl core::fmt::Display for Foo {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        f.write_str("foo")
+    }
+}
+
 unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
     let mut bitmap =
         GBitmap::new_empty(GSize { w: 50, h: 50 }, GBitmapFormat_GBitmapFormat1Bit).unwrap();
@@ -73,10 +80,51 @@ unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::
         let borrow = FRAME_COUNT.borrow(cs);
         let mut count = match borrow.try_borrow_mut() {
             Ok(c) => c,
-            Err(_e) => {
+            Err(e) => {
                 log_c_str(c"failed to borrow:");
-                let mut v = String::new();
-                v.write_str("something...").unwrap();
+                // return;
+                let mut v = String::with_capacity(1000);
+                log_c_str(c"created string with 1000 capacity.");
+                v.push_str(" [ ");
+                // Does pushing a static string crash?
+                v.push_str("hello");
+                log_c_str(c"push_str ok");
+
+                // Does formatting a simple literal crash?
+                write!(&mut v, "test").ok();
+                log_c_str(c"write literal ok");
+
+                // Does formatting a number crash?
+                if write!(&mut v, "{}", 42u32).is_ok() {
+                    log_c_str(c"write number ok");
+                }
+
+                let foo = Foo;
+                if write!(&mut v, "{foo}").is_ok() {
+                    log_c_str(c"write foo ok");
+                };
+
+                // Does Display for &str specifically crash?
+                if write!(&mut v, "{}", "hello world").is_ok() {
+                    log_c_str(c"write str ok");
+                }
+
+                // // Does formatting the actual error crash?
+                // if write!(&mut v, "{e}").is_ok() {
+                //     log_c_str(c"write error ok");
+                // } else {
+                //     log_c_str(c"write error no good");
+                // }
+
+                // if let Err(e) = write!(&mut v, "{e}") {
+                //     log_c_str(c"Failed to write borrow error");
+                //     // v.push_str("failed to write: ");
+                //     // if write!(&mut v, "{e}").is_err() {
+                //     //     v.push_str("and the error.");
+                //     // };
+                // };
+                // v.push_str("something...");
+                v.push_str(" ] ");
                 log_c_str(c"created string.");
                 // write!(&mut v, "{}", e);
                 log_c_str(c"formatted");

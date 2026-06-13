@@ -12,7 +12,6 @@ mod font;
 mod globals;
 mod layer;
 mod log;
-mod non_send;
 mod rect;
 pub mod sys;
 mod test_render;

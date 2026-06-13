@@ -19,6 +19,8 @@ bindgen = "0.72.1"
 [profile.release]
 panic = "abort"
 debug = true
+opt-level = 2   # or "s" for size
+
 
 [profile.dev]
 panic = "abort"
