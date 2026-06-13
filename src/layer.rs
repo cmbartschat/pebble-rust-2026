@@ -58,6 +58,13 @@ impl Layer {
         unsafe { sys::layer_set_bounds(self.inner, bounds) };
     }
 
+    pub fn from_raw(inner: *mut sys::Layer) -> Self {
+        Self {
+            inner,
+            owned: false,
+        }
+    }
+
     pub fn set_update_proc(
         &mut self,
         proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),

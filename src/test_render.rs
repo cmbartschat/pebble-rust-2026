@@ -11,11 +11,11 @@ use critical_section::Mutex;
 
 use crate::app::APP;
 use crate::bitmap::GBitmap;
-use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_RED, GCOLOR_WHITE};
+use crate::color::{GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_ORANGE, GCOLOR_RED, GCOLOR_WHITE};
 use crate::font::SystemFont;
 use crate::layer::{Layer, LayerCreateFailed};
 use crate::log::log_c_str;
-use crate::sys::{self, GBitmapFormat_GBitmapFormat1Bit};
+use crate::sys::{self, GBitmapFormat_GBitmapFormat1Bit, TimeUnits_SECOND_UNIT};
 use crate::sys::{GPoint, GRect, GSize};
 use crate::text_layer::TextLayerCreateFailed;
 use crate::window::{Window, WindowCreateFailed};
@@ -137,10 +137,23 @@ unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::
             }
         };
         let y = *count % (bounds.size.h);
+        *count = count.wrapping_add(10);
+
         log_c_str(c"borrowed");
 
-        ctx.set_stroke_color(GCOLOR_RED);
+        ctx.set_stroke_color(GCOLOR_ORANGE);
         ctx.set_stroke_width(3);
+        ctx.draw_line(
+            GPoint {
+                x: bounds.origin.x,
+                y: 4,
+            },
+            GPoint {
+                x: bounds.origin.x + bounds.size.w,
+                y: 4,
+            },
+        );
+
         ctx.draw_line(
             GPoint {
                 x: bounds.origin.x,
@@ -152,7 +165,6 @@ unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::
             },
         );
         log_c_str(c"assigning");
-        *count = count.wrapping_add(1);
         log_c_str(c"done");
     });
     log_c_str(c"outside critical");
@@ -200,6 +212,10 @@ pub fn test_render() -> Result<(), MultiError> {
     // custom_layer.add_child(&child_text_layer.get_layer());
     custom_layer.set_update_proc(render_with_bitmap);
     window.add_child(&custom_layer);
+
+    APP.set_timer(TimeUnits_SECOND_UNIT, move || {
+        custom_layer.mark_dirty();
+    });
 
     // let mut child_text_layer = TextLayer::new(GRect::new(0, 0, 75, 75))?;
     // child_text_layer.set_font(font);

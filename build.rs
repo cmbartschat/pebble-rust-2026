@@ -13,7 +13,7 @@ fn main() {
         ))
         .clang_arg("-D_TIME_H_")
         .clang_arg("-I/Users/cmb/repo/pebble-rust-2026")
-        .clang_arg("--target=thumbv7em-none-eabi")
+        .clang_arg("--target=thumbv8m.main-none-eabi")
         .use_core()
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()

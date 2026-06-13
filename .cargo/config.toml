@@ -1,12 +1,12 @@
 [build]
-target = "thumbv7em-none-eabi"
+target = "thumbv8m.main-none-eabi"
 
-[target.thumbv7em-none-eabi]
+[target.thumbv8m.main-none-eabi]
 rustflags = [
   "-C",
   "code-model=large",
   "-C",
-  "relocation-model=static",
+  "relocation-model=pie",
   "-C",
   "opt-level=2",
 ]
