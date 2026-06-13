@@ -58,7 +58,12 @@ impl Layer {
         unsafe { sys::layer_set_bounds(self.inner, bounds) };
     }
 
-    pub fn set_update(&mut self) {
-        unsafe { sys::layer_set_update_proc(self.inner, Some(global_layer_update_handler)) };
+    pub fn set_update_proc(
+        &mut self,
+        proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),
+    ) {
+        unsafe { sys::layer_set_update_proc(self.inner, Some(proc)) };
     }
 }
+
+// type UpdateProc = Fn( *mut sys::Layer, *mut sys::GContext)

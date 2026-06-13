@@ -2,6 +2,8 @@ extern crate alloc;
 
 use core::panic::PanicInfo;
 
+use alloc::{ffi::CString, vec::Vec};
+
 use crate::log::log_c_str;
 
 #[unsafe(no_mangle)]
@@ -60,8 +62,24 @@ pub extern "C" fn _sbrk(_incr: i32) -> *mut u8 {
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    log_c_str(c"panic called");
+fn panic(info: &PanicInfo) -> ! {
+    match info.message().as_str() {
+        Some(e) => {
+            let bytes: Vec<_> = e.bytes().collect::<Vec<_>>();
+            let str = CString::new(bytes).unwrap_or(CString::from(c"failed"));
+            log_c_str(c"panic called, message:");
+            log_c_str(str.as_c_str());
+        }
+        None => {
+            log_c_str(c"panic called, no message");
+        }
+    };
+
+    match info.location() {
+        Some(l) => log_c_str(l.file_as_c_str()),
+        None => log_c_str(c"no location"),
+    }
+
     loop {}
 }
 

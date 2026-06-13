@@ -1,9 +1,12 @@
 use alloc::vec::Vec;
 
 use crate::{
+    font::Font,
     layer::Layer,
-    sys::{self, GColor, GFont, GRect},
+    sys::{self, GColor, GRect},
 };
+
+pub struct TextLayerCreateFailed;
 
 pub struct TextLayer {
     inner: *mut sys::TextLayer,
@@ -11,11 +14,11 @@ pub struct TextLayer {
 }
 
 impl TextLayer {
-    pub fn new(r: GRect) -> Result<Self, ()> {
+    pub fn new(r: GRect) -> Result<Self, TextLayerCreateFailed> {
         unsafe {
             let layer = sys::text_layer_create(r);
             if layer.is_null() {
-                return Err(());
+                return Err(TextLayerCreateFailed);
             }
 
             Ok(Self {
@@ -25,8 +28,8 @@ impl TextLayer {
         }
     }
 
-    pub fn set_font(&mut self, font: GFont) {
-        unsafe { sys::text_layer_set_font(self.inner, font) };
+    pub fn set_font(&mut self, font: Font) {
+        unsafe { sys::text_layer_set_font(self.inner, font.inner) };
     }
 
     pub fn set_text(&mut self, text: &str) {

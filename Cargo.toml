@@ -10,12 +10,15 @@ doctest = false
 bench = false
 
 [dependencies]
+critical-section = "1.2.0"
+cortex-m = { version = "0.7.6", features = ["critical-section-single-core"] }
 
 [build-dependencies]
 bindgen = "0.72.1"
 
 [profile.release]
 panic = "abort"
+debug = true
 
 [profile.dev]
 panic = "abort"
