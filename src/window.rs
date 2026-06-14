@@ -47,18 +47,12 @@ extern "C" fn global_handle_load(window: *mut sys::Window) {
 #[unsafe(no_mangle)]
 extern "C" fn global_handle_unload(window: *mut sys::Window) {
     unsafe {
-        let context = sys::window_get_user_data(window);
-        if context.is_null() {
-            return;
-        }
-        let Some(data) = (context as *mut WindowUserData).as_mut() else {
-            return;
-        };
-        let Some(handler) = data.unload_handler.as_mut() else {
-            return;
-        };
+        let context = sys::window_get_user_data(window) as *mut WindowUserData;
+        let mut data = Box::from_raw(context);
 
-        handler();
+        if let Some(handler) = &mut data.unload_handler {
+            handler();
+        };
     }
 }
 
@@ -102,7 +96,7 @@ impl Window {
         }
     }
 
-    fn get_user_data<'b>(&'b mut self) -> &'b mut WindowUserData {
+    fn get_user_data(&mut self) -> &mut WindowUserData<'static> {
         unsafe {
             let ptr = core::mem::transmute::<*mut c_void, *mut WindowUserData>(
                 sys::window_get_user_data(self.raw.as_ptr()),
@@ -111,7 +105,7 @@ impl Window {
         }
     }
 
-    pub fn set_load_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
+    pub fn set_load_handler(&mut self, callback: impl FnMut() + 'static) {
         self.get_user_data().load_handler = Some(Box::new(callback));
     }
 
@@ -119,7 +113,7 @@ impl Window {
         self.get_user_data().load_handler = None;
     }
 
-    pub fn set_unload_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
+    pub fn set_unload_handler(&mut self, callback: impl FnMut() + 'static) {
         self.get_user_data().unload_handler = Some(Box::new(callback));
     }
 
@@ -127,7 +121,7 @@ impl Window {
         self.get_user_data().unload_handler = None;
     }
 
-    pub fn set_appear_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
+    pub fn set_appear_handler(&mut self, callback: impl FnMut() + 'static) {
         self.get_user_data().appear_handler = Some(Box::new(callback));
     }
 
@@ -135,7 +129,7 @@ impl Window {
         self.get_user_data().appear_handler = None;
     }
 
-    pub fn set_disappear_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
+    pub fn set_disappear_handler(&mut self, callback: impl FnMut() + 'static) {
         self.get_user_data().disappear_handler = Some(Box::new(callback));
     }
 

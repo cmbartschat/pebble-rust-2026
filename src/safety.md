@@ -15,13 +15,12 @@ I'm looking at wrapping a c library in a safe rust wrapper.
 
 The base definitions look like:
 
-
 ```
 void layer_remove_from_parent(Layer *child);
 void layer_add_child(Layer *parent, Layer *child);
 Layer* layer_create(GRect frame);
 void layer_destroy(Layer* layer);
-void layer_set_color(Layer* layer, GGolor color);
+void layer_set_color(Layer* layer, GColor color);
 ```
 
 layer_destroy cannot be called after the parent is destroyed, so parents must outlive children.
@@ -30,8 +29,7 @@ My goal is that a complex tree can be created, specific mutable (or interior mut
 
 When a node that doesn't have a parent goes out of scope, it should clean itself up and all children.
 
-What would a safe rust wrapper look like that has these properties? 
-
+What would a safe rust wrapper look like that has these properties?
 
 Option 1: Lifetimes
 

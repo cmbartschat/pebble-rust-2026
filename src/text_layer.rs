@@ -1,8 +1,4 @@
-use core::{
-    cell::{RefCell, RefMut},
-    ffi::CStr,
-    ptr::NonNull,
-};
+use core::{cell::RefCell, ffi::CStr, ptr::NonNull};
 
 use alloc::{rc::Rc, vec::Vec};
 
