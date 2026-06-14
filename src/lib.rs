@@ -13,6 +13,7 @@ mod globals;
 mod layer;
 mod log;
 // mod node;
+mod bitmap_layer;
 mod rect;
 pub mod sys;
 mod test_render;
@@ -20,6 +21,7 @@ mod text_layer;
 mod window;
 
 pub use crate::app::APP;
+pub use crate::bitmap_layer::BitmapLayer;
 pub use crate::context::GContext;
 pub use crate::layer::Layer;
 pub use crate::sys::{GPoint, GRect, GSize};

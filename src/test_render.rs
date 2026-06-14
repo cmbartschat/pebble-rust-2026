@@ -7,10 +7,10 @@ use cortex_m as _;
 use critical_section::Mutex;
 
 use crate::app::APP;
-use crate::bitmap::GBitmap;
+use crate::bitmap::Bitmap;
 use crate::color::{GCOLOR_BLUE, GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_RED, GCOLOR_WHITE};
 use crate::font::SystemFont;
-use crate::layer::{Layer, LayerCreateFailed};
+use crate::layer::{ChildLayer, Layer, LayerCreateFailed};
 use crate::log::log_c_str;
 use crate::sys::{self, GBitmapFormat_GBitmapFormat1Bit};
 use crate::sys::{GPoint, GRect, GSize};
@@ -57,7 +57,7 @@ unsafe extern "C" fn render_square(_layer: *mut sys::Layer, ctx: *mut sys::GCont
 
 unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
     let mut bitmap =
-        GBitmap::new_empty(GSize { w: 50, h: 50 }, GBitmapFormat_GBitmapFormat1Bit).unwrap();
+        Bitmap::new_empty(GSize { w: 50, h: 50 }, GBitmapFormat_GBitmapFormat1Bit).unwrap();
 
     let bounds = bitmap.get_bounds();
     let data = bitmap.get_data().unwrap();
@@ -112,26 +112,33 @@ pub fn test_render() -> Result<(), MultiError> {
 
     let font = Rc::new(font);
 
-    let mut text_layer1 = TextLayer::new(GRect::new(10, 60, 180, 100))?;
-    text_layer1.set_font(&font);
-    text_layer1.set_text("text_layer1");
-    text_layer1.set_background_color(GCOLOR_GREEN);
-    text_layer1.set_text_color(GCOLOR_WHITE);
-    window.add_child(&mut text_layer1);
+    {
+        let mut text_layer1 = TextLayer::new(GRect::new(10, 60, 180, 100))?;
+        text_layer1.set_font(&font);
+        text_layer1.set_text("text_layer1");
+        text_layer1.set_background_color(GCOLOR_GREEN);
+        text_layer1.set_text_color(GCOLOR_WHITE);
+        window.add_child(&mut text_layer1);
+    }
 
-    let mut text_layer2 = TextLayer::new(GRect::new(10, 160, 180, 100))?;
-    text_layer2.set_font(&font);
-    text_layer2.set_text("text_layer2");
-    text_layer2.set_background_color(GCOLOR_BLUE);
-    text_layer2.set_text_color(GCOLOR_WHITE);
-    window.add_child(&mut text_layer2);
+    let text_layer2 = {
+        let mut text_layer2 = TextLayer::new(GRect::new(10, 160, 180, 100))?;
+        text_layer2.set_font(&font);
+        text_layer2.set_text("text_layer2");
+        text_layer2.set_background_color(GCOLOR_BLUE);
+        text_layer2.set_text_color(GCOLOR_WHITE);
+        window.add_child(&mut text_layer2);
+        text_layer2
+    };
 
-    let mut text_layer3 = TextLayer::new(GRect::new(0, 0, 75, 75))?;
-    text_layer3.set_font(&font);
-    text_layer3.set_text("text_layer3, plus Something a bit longer");
-    text_layer3.set_background_color(GCOLOR_RED);
-    text_layer3.set_text_color(GCOLOR_WHITE);
-    window.add_child(&mut text_layer3);
+    {
+        let mut text_layer3 = TextLayer::new(GRect::new(0, 0, 75, 75))?;
+        text_layer3.set_font(&font);
+        text_layer3.set_text("text_layer3, plus Something a bit longer");
+        text_layer3.set_background_color(GCOLOR_RED);
+        text_layer3.set_text_color(GCOLOR_WHITE);
+        window.add_child(&mut text_layer3);
+    }
 
     let mut custom_layer = Layer::new(GRect::new(50, 50, 100, 100))?;
     custom_layer.set_update_proc(render_with_bitmap);
@@ -139,8 +146,8 @@ pub fn test_render() -> Result<(), MultiError> {
     let mut child_text_layer = TextLayer::new(GRect::new(0, 35, 75, 75))?;
     child_text_layer.set_font(&font);
     child_text_layer.set_text("child_text_layer");
-    child_text_layer.set_background_color(GCOLOR_GREEN);
-    child_text_layer.set_text_color(GCOLOR_WHITE);
+    child_text_layer.set_background_color(GCOLOR_WHITE);
+    child_text_layer.set_text_color(GCOLOR_RED);
 
     let mut custom_child = Layer::new(GRect::new(2, 3, 15, 15))?;
     custom_layer.add_child(&mut custom_child);
@@ -153,9 +160,15 @@ pub fn test_render() -> Result<(), MultiError> {
     APP.show_window(&window);
 
     let x = Rc::new(RefCell::new((custom_layer, window, font)));
+    let mut count = 0;
     APP.set_timer(sys::TimeUnits_SECOND_UNIT, move || {
         let mut data = x.borrow_mut();
         data.0.mark_dirty();
+        count += 1;
+
+        if count > 5 {
+            text_layer2.remove_from_parent();
+        }
     });
 
     APP.event_loop();

@@ -1,13 +1,38 @@
-use core::{marker::PhantomData, ptr::slice_from_raw_parts_mut};
+use core::{
+    cell::RefCell,
+    ptr::{NonNull, slice_from_raw_parts_mut},
+};
+
+use alloc::rc::Rc;
 
 use crate::{
     GRect, GSize,
-    sys::{self, GBitmapFormat, gbitmap_destroy},
+    sys::{self, GBitmapFormat},
 };
 
-pub struct GBitmap<'parent> {
-    pub(crate) inner: *mut sys::GBitmap,
-    _parent: PhantomData<&'parent GBitmap<'parent>>,
+pub(crate) struct BitmapInner {
+    pub(crate) raw: NonNull<sys::GBitmap>,
+    parent: Option<Bitmap>,
+}
+
+impl BitmapInner {
+    pub(crate) unsafe fn from_ptr(ptr: *mut sys::GBitmap) -> Option<Self> {
+        Some(Self {
+            raw: NonNull::new(ptr)?,
+            parent: None,
+        })
+    }
+}
+
+impl Drop for BitmapInner {
+    fn drop(&mut self) {
+        unsafe { sys::gbitmap_destroy(self.raw.as_ptr()) };
+    }
+}
+
+#[derive(Clone)]
+pub struct Bitmap {
+    pub(crate) handle: Rc<RefCell<BitmapInner>>,
 }
 
 /*
@@ -29,44 +54,45 @@ gbitmap_create_palettized_from_1bit
 gbitmap_destroy
 */
 
-impl GBitmap<'static> {
-    pub fn from_resource(resource_id: u32) -> Result<Self, ()> {
-        Self::from_ptr(unsafe { sys::gbitmap_create_with_resource(resource_id) })
+impl Bitmap {
+    pub fn from_resource(resource_id: u32) -> Option<Self> {
+        unsafe { Self::from_ptr(sys::gbitmap_create_with_resource(resource_id)) }
     }
 
-    pub fn new_empty(size: GSize, format: GBitmapFormat) -> Result<Self, ()> {
-        Self::from_ptr(unsafe { sys::gbitmap_create_blank(size, format) })
+    pub fn new_empty(size: GSize, format: GBitmapFormat) -> Option<Self> {
+        unsafe { Self::from_ptr(sys::gbitmap_create_blank(size, format)) }
     }
-}
 
-impl<'a> Drop for GBitmap<'a> {
-    fn drop(&mut self) {
-        unsafe { gbitmap_destroy(self.inner) };
-    }
-}
-
-impl<'parent> GBitmap<'parent> {
-    fn from_ptr(ptr: *mut sys::GBitmap) -> Result<Self, ()> {
-        if ptr.is_null() {
-            return Err(());
+    unsafe fn from_ptr(ptr: *mut sys::GBitmap) -> Option<Self> {
+        unsafe {
+            Some(Self {
+                handle: Rc::new(RefCell::new(BitmapInner::from_ptr(ptr)?)),
+            })
         }
-        Ok(Self {
-            inner: ptr,
-            _parent: PhantomData,
-        })
     }
 
-    pub fn extract<'a>(&'a self, bounds: sys::GRect) -> Result<GBitmap<'a>, ()> {
-        let ptr = unsafe { sys::gbitmap_create_as_sub_bitmap(self.inner, bounds) };
-        Self::from_ptr(ptr)
+    fn from_inner(handle: BitmapInner) -> Self {
+        Self {
+            handle: Rc::new(RefCell::new(handle)),
+        }
+    }
+
+    pub fn extract(&self, bounds: sys::GRect) -> Option<Bitmap> {
+        let mut inner = unsafe {
+            let ptr = sys::gbitmap_create_as_sub_bitmap(self.handle.borrow().raw.as_ptr(), bounds);
+            BitmapInner::from_ptr(ptr)?
+        };
+        inner.parent = Some(self.clone());
+        Some(Self::from_inner(inner))
     }
 
     pub fn get_data(&mut self) -> Result<&mut [u8], ()> {
         unsafe {
-            let bytes_per_row = sys::gbitmap_get_bytes_per_row(self.inner) as usize;
-            let rows = sys::gbitmap_get_bounds(self.inner).size.h as usize;
+            let ptr = self.handle.borrow_mut().raw.as_ptr();
+            let bytes_per_row = sys::gbitmap_get_bytes_per_row(ptr) as usize;
+            let rows = sys::gbitmap_get_bounds(ptr).size.h as usize;
             let len = bytes_per_row * rows;
-            let data = sys::gbitmap_get_data(self.inner);
+            let data = sys::gbitmap_get_data(ptr);
             if data.is_null() {
                 return Err(());
             }
@@ -78,6 +104,6 @@ impl<'parent> GBitmap<'parent> {
     }
 
     pub fn get_bounds(&self) -> GRect {
-        unsafe { sys::gbitmap_get_bounds(self.inner) }
+        unsafe { sys::gbitmap_get_bounds(self.handle.borrow().raw.as_ptr()) }
     }
 }

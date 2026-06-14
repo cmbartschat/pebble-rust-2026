@@ -1,5 +1,4 @@
-use crate::bitmap::GBitmap;
-
+use crate::bitmap::Bitmap;
 use crate::sys;
 use crate::sys::{GColor, GPoint, GRect};
 
@@ -53,8 +52,14 @@ impl GContext {
         unsafe { sys::graphics_fill_circle(self.inner, point, radius) };
     }
 
-    pub fn draw_bitmap(&mut self, bitmap: &GBitmap, bounds: GRect) {
-        unsafe { sys::graphics_draw_bitmap_in_rect(self.inner, bitmap.inner, bounds) };
+    pub fn draw_bitmap(&mut self, bitmap: &Bitmap, bounds: GRect) {
+        unsafe {
+            sys::graphics_draw_bitmap_in_rect(
+                self.inner,
+                bitmap.handle.borrow().raw.as_ptr(),
+                bounds,
+            )
+        };
     }
 
     pub fn set_stroke_color(&mut self, color: GColor) {
@@ -75,7 +80,7 @@ impl GContext {
 
     pub fn draw_rotated_bitmap(
         &mut self,
-        bitmap: &GBitmap,
+        bitmap: &Bitmap,
         source_center: GPoint,
         rotation: i32, // TODO(christoph): Create angle class
         destination_center: GPoint,
@@ -83,7 +88,7 @@ impl GContext {
         unsafe {
             sys::graphics_draw_rotated_bitmap(
                 self.inner,
-                bitmap.inner,
+                bitmap.handle.borrow().raw.as_ptr(),
                 source_center,
                 rotation,
                 destination_center,
