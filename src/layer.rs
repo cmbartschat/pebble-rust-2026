@@ -1,6 +1,7 @@
 use core::{cell::RefCell, ptr::NonNull};
 
 use alloc::{
+    boxed::Box,
     rc::{Rc, Weak},
     vec::Vec,
 };
@@ -12,15 +13,16 @@ use crate::{
     sys::{self, GRect},
 };
 
-pub(crate) trait ChildLayer {
-    unsafe fn as_ptr(&mut self) -> NonNull<sys::Layer>;
-    fn remove_from_parent(&mut self);
+pub trait ChildLayer {
+    fn is_same(&self, other: &Layer) -> bool;
+    fn set_parent(&mut self, other: &mut Layer);
+    fn remove_from_parent(&self);
 }
 
 pub struct LayerInner {
     pub(crate) raw: NonNull<sys::Layer>,
     parent: Option<Weak<RefCell<LayerInner>>>,
-    children: Vec<Layer>,
+    children: Vec<Box<dyn ChildLayer>>,
     owned: bool,
 }
 
@@ -49,14 +51,14 @@ pub struct Layer {
 }
 
 impl ChildLayer for Layer {
-    unsafe fn as_ptr(&mut self) -> NonNull<sys::Layer> {
-        self.handle.borrow_mut().raw
-    }
+    // fn base(&self) -> RefMut<LayerInner> {
+    //     self.handle.borrow_mut()
+    // }
 
-    fn remove_from_parent(&mut self) {
-        unsafe { sys::layer_remove_from_parent(self.as_ptr().as_ptr()) };
+    fn remove_from_parent(&self) {
+        unsafe { sys::layer_remove_from_parent(self.as_ptr()) };
 
-        let mut self_mut = self.handle.borrow_mut();
+        let self_mut = self.handle.borrow_mut();
 
         let Some(parent_weak) = &self_mut.parent else {
             return;
@@ -67,15 +69,19 @@ impl ChildLayer for Layer {
         };
 
         let mut parent_mut = parent_rc.borrow_mut();
-        let Some(child_index) = parent_mut
-            .children
-            .iter()
-            .position(|e| e.handle.as_ptr() == self.handle.as_ptr())
-        else {
+        let Some(child_index) = parent_mut.children.iter().position(|e| e.is_same(self)) else {
             return;
         };
 
         parent_mut.children.swap_remove(child_index);
+    }
+
+    fn is_same(&self, other: &Layer) -> bool {
+        self.handle.borrow().raw == other.handle.borrow().raw
+    }
+
+    fn set_parent(&mut self, parent: &mut Layer) {
+        unsafe { sys::layer_add_child(parent.as_ptr(), self.as_ptr()) };
     }
 }
 
@@ -105,27 +111,33 @@ impl Layer {
         }
     }
 
-    pub fn add_child(&mut self, child: &mut Layer) {
+    pub fn add_child<T>(&mut self, child: &mut T)
+    where
+        T: Clone + ChildLayer + 'static,
+    {
         child.remove_from_parent();
-        let mut parent_mut = self.handle.borrow_mut();
-        let mut child_mut = child.handle.borrow_mut();
-        unsafe { sys::layer_add_child(parent_mut.raw.as_ptr(), child_mut.raw.as_ptr()) };
-        child_mut.parent = Some(Rc::downgrade(&self.handle));
-        parent_mut.children.push(child.clone());
+        {
+            let mut parent_mut = self.handle.borrow_mut();
+            parent_mut.children.push(Box::new(child.clone()));
+        }
+        child.set_parent(self);
     }
 
     pub fn mark_dirty(&mut self) {
-        unsafe { sys::layer_mark_dirty(self.as_ptr().as_ptr()) };
+        unsafe { sys::layer_mark_dirty(self.as_ptr()) };
     }
 
     pub fn set_bounds(&mut self, bounds: GRect) {
-        unsafe { sys::layer_set_bounds(self.as_ptr().as_ptr(), bounds) };
+        unsafe { sys::layer_set_bounds(self.as_ptr(), bounds) };
     }
 
     pub fn set_update_proc(
         &mut self,
         proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),
     ) {
-        unsafe { sys::layer_set_update_proc(self.as_ptr().as_ptr(), Some(proc)) };
+        unsafe { sys::layer_set_update_proc(self.as_ptr(), Some(proc)) };
+    }
+    unsafe fn as_ptr(&self) -> *mut sys::Layer {
+        self.handle.borrow_mut().raw.as_ptr()
     }
 }

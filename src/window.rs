@@ -4,7 +4,7 @@ use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     Layer,
-    layer::LayerInner,
+    layer::{ChildLayer, LayerInner},
     sys::{self, WindowHandlers, window_destroy},
 };
 
@@ -147,7 +147,10 @@ impl Window {
         unsafe { sys::window_set_background_color(self.raw.as_ptr(), color) };
     }
 
-    pub fn add_child(&mut self, child: &mut Layer) {
+    pub fn add_child<T>(&mut self, child: &mut T)
+    where
+        T: Clone + ChildLayer + 'static,
+    {
         self.root_layer.add_child(child);
     }
 }
