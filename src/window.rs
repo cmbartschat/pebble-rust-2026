@@ -1,15 +1,16 @@
-use core::{ffi::c_void, marker::PhantomData};
+use core::{cell::RefCell, ffi::c_void, ptr::NonNull};
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
-    layer::Layer,
+    Layer,
+    layer::LayerInner,
     sys::{self, WindowHandlers, window_destroy},
 };
 
-pub struct Window<'a> {
-    pub(crate) inner: *mut sys::Window,
-    _user_data: PhantomData<WindowUserData<'a>>,
+pub struct Window {
+    pub(crate) raw: NonNull<sys::Window>,
+    pub(crate) root_layer: Layer,
 }
 
 type Callback<'a> = Box<dyn FnMut() + 'a>;
@@ -21,10 +22,10 @@ struct WindowUserData<'a> {
     unload_handler: Option<Callback<'a>>,
 }
 
-impl Drop for Window<'_> {
+impl Drop for Window {
     fn drop(&mut self) {
         // TODO(christoph): Free user handler, currently dangling
-        unsafe { window_destroy(self.inner) };
+        unsafe { window_destroy(self.raw.as_ptr()) };
     }
 }
 
@@ -63,17 +64,22 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
 
 pub struct WindowCreateFailed;
 
-impl<'a> Window<'a> {
-    pub fn new() -> Result<Self, WindowCreateFailed> {
+impl Window {
+    pub fn new() -> Option<Self> {
         unsafe {
             let window = sys::window_create();
-            if window.is_null() {
-                return Err(WindowCreateFailed);
-            }
+
+            let Some(layer) = LayerInner::from_ptr(sys::window_get_root_layer(window), false)
+            else {
+                sys::window_destroy(window);
+                return None;
+            };
 
             let res = Self {
-                inner: window,
-                _user_data: PhantomData,
+                raw: NonNull::new(window)?,
+                root_layer: Layer {
+                    handle: Rc::new(RefCell::new(layer)),
+                },
             };
 
             let user_data = Box::new(WindowUserData {
@@ -92,20 +98,20 @@ impl<'a> Window<'a> {
                 unload: Some(global_handle_unload),
             };
             sys::window_set_window_handlers(window, handlers);
-            Ok(res)
+            Some(res)
         }
     }
 
-    fn get_user_data<'b>(&'b mut self) -> &'b mut WindowUserData<'a> {
+    fn get_user_data<'b>(&'b mut self) -> &'b mut WindowUserData {
         unsafe {
-            let ptr = core::mem::transmute::<*mut c_void, *mut WindowUserData<'a>>(
-                sys::window_get_user_data(self.inner),
+            let ptr = core::mem::transmute::<*mut c_void, *mut WindowUserData>(
+                sys::window_get_user_data(self.raw.as_ptr()),
             );
             ptr.as_mut().unwrap()
         }
     }
 
-    pub fn set_load_handler(&mut self, callback: impl FnMut() + 'a) {
+    pub fn set_load_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
         self.get_user_data().load_handler = Some(Box::new(callback));
     }
 
@@ -113,7 +119,7 @@ impl<'a> Window<'a> {
         self.get_user_data().load_handler = None;
     }
 
-    pub fn set_unload_handler(&mut self, callback: impl FnMut() + 'a) {
+    pub fn set_unload_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
         self.get_user_data().unload_handler = Some(Box::new(callback));
     }
 
@@ -121,7 +127,7 @@ impl<'a> Window<'a> {
         self.get_user_data().unload_handler = None;
     }
 
-    pub fn set_appear_handler(&mut self, callback: impl FnMut() + 'a) {
+    pub fn set_appear_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
         self.get_user_data().appear_handler = Some(Box::new(callback));
     }
 
@@ -129,7 +135,7 @@ impl<'a> Window<'a> {
         self.get_user_data().appear_handler = None;
     }
 
-    pub fn set_disappear_handler(&mut self, callback: impl FnMut() + 'a) {
+    pub fn set_disappear_handler<'a>(&'a mut self, callback: impl FnMut() + 'a) {
         self.get_user_data().disappear_handler = Some(Box::new(callback));
     }
 
@@ -138,10 +144,10 @@ impl<'a> Window<'a> {
     }
 
     pub fn set_background_color(&mut self, color: sys::GColor) {
-        unsafe { sys::window_set_background_color(self.inner, color) };
+        unsafe { sys::window_set_background_color(self.raw.as_ptr(), color) };
     }
 
-    pub fn add_child(&mut self, other: &Layer) {
-        unsafe { sys::layer_add_child(sys::window_get_root_layer(self.inner), other.inner) };
+    pub fn add_child(&mut self, child: &mut Layer) {
+        self.root_layer.add_child(child);
     }
 }

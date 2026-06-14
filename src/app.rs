@@ -41,10 +41,10 @@ extern "C" fn tick_handler(_tick_time: *mut sys::tm, _units_changed: TimeUnits) 
 
 impl App {
     pub fn show_window(&self, window: &Window) {
-        unsafe { sys::window_stack_push(window.inner, true) };
+        unsafe { sys::window_stack_push(window.raw.as_ptr(), true) };
     }
     pub fn show_window_immediate(&self, window: &Window) {
-        unsafe { sys::window_stack_push(window.inner, false) };
+        unsafe { sys::window_stack_push(window.raw.as_ptr(), false) };
     }
     pub fn event_loop(&self) {
         unsafe { sys::app_event_loop() };
