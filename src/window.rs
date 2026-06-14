@@ -147,4 +147,19 @@ impl Window {
     {
         self.root_layer.add_child(child);
     }
+
+    pub fn show(&mut self) {
+        unsafe { sys::window_stack_push(self.raw.as_ptr(), true) };
+    }
+    pub fn show_immediate(&mut self) {
+        unsafe { sys::window_stack_push(self.raw.as_ptr(), false) };
+    }
+
+    pub fn hide(&mut self) {
+        unsafe { sys::window_stack_remove(self.raw.as_ptr(), true) };
+    }
+
+    pub fn hide_immediate(&mut self) {
+        unsafe { sys::window_stack_remove(self.raw.as_ptr(), false) };
+    }
 }

@@ -157,9 +157,9 @@ pub fn test_render() -> Result<(), MultiError> {
 
     window.add_child(&mut custom_layer);
 
-    APP.show_window(&window);
-
+    window.show();
     let x = Rc::new(RefCell::new((custom_layer, window, font)));
+    let y = x.clone();
     let mut count = 0;
     APP.set_timer(sys::TimeUnits_SECOND_UNIT, move || {
         let mut data = x.borrow_mut();
@@ -173,6 +173,8 @@ pub fn test_render() -> Result<(), MultiError> {
 
     APP.event_loop();
     APP.clear_timer();
+
+    y.borrow_mut().1.hide();
 
     Ok(())
 }
