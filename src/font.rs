@@ -1,8 +1,8 @@
+use core::ptr::NonNull;
+
 use crate::sys;
 
-pub struct Font {
-    pub(crate) inner: *mut sys::FontInfo,
-}
+pub type Font = NonNull<sys::FontInfo>;
 
 pub enum SystemFont {
     Gothic24,
@@ -16,21 +16,6 @@ impl SystemFont {
         .as_ptr();
 
         let font = unsafe { sys::fonts_get_system_font(ptr) };
-        if font.is_null() {
-            return None;
-        }
-
-        Some(Font { inner: font })
+        NonNull::new(font)
     }
 }
-
-// impl Font {
-//     pub fn system() -> Option<Self> {
-//         let font = unsafe { sys::fonts_get_system_font(sys::FONT_KEY_GOTHIC_24.as_ptr()) };
-//         if font.is_null() {
-//             return None;
-//         }
-
-//         Some(Self { inner: font })
-//     }
-// }

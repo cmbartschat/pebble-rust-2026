@@ -29,7 +29,7 @@ impl TextLayer {
     }
 
     pub fn set_font(&mut self, font: Font) {
-        unsafe { sys::text_layer_set_font(self.inner, font.inner) };
+        unsafe { sys::text_layer_set_font(self.inner, font.as_ptr()) };
     }
 
     pub fn set_text(&mut self, text: &str) {
