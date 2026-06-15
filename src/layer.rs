@@ -28,6 +28,7 @@ pub struct LayerInner {
 
 impl Drop for LayerInner {
     fn drop(&mut self) {
+        self.children.iter().for_each(|f| f.remove_from_parent());
         if self.owned {
             unsafe { sys::layer_destroy(self.raw.as_ptr()) };
         }
