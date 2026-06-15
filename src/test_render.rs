@@ -1,28 +1,32 @@
 extern crate alloc;
 
 use core::cell::RefCell;
+use core::time::Duration;
 
 use alloc::rc::Rc;
+use alloc::string::String;
 use cortex_m as _;
 use critical_section::Mutex;
 
 use crate::app::APP;
 use crate::bitmap::Bitmap;
-use crate::color::{GCOLOR_BLUE, GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_RED, GCOLOR_WHITE};
+use crate::color::{GCOLOR_BLACK, GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_RED};
 use crate::font::SystemFont;
-use crate::layer::{ChildLayer, Layer, LayerCreateFailed};
+use crate::layer::{Layer, LayerCreateFailed};
 use crate::log::log_c_str;
 use crate::sys::{self, GBitmapFormat_GBitmapFormat1Bit};
 use crate::sys::{GPoint, GRect, GSize};
 use crate::text_layer::TextLayerCreateFailed;
+use crate::timer::Timer;
 use crate::window::{Window, WindowCreateFailed};
-use crate::{GContext, TextLayer};
+use crate::{BitmapLayer, GContext, TextLayer};
 
-#[allow(clippy::enum_variant_names)]
 pub enum MultiError {
     WindowCreateFailed,
     LayerCreateFailed,
     TextLayerCreateFailed,
+    MissingFont,
+    MissingResource,
 }
 
 impl From<WindowCreateFailed> for MultiError {
@@ -45,16 +49,6 @@ impl From<TextLayerCreateFailed> for MultiError {
 
 static FRAME_COUNT: Mutex<RefCell<i16>> = Mutex::new(RefCell::new(0));
 
-unsafe extern "C" fn render_square(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
-    let Ok(mut ctx) = GContext::from_raw(ctx) else {
-        log_c_str(c"invalid context");
-        return;
-    };
-
-    ctx.set_fill_color(GCOLOR_BLUE);
-    ctx.fill_rect(GRect::new(5, 5, 5, 5));
-}
-
 unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
     let mut bitmap =
         Bitmap::new_empty(GSize { w: 50, h: 50 }, GBitmapFormat_GBitmapFormat1Bit).unwrap();
@@ -76,7 +70,7 @@ unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::
     ctx.draw_bitmap(&bitmap, bounds);
     critical_section::with(|cs| {
         let borrow = FRAME_COUNT.borrow(cs);
-        let mut count = match borrow.try_borrow_mut() {
+        let count = match borrow.try_borrow_mut() {
             Ok(c) => c,
             Err(_) => {
                 log_c_str(c"failed to borrow:");
@@ -85,7 +79,6 @@ unsafe extern "C" fn render_with_bitmap(_layer: *mut sys::Layer, ctx: *mut sys::
         };
 
         let y = *count % (bounds.size.h);
-        *count = count.wrapping_add(10);
 
         ctx.draw_line(
             GPoint {
@@ -112,67 +105,97 @@ pub fn test_render() -> Result<(), MultiError> {
 
     let font = Rc::new(font);
 
-    {
-        let mut text_layer1 = TextLayer::new(GRect::new(10, 60, 180, 100))?;
-        text_layer1.set_font(&font);
-        text_layer1.set_text("text_layer1");
+    let text_layer1 = {
+        let Some(font) = SystemFont::Gothic14Bold.load() else {
+            return Err(MultiError::MissingFont);
+        };
+        let mut text_layer1 = TextLayer::new(GRect::new(0, 0, 32, 32))?;
+        text_layer1.set_font(&Rc::new(font));
+        text_layer1.set_text("layer1");
         text_layer1.set_background_color(GCOLOR_GREEN);
-        text_layer1.set_text_color(GCOLOR_WHITE);
+        text_layer1.set_text_color(GCOLOR_BLACK);
         window.add_child(&mut text_layer1);
-    }
-
-    let text_layer2 = {
-        let mut text_layer2 = TextLayer::new(GRect::new(10, 160, 180, 100))?;
-        text_layer2.set_font(&font);
-        text_layer2.set_text("text_layer2");
-        text_layer2.set_background_color(GCOLOR_BLUE);
-        text_layer2.set_text_color(GCOLOR_WHITE);
-        window.add_child(&mut text_layer2);
-        text_layer2
+        text_layer1
     };
 
-    {
-        let mut text_layer3 = TextLayer::new(GRect::new(0, 0, 75, 75))?;
-        text_layer3.set_font(&font);
-        text_layer3.set_text("text_layer3, plus Something a bit longer");
-        text_layer3.set_background_color(GCOLOR_RED);
-        text_layer3.set_text_color(GCOLOR_WHITE);
-        window.add_child(&mut text_layer3);
-    }
+    let mut bitmap_layer = {
+        let Some(mut bitmap_layer) = BitmapLayer::new(GRect::new(40, 8, 16, 16)) else {
+            return Err(MultiError::LayerCreateFailed);
+        };
+        window.add_child(&mut bitmap_layer);
+        bitmap_layer
+    };
 
-    let mut custom_layer = Layer::new(GRect::new(50, 50, 100, 100))?;
+    let mut custom_layer = Layer::new(GRect::new(64, 0, 32, 32))?;
     custom_layer.set_update_proc(render_with_bitmap);
-
-    let mut child_text_layer = TextLayer::new(GRect::new(0, 35, 75, 75))?;
-    child_text_layer.set_font(&font);
-    child_text_layer.set_text("child_text_layer");
-    child_text_layer.set_background_color(GCOLOR_WHITE);
-    child_text_layer.set_text_color(GCOLOR_RED);
-
-    let mut custom_child = Layer::new(GRect::new(2, 3, 15, 15))?;
-    custom_layer.add_child(&mut custom_child);
-    custom_child.set_update_proc(render_square);
-
-    custom_layer.add_child(&mut child_text_layer);
 
     window.add_child(&mut custom_layer);
 
     window.show();
+
+    let Some(hero_sheet) = Bitmap::from_resource(1) else {
+        return Err(MultiError::MissingResource);
+    };
+    let hero_frames = [
+        hero_sheet.extract(GRect::new(0, 16, 16, 16)).unwrap(),
+        hero_sheet.extract(GRect::new(16, 16, 16, 16)).unwrap(),
+        hero_sheet.extract(GRect::new(32, 16, 16, 16)).unwrap(),
+        hero_sheet.extract(GRect::new(48, 16, 16, 16)).unwrap(),
+    ];
+
+    bitmap_layer.set_bitmap(&hero_frames[0]);
+
     let x = Rc::new(RefCell::new((custom_layer, window, font)));
     let y = x.clone();
     let mut count = 0;
-    APP.set_timer(sys::TimeUnits_SECOND_UNIT, move || {
+
+    APP.set_tick_handler(sys::TimeUnits_SECOND_UNIT, move || {
         let mut data = x.borrow_mut();
         data.0.mark_dirty();
-        count += 1;
 
-        if count > 5 {
-            text_layer2.remove_from_parent();
-        }
+        critical_section::with(|cs| {
+            let borrow = FRAME_COUNT.borrow(cs);
+            let mut count = match borrow.try_borrow_mut() {
+                Ok(c) => c,
+                Err(_) => {
+                    log_c_str(c"failed to borrow:");
+                    return;
+                }
+            };
+
+            *count = count.wrapping_add(10);
+        });
     });
 
+    Timer::repeat(Duration::from_millis(50), move || {
+        count += 1;
+        bitmap_layer.set_bitmap(&hero_frames[count % hero_frames.len()]);
+        true
+    });
+
+    {
+        let mut text_layer_cloned2 = text_layer1.clone();
+        let mut start = 0;
+        let mut text = String::new();
+        let timer = Timer::repeat(Duration::from_secs(1), move || {
+            start = (start + 1) % 10;
+            text.clear();
+            for _ in 0..start {
+                text.push('x');
+            }
+
+            text_layer_cloned2.set_text(&text);
+            true
+        })
+        .unwrap();
+
+        Timer::once(Duration::from_secs(5), move || {
+            timer.cancel();
+        });
+    }
+
     APP.event_loop();
-    APP.clear_timer();
+    APP.clear_tick_handler();
 
     y.borrow_mut().1.hide();
 

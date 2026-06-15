@@ -49,7 +49,7 @@ impl App {
     pub fn event_loop(&self) {
         unsafe { sys::app_event_loop() };
     }
-    pub fn set_timer(&self, unit: TimeUnits, callback: impl FnMut() + 'static) {
+    pub fn set_tick_handler(&self, unit: TimeUnits, callback: impl FnMut() + 'static) {
         unsafe {
             with_state(|state| {
                 state.timer_callback = Some(Box::new(callback));
@@ -57,7 +57,7 @@ impl App {
             });
         };
     }
-    pub fn clear_timer(&self) {
+    pub fn clear_tick_handler(&self) {
         unsafe {
             with_state(|state| {
                 sys::tick_timer_service_unsubscribe();

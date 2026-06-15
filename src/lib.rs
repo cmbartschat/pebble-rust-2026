@@ -12,21 +12,24 @@ mod font;
 mod globals;
 mod layer;
 mod log;
-// mod node;
+
 mod bitmap_layer;
 mod rect;
 pub mod sys;
 mod test_render;
 mod text_layer;
+mod timer;
 mod window;
 
 pub use crate::app::APP;
 pub use crate::bitmap_layer::BitmapLayer;
 pub use crate::context::GContext;
+pub use crate::font::{Font, SystemFont};
 pub use crate::layer::Layer;
 pub use crate::sys::{GPoint, GRect, GSize};
 use crate::test_render::test_render;
 pub use crate::text_layer::TextLayer;
+pub use crate::timer::Timer;
 pub use crate::window::Window;
 
 #[unsafe(no_mangle)]
