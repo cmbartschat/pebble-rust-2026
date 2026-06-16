@@ -44,8 +44,6 @@ impl BitmapLayer {
     pub fn new(r: GRect) -> Option<Self> {
         unsafe {
             let raw = NonNull::new(sys::bitmap_layer_create(r))?;
-            // todo!()
-
             let base = LayerInner::from_ptr(sys::bitmap_layer_get_layer(raw.as_ptr()), false);
             let Some(base_layer) = base else {
                 sys::bitmap_layer_destroy(raw.as_ptr());

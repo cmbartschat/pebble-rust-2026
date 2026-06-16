@@ -1,14 +1,17 @@
 extern crate alloc;
 
 use core::cell::RefCell;
+use core::str::FromStr;
 use core::time::Duration;
 
+use alloc::ffi::CString;
+use alloc::format;
 use alloc::rc::Rc;
 use alloc::string::String;
 use cortex_m as _;
 use critical_section::Mutex;
 
-use crate::app::APP;
+use crate::app::{APP, InboxSize};
 use crate::bitmap::Bitmap;
 use crate::color::{GCOLOR_BLACK, GCOLOR_BLUE_MOON, GCOLOR_GREEN, GCOLOR_RED};
 use crate::font::SystemFont;
@@ -193,6 +196,37 @@ pub fn test_render() -> Result<(), MultiError> {
             timer.cancel();
         });
     }
+
+    log_c_str(c"setting message handler.");
+
+    APP.set_message_handler(|dict| {
+        log_c_str(c"received message...");
+        for tuple in dict.iter() {
+            log_c_str(match tuple.value() {
+                crate::dictionary::Value::Bytes(_) => c" - key of bytes",
+                crate::dictionary::Value::CStr(_) => c" - key of str",
+                crate::dictionary::Value::Uint(_) => c" - key of uint",
+                crate::dictionary::Value::Int(_) => c" - key of int",
+            });
+        }
+        log_c_str(c"done.");
+    });
+
+    APP.open_inbox(InboxSize::Half).unwrap();
+
+    let sent_count = 0;
+    Timer::repeat(Duration::from_secs(2), move || {
+        if let Err(e) = APP.send_message(|builder| {
+            builder.write_i8(10000 /* ECHO */, 1)?;
+            builder.write_i32(10001 /* DATA1 */, 1)?;
+            Ok(())
+        }) {
+            let s = format!("{e:?}");
+            log_c_str(CString::from_str(&s).unwrap().as_c_str());
+        }
+
+        sent_count < 10
+    });
 
     APP.event_loop();
     APP.clear_tick_handler();

@@ -4,10 +4,12 @@
 extern crate alloc;
 
 mod app;
+mod app_message_result;
 mod bitmap;
 pub mod color;
 mod context;
 mod custom_alloc;
+mod dictionary;
 mod font;
 mod globals;
 mod layer;
@@ -22,6 +24,7 @@ mod timer;
 mod window;
 
 pub use crate::app::APP;
+pub use crate::app_message_result::AppMessageError;
 pub use crate::bitmap_layer::BitmapLayer;
 pub use crate::context::GContext;
 pub use crate::font::{Font, SystemFont};
