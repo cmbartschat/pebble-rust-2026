@@ -7,8 +7,9 @@
 - [x] Position and render text
 - [x] Run a timer to update periodically
 - [x] Send/receive messages
-- [ ] Persist data
+- [x] Persist data
 - [ ] Nicer way to use resource/message keys
+- [ ] Get/format time
 
 ## Shareable
 

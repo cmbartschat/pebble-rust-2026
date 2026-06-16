@@ -10,6 +10,7 @@ use crate::{
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
     log::log_c_str,
+    persist::Persist,
     sys::{self},
     window::Window,
 };
@@ -21,9 +22,11 @@ pub struct AppState {
     inbox_received_callback: InboxReceivedCallback,
 }
 
-pub struct App;
+pub struct App {
+    pub persist: Persist,
+}
 
-pub static APP: App = App;
+pub static APP: App = App { persist: Persist };
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
     timer_callback: None,

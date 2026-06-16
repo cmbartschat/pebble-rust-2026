@@ -136,10 +136,9 @@ impl DictionaryView {
         })
     }
 
-    pub fn get(&self, key: u32) -> Option<&Value<'_>> {
-        let _next = unsafe { sys::dict_find(self.raw.as_ptr(), key) };
-        todo!();
-        // Tuple::from_raw(next).map(|e| e.value())
+    pub fn get(&self, key: u32) -> Option<Value<'_>> {
+        let next = unsafe { sys::dict_find(self.raw.as_ptr(), key) };
+        Tuple::from_raw(next).map(|e| e.value())
     }
 
     pub fn iter(&mut self) -> Tuples<'_> {

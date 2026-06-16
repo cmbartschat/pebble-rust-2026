@@ -228,6 +228,20 @@ pub fn test_render() -> Result<(), MultiError> {
         sent_count < 10
     });
 
+    match APP.persist.read_bool(10000) {
+        Some(true) => log_c_str(c"bool is true"),
+        Some(false) => log_c_str(c"bool is false"),
+        None => log_c_str(c"bool is unset"),
+    };
+
+    let mut v = false;
+    Timer::repeat(Duration::from_secs(2), move || {
+        v = !v;
+        log_c_str(if v { c"storing true" } else { c"storing false" });
+        APP.persist.write_bool(10000, v);
+        true
+    });
+
     APP.event_loop();
     APP.clear_tick_handler();
 

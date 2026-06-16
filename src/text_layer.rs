@@ -6,9 +6,10 @@ use crate::{
     Layer,
     font::Font,
     layer::{ChildLayer, LayerInner},
-    sys::{self, GColor, GRect},
+    sys::{self, GColor, GRect, GTextAlignment},
 };
 
+#[derive(Debug)]
 pub struct TextLayerCreateFailed;
 
 struct TextLayerInner {
@@ -103,6 +104,12 @@ impl TextLayer {
     pub fn set_text_color(&mut self, color: GColor) {
         self.inner_mut(|inner| {
             unsafe { sys::text_layer_set_text_color(inner.raw.as_ptr(), color) };
+        });
+    }
+
+    pub fn set_alignment(&mut self, alignment: GTextAlignment) {
+        self.inner_mut(|inner| {
+            unsafe { sys::text_layer_set_text_alignment(inner.raw.as_ptr(), alignment) };
         });
     }
 }
