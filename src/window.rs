@@ -56,8 +56,6 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
     }
 }
 
-pub struct WindowCreateFailed;
-
 impl Window {
     pub fn new() -> Option<Self> {
         unsafe {

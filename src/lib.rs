@@ -20,7 +20,6 @@ mod persist;
 mod bitmap_layer;
 mod rect;
 pub mod sys;
-mod test_render;
 mod text_layer;
 mod timer;
 mod window;

@@ -1,10 +1,10 @@
 use core::{cell::RefCell, time::Duration};
 
-use alloc::{format, rc::Rc, vec::Vec};
+use alloc::{rc::Rc, vec::Vec};
 
 use crate::{
     APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Timer, Window, color,
-    dictionary::Value, log::log_c_str, sys::GTextAlignment_GTextAlignmentRight,
+    dictionary::Value, log::log_c_str,
 };
 
 extern crate alloc;
@@ -57,22 +57,23 @@ pub fn run_cores() {
 
     let font = Rc::new(SystemFont::Gothic28Bold.load().unwrap());
 
-    let mut time_layer = TextLayer::new(GRect::new(4, 194, 192, 28)).unwrap();
+    let mut time_layer = TextLayer::new(GRect::new(4, 194, 192, 40)).unwrap();
     time_layer.set_font(&font);
     time_layer.set_text_color(color::GCOLOR_WHITE);
     time_layer.set_background_color(color::GCOLOR_CLEAR);
     window.add_child(&mut time_layer);
 
-    let mut cycle_layer = TextLayer::new(GRect::new(104, 194, 192, 28)).unwrap();
+    let mut cycle_layer = TextLayer::new(GRect::new(104, 194, 192, 40)).unwrap();
     cycle_layer.set_font(&font);
     cycle_layer.set_text_color(color::GCOLOR_WHITE);
     cycle_layer.set_background_color(color::GCOLOR_CLEAR);
-    // cycle_layer.set_alignment(GTextAlignment_GTextAlignmentRight);
-    // window.add_child(&mut cycle_layer);
+    window.add_child(&mut cycle_layer);
 
     let mut update = move |state: &mut State| {
         time_layer.set_text("12:30");
         cycle_layer.set_text("cycles");
+        // cycle_layer.set_alignment(GTextAlignment_GTextAlignmentRight);
+
         // log_c_str(c"setting alignment");
         // cycle_layer.set_alignment(2);
         // log_c_str(c"set alignment");
@@ -124,6 +125,7 @@ pub fn run_cores() {
                     });
 
                     update(&mut state);
+                    log_c_str(c"finished update");
                 } else {
                     log_c_str(c"received invalid state");
                 }
