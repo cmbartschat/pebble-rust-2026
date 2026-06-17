@@ -1,6 +1,5 @@
-use core::{cell::RefCell, time::Duration};
-
 use alloc::{rc::Rc, vec::Vec};
+use core::{cell::RefCell, time::Duration};
 
 use crate::{
     APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Timer, Window, color,
@@ -15,8 +14,15 @@ struct Core {
     layer: BitmapLayer,
 }
 
+#[derive(PartialEq)]
+enum Status {
+    Loading,
+    MissingConfig,
+    Loaded,
+}
+
 struct State {
-    loaded: bool,
+    status: Status,
     cycles: usize,
     cores: [Core; 64],
 }
@@ -38,7 +44,7 @@ pub fn run_cores() {
     let state = {
         let mut core_index: i16 = 0;
         Rc::new(RefCell::new(State {
-            loaded: false,
+            status: Status::Loading,
             cycles: 0,
             cores: [(); 64].map(|_| {
                 let y = core_index.div_euclid(8);
@@ -79,7 +85,7 @@ pub fn run_cores() {
         // log_c_str(c"set alignment");
 
         state.cores.iter_mut().for_each(|c| {
-            let sprite = if state.loaded {
+            let sprite = if state.status == Status::Loaded {
                 if c.level < 7 && c.broken {
                     &core_sprites[c.level as usize].1
                 } else {
@@ -103,7 +109,7 @@ pub fn run_cores() {
                 log_c_str(c"received reset");
 
                 let mut state = state.borrow_mut();
-                state.loaded = false;
+                state.status = Status::MissingConfig;
                 update(&mut state);
             }
             Some(Value::CStr(t)) if *t == c"STATE" => {
@@ -115,7 +121,7 @@ pub fn run_cores() {
                 } {
                     log_c_str(c"received valid state");
                     let mut state = state.borrow_mut();
-                    state.loaded = true;
+                    state.status = Status::Loaded;
                     level_data.iter().enumerate().for_each(|(i, level)| {
                         state.cores[i].level = *level;
                     });
