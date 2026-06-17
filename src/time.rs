@@ -1,6 +1,4 @@
-use core::{ptr::null_mut, str::FromStr};
-
-use alloc::{borrow::ToOwned, ffi::CString};
+use alloc::ffi::CString;
 
 use crate::{log::log_c_str, sys};
 
@@ -48,26 +46,24 @@ impl LocalTime {
         self.value.tm_min
     }
 
-    pub fn to_string(&self) -> CString {
-        // let mut buffer = [0; 10];
-        // let written = unsafe {
-        //     sys::strftime(
-        //         buffer.as_mut_ptr(),
-        //         buffer.len(),
-        //         if sys::clock_is_24h_style() {
-        //             c"%H:%M".as_ptr()
-        //         } else {
-        //             c"%I:%M".as_ptr()
-        //         },
-        //         &self.value,
-        //     )
-        // };
-        // if written == 0 {
-        //     log_c_str(c"LocalTime::to_string failed to write");
-        //     panic!("Time overflowed buffer");
-        // }
-        // CString::new(&buffer[0..written]).unwrap()
-        // CString::from_str("ti:me").unwrap()
-        c"tii:mme".to_owned()
+    pub fn format_hh_mm(&self) -> CString {
+        let mut buffer = [0; 10];
+        let written = unsafe {
+            sys::strftime(
+                buffer.as_mut_ptr(),
+                buffer.len(),
+                if sys::clock_is_24h_style() {
+                    c"%H:%M".as_ptr()
+                } else {
+                    c"%I:%M".as_ptr()
+                },
+                &self.value,
+            )
+        };
+        if written == 0 {
+            log_c_str(c"LocalTime::to_string failed to write");
+            panic!("Time overflowed buffer");
+        }
+        CString::new(&buffer[0..written]).unwrap()
     }
 }

@@ -1,9 +1,11 @@
-use alloc::{format, rc::Rc, vec::Vec};
-use core::{cell::RefCell, time::Duration};
+use alloc::{rc::Rc, vec::Vec};
+use core::cell::RefCell;
 
 use crate::{
-    APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Time, Timer, Window, color,
-    dictionary::Value, log::log_c_str, sys::TimeUnits_MINUTE_UNIT,
+    APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Time, Window, color,
+    dictionary::Value,
+    log::log_c_str,
+    sys::{GTextAlignment_GTextAlignmentRight, TimeUnits_MINUTE_UNIT},
 };
 
 extern crate alloc;
@@ -27,18 +29,90 @@ struct State {
     cores: [Core; 64],
 }
 
-fn format_number(v: u32) -> (u32, Option<u32>, &'static str) {
-    if v >= 10_000_000 {
-        (v / 1_000_000, None, "M")
-    } else if v >= 1000 * 1000 {
-        (v / 1_000_000, Some((v % 1_000_000) / 100_1000), "M")
-    } else if v >= 10_000 {
-        (v / 1000, None, "K")
-    } else if v >= 1000 {
-        (v / 1000, Some((v % 1000) / 100), "K")
-    } else {
-        (v, None, "")
+fn write_digit(data: &mut Vec<u8>, d: u32) {
+    data.push(b'0' + d as u8);
+}
+
+fn write_number(data: &mut Vec<u8>, mut d: u32) {
+    let initial_length = data.len();
+    loop {
+        let digit = d % 10;
+        write_digit(data, digit);
+        d /= 10;
+        if d == 0 {
+            break;
+        }
     }
+    let (_, new_digits) = data.split_at_mut(initial_length);
+    new_digits.reverse();
+}
+
+fn write_number_to_layer(layer: &mut TextLayer, v: u32) {
+    let mut str = Vec::with_capacity(16);
+
+    // write!(&mut str, "{}", v).unwrap();
+
+    // let mut data = Vec::with_capacity(16);
+    // write_number(&mut data, v);
+
+    if v >= 10_000_000 {
+        str.extend_from_slice(b">10M");
+    } else if v >= 1000 * 1000 {
+        write_number(&mut str, v / 1_000_000);
+        str.push(b'.');
+        write_number(&mut str, (v % 1_000_000) / 100_1000);
+        str.push(b'M');
+    } else if v >= 10_000 {
+        write_number(&mut str, v / 1_000);
+        str.push(b'K');
+    } else if v >= 1000 {
+        write_number(&mut str, v / 1_000);
+        str.push(b'.');
+        write_number(&mut str, (v % 1_000) / 100);
+        str.push(b'K');
+    } else {
+        write_number(&mut str, v)
+    }
+
+    // if false {
+    //     if v > 10_000_000 {
+    //         str.push_str(">10M");
+    //     } else if v > 1_000_000 {
+    //         str.push_str("1-10M");
+    //     } else if v > 100_000 {
+    //         str.push_str("100K-1M");
+    //     } else if v > 10_000 {
+    //         str.push_str("10K-100K");
+    //     } else if v > 1_000 {
+    //         str.push_str("1K-10K");
+    //     } else {
+    //         str.push_str("<1K");
+    //     }
+    // } else if false {
+    //     if v >= 10_000_000 {
+    //         // write!(&mut str, "{}", v / 1_000_000).unwrap();
+    //         // str.push('M');
+    //         str.push_str(">10M");
+    //     } else if v >= 1000 * 1000 {
+    //         write_digit(&mut str, v / 1_000_000);
+    //         write!(&mut str, "{}", v / 1_000_000).unwrap();
+    //         str.push('.');
+    //         write!(&mut str, "{}", (v % 1_000_000) / 100_1000).unwrap();
+    //         str.push('M');
+    //     } else if v >= 10_000 {
+    //         write!(&mut str, "{}", v / 1_000).unwrap();
+    //         str.push('K');
+    //     } else if v >= 1000 {
+    //         write!(&mut str, "{}", v / 1_000).unwrap();
+    //         str.push('.');
+    //         write!(&mut str, "{}", (v % 1_000) / 100).unwrap();
+    //         str.push('K');
+    //     } else {
+    //         write!(&mut str, "{}", v).unwrap();
+    //     }
+    // }
+
+    layer.set_text_bytes(&str);
 }
 
 pub fn run_cores() {
@@ -78,34 +152,21 @@ pub fn run_cores() {
 
     let font = Rc::new(SystemFont::Gothic28Bold.load().unwrap());
 
-    let mut time_layer = TextLayer::new(GRect::new(4, 194, 192, 40)).unwrap();
+    let mut time_layer = TextLayer::new(GRect::new(4, 192, 192, 40)).unwrap();
     time_layer.set_font(&font);
     time_layer.set_text_color(color::GCOLOR_WHITE);
     time_layer.set_background_color(color::GCOLOR_CLEAR);
     window.add_child(&mut time_layer);
 
-    let mut cycle_layer = TextLayer::new(GRect::new(104, 194, 192, 40)).unwrap();
+    let mut cycle_layer = TextLayer::new(GRect::new(4, 192, 192, 40)).unwrap();
     cycle_layer.set_font(&font);
     cycle_layer.set_text_color(color::GCOLOR_WHITE);
     cycle_layer.set_background_color(color::GCOLOR_CLEAR);
+    cycle_layer.set_alignment(GTextAlignment_GTextAlignmentRight);
     window.add_child(&mut cycle_layer);
 
-    let now = Time::now();
-    log_c_str(c"got now");
-    let local = now.to_local();
-    log_c_str(c"got local");
-    let formatted = local.to_string();
-    log_c_str(c"got formatted");
-    // log_c_str(formatted.as_c_str());
-    // log_c_str(Time::now().to_local().to_string().as_c_str());
-    // time_layer.set_text_bytes(Time::now().to_local().to_string().as_bytes());
-
     let mut update = move |state: &mut State| {
-        log_c_str(c"update called");
-        time_layer.set_text_bytes(Time::now().to_local().to_string().as_bytes());
-        // time_layer.set_text("12:30");
-        // log_c_str(Time::now().to_local().to_string().as_c_str());
-        cycle_layer.set_text("cycles");
+        time_layer.set_text_bytes(Time::now().to_local().format_hh_mm().as_bytes());
 
         match state.status {
             Status::Loading => {
@@ -113,28 +174,7 @@ pub fn run_cores() {
             }
             Status::MissingConfig => cycle_layer.set_text_c_str(c"Needs config"),
             Status::Loaded => {
-                cycle_layer.set_text_c_str(c"loaded");
-
-                // let formatted = format_number(state.cycles);
-                // let cycle_display = if let Some(decimal) = formatted.1 {
-                //     format!("{}.{}{}", formatted.0, decimal, formatted.2)
-                // } else {
-                //     format!("{}{}", formatted.0, formatted.2)
-                // };
-                // cycle_layer.set_text(&cycle_display);
-
-                // let mut cycle_text = String::new();
-                // let formatted = format_number(state.cycles);
-                // use core::fmt::Write as _;
-                // write!(&mut cycle_text, "{}", formatted.0).unwrap();
-                // cycle_text.write_fmt(Arg);
-
-                // let cycle_display = if let Some(decimal) = formatted.1 {
-                //     format!("{}.{}{}", formatted.0, decimal, formatted.2)
-                // } else {
-                //     format!("{}{}", formatted.0, formatted.2)
-                // };
-                // cycle_layer.set_text(&cycle_text);
+                write_number_to_layer(&mut cycle_layer, 12400);
             }
         }
 
@@ -229,9 +269,13 @@ pub fn run_cores() {
         .is_ok()
     };
 
+    log_c_str(c"before request update");
+
     request_update();
 
-    Timer::repeat(Duration::from_mins(10), request_update);
+    // log_c_str(c"starting repeat");
+
+    // Timer::repeat(Duration::from_mins(10), request_update);
 
     window.show();
 
