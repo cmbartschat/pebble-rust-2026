@@ -16,6 +16,7 @@ mod globals;
 mod layer;
 pub mod log;
 mod persist;
+mod time;
 
 mod bitmap_layer;
 mod rect;
@@ -35,6 +36,7 @@ pub use crate::layer::Layer;
 pub use crate::sys::{GPoint, GRect, GSize};
 // use crate::test_render::test_render;
 pub use crate::text_layer::TextLayer;
+pub use crate::time::Time;
 pub use crate::timer::Timer;
 pub use crate::window::Window;
 

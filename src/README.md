@@ -19,4 +19,5 @@
 
 ## "Production" Ready
 
-- Panic handlers at callback boundaries
+- [ ] Panic handlers at callback boundaries
+- [ ] Nicer enums with enum_primitive
