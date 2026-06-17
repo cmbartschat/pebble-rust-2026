@@ -40,8 +40,39 @@ pub use crate::time::Time;
 pub use crate::timer::Timer;
 pub use crate::window::Window;
 
+// fn stack_depth_test(depth: u8, v: &mut u8) {
+//     // log_c_str(c"stack_depth_test");
+
+//     let mut data = [0u8; 100];
+
+//     data[3] = *v;
+
+//     if depth > 0 {
+//         stack_depth_test(depth - 1, &mut data[3]);
+//         data[3] += 1;
+//     };
+
+//     *v = data[3];
+// }
+
 #[unsafe(no_mangle)]
 pub fn main() -> i32 {
+    // for depth in [0, 1] {
+    //     let mut res = 0;
+    //     stack_depth_test(depth, &mut res);
+    //     log_c_str(c"loop done.");
+
+    //     if res != depth {
+    //         log_c_str(c" - bad");
+    //         return -1;
+    //         // panic!("Bad data")
+    //     }
+
+    //     log_c_str(c" - good");
+    // }
+    // let mut res = 0;
+    // stack_depth_test(15, &mut res);
+
     // match test_render() {
     //     Ok(_) => 0,
     //     Err(_) => -1,

@@ -29,6 +29,18 @@ pub enum Value<'a> {
     Int(i32),
 }
 
+impl Value<'_> {
+    pub fn as_u32(&self) -> Option<u32> {
+        match self {
+            Self::Bytes(_) => None,
+            Self::CStr(_) => None,
+            Self::Uint(v) => Some(*v),
+            Self::Int(v) if *v >= 0i32 => Some(*v as u32),
+            Self::Int(_v) => None,
+        }
+    }
+}
+
 pub struct Tuple<'a> {
     raw: NonNull<sys::Tuple>,
     tuple: PhantomData<&'a sys::Tuple>,

@@ -1,9 +1,9 @@
-use alloc::{rc::Rc, vec::Vec};
+use alloc::{format, rc::Rc, vec::Vec};
 use core::{cell::RefCell, time::Duration};
 
 use crate::{
-    APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Timer, Window, color,
-    dictionary::Value, log::log_c_str,
+    APP, Bitmap, BitmapLayer, GRect, SystemFont, TextLayer, Time, Timer, Window, color,
+    dictionary::Value, log::log_c_str, sys::TimeUnits_MINUTE_UNIT,
 };
 
 extern crate alloc;
@@ -23,8 +23,22 @@ enum Status {
 
 struct State {
     status: Status,
-    cycles: usize,
+    cycles: u32,
     cores: [Core; 64],
+}
+
+fn format_number(v: u32) -> (u32, Option<u32>, &'static str) {
+    if v >= 10_000_000 {
+        (v / 1_000_000, None, "M")
+    } else if v >= 1000 * 1000 {
+        (v / 1_000_000, Some((v % 1_000_000) / 100_1000), "M")
+    } else if v >= 10_000 {
+        (v / 1000, None, "K")
+    } else if v >= 1000 {
+        (v / 1000, Some((v % 1000) / 100), "K")
+    } else {
+        (v, None, "")
+    }
 }
 
 pub fn run_cores() {
@@ -51,6 +65,7 @@ pub fn run_cores() {
                 let x = core_index.rem_euclid(8);
                 core_index += 1;
                 let mut layer = BitmapLayer::new(GRect::new(x * 25, y * 25, 25, 25)).unwrap();
+                layer.set_bitmap(&core_sprites[7].1);
                 window.add_child(&mut layer);
                 Core {
                     level: 0,
@@ -76,9 +91,50 @@ pub fn run_cores() {
     window.add_child(&mut cycle_layer);
 
     let mut update = move |state: &mut State| {
+        log_c_str(c"update called");
+        // time_layer.set_text(
+        //     Time::now()
+        //         .to_local()
+        //         .to_string()
+        //         .to_string_lossy()
+        //         .as_ref(),
+        // );
         time_layer.set_text("12:30");
+        // log_c_str(Time::now().to_local().to_string().as_c_str());
         cycle_layer.set_text("cycles");
-        // cycle_layer.set_alignment(GTextAlignment_GTextAlignmentRight);
+
+        match state.status {
+            Status::Loading => {
+                cycle_layer.set_text_c_str(c"loading");
+            }
+            Status::MissingConfig => cycle_layer.set_text_c_str(c"Needs config"),
+            Status::Loaded => {
+                cycle_layer.set_text_c_str(c"loaded");
+
+                // let formatted = format_number(state.cycles);
+                // let cycle_display = if let Some(decimal) = formatted.1 {
+                //     format!("{}.{}{}", formatted.0, decimal, formatted.2)
+                // } else {
+                //     format!("{}{}", formatted.0, formatted.2)
+                // };
+                // cycle_layer.set_text(&cycle_display);
+
+                // let mut cycle_text = String::new();
+                // let formatted = format_number(state.cycles);
+                // use core::fmt::Write as _;
+                // write!(&mut cycle_text, "{}", formatted.0).unwrap();
+                // cycle_text.write_fmt(Arg);
+
+                // let cycle_display = if let Some(decimal) = formatted.1 {
+                //     format!("{}.{}{}", formatted.0, decimal, formatted.2)
+                // } else {
+                //     format!("{}{}", formatted.0, formatted.2)
+                // };
+                // cycle_layer.set_text(&cycle_text);
+            }
+        }
+
+        // cycle_layer.set_alignment(GTextAlignment_GTextAlignmentLeft);
 
         // log_c_str(c"setting alignment");
         // cycle_layer.set_alignment(2);
@@ -98,8 +154,22 @@ pub fn run_cores() {
         });
     };
 
-    {
+    if true {
+        // let state = state.bo();
+        // core::mem::drop(state);
+        // if let Ok(mut state) = state.try_borrow_mut() {
+        //     update(&mut state);
+        // } else {
+        //     log_c_str(c"initial update failed to borrow mut");
+        // }
+        // let mut update = update.clone();
         update(&mut state.borrow_mut());
+
+        let mut update = update.clone();
+        let state = state.clone();
+        APP.set_tick_handler(TimeUnits_MINUTE_UNIT, move || {
+            update(&mut state.borrow_mut());
+        });
     }
 
     APP.set_message_handler(move |d| {
@@ -129,6 +199,10 @@ pub fn run_cores() {
                     broken_data.iter().enumerate().for_each(|(i, broken)| {
                         state.cores[i].broken = *broken != 0;
                     });
+
+                    if let Some(cycles) = d.get(10006).and_then(|f| f.as_u32()) {
+                        state.cycles = cycles;
+                    }
 
                     update(&mut state);
                     log_c_str(c"finished update");
