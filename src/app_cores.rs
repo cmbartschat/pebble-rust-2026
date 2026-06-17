@@ -90,16 +90,20 @@ pub fn run_cores() {
     cycle_layer.set_background_color(color::GCOLOR_CLEAR);
     window.add_child(&mut cycle_layer);
 
+    let now = Time::now();
+    log_c_str(c"got now");
+    let local = now.to_local();
+    log_c_str(c"got local");
+    let formatted = local.to_string();
+    log_c_str(c"got formatted");
+    // log_c_str(formatted.as_c_str());
+    // log_c_str(Time::now().to_local().to_string().as_c_str());
+    // time_layer.set_text_bytes(Time::now().to_local().to_string().as_bytes());
+
     let mut update = move |state: &mut State| {
         log_c_str(c"update called");
-        // time_layer.set_text(
-        //     Time::now()
-        //         .to_local()
-        //         .to_string()
-        //         .to_string_lossy()
-        //         .as_ref(),
-        // );
-        time_layer.set_text("12:30");
+        time_layer.set_text_bytes(Time::now().to_local().to_string().as_bytes());
+        // time_layer.set_text("12:30");
         // log_c_str(Time::now().to_local().to_string().as_c_str());
         cycle_layer.set_text("cycles");
 

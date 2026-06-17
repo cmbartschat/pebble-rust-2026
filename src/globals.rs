@@ -65,9 +65,9 @@ pub extern "C" fn _sbrk(_incr: i32) -> *mut u8 {
 fn panic(info: &PanicInfo) -> ! {
     match info.message().as_str() {
         Some(e) => {
+            log_c_str(c"panic called, message:");
             let bytes: Vec<_> = e.bytes().collect::<Vec<_>>();
             let str = CString::new(bytes).unwrap_or(CString::from(c"failed"));
-            log_c_str(c"panic called, message:");
             log_c_str(str.as_c_str());
         }
         None => {

@@ -88,6 +88,16 @@ impl TextLayer {
         });
     }
 
+    pub fn set_text_bytes(&mut self, text: &[u8]) {
+        self.inner_mut(|inner| {
+            inner.text_vec.clear();
+            inner.text_vec.reserve(text.len() + 1);
+            inner.text_vec.extend(text);
+            inner.text_vec.push(0);
+            unsafe { sys::text_layer_set_text(inner.raw.as_ptr(), inner.text_vec.as_ptr()) };
+        });
+    }
+
     pub fn set_text_c_str(&mut self, text: &'static CStr) {
         self.inner_mut(|inner| {
             unsafe { sys::text_layer_set_text(inner.raw.as_ptr(), text.as_ptr()) };

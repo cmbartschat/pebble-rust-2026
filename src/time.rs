@@ -1,8 +1,8 @@
-use core::ptr::null_mut;
+use core::{ptr::null_mut, str::FromStr};
 
-use alloc::ffi::CString;
+use alloc::{borrow::ToOwned, ffi::CString};
 
-use crate::sys;
+use crate::{log::log_c_str, sys};
 
 pub struct Time {
     value: sys::time_t,
@@ -10,10 +10,11 @@ pub struct Time {
 
 impl Time {
     pub fn now() -> Self {
+        let mut res = Self { value: 0 };
         unsafe {
-            let value: sys::time_t = sys::time(null_mut());
-            Self { value }
+            sys::time(core::ptr::addr_of_mut!(res.value));
         }
+        res
     }
 
     pub fn to_local(&self) -> LocalTime {
@@ -48,22 +49,25 @@ impl LocalTime {
     }
 
     pub fn to_string(&self) -> CString {
-        let mut buffer = [0; 50];
-        let written = unsafe {
-            sys::strftime(
-                buffer.as_mut_ptr(),
-                buffer.len(),
-                if sys::clock_is_24h_style() {
-                    c"%H:%M".as_ptr()
-                } else {
-                    c"%I:%M".as_ptr()
-                },
-                &self.value,
-            )
-        };
-        if written == 0 {
-            panic!("Time overflowed buffer");
-        }
-        CString::new(&buffer[0..written]).unwrap()
+        // let mut buffer = [0; 10];
+        // let written = unsafe {
+        //     sys::strftime(
+        //         buffer.as_mut_ptr(),
+        //         buffer.len(),
+        //         if sys::clock_is_24h_style() {
+        //             c"%H:%M".as_ptr()
+        //         } else {
+        //             c"%I:%M".as_ptr()
+        //         },
+        //         &self.value,
+        //     )
+        // };
+        // if written == 0 {
+        //     log_c_str(c"LocalTime::to_string failed to write");
+        //     panic!("Time overflowed buffer");
+        // }
+        // CString::new(&buffer[0..written]).unwrap()
+        // CString::from_str("ti:me").unwrap()
+        c"tii:mme".to_owned()
     }
 }
