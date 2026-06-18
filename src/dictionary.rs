@@ -2,7 +2,7 @@ use core::{ffi::CStr, marker::PhantomData, ptr::NonNull};
 
 use alloc::slice;
 
-use crate::sys;
+use crate::{key::MessageKey, sys};
 
 #[derive(Debug)]
 pub enum DictionaryWriteError {
@@ -148,8 +148,8 @@ impl DictionaryView {
         })
     }
 
-    pub fn get(&self, key: u32) -> Option<Value<'_>> {
-        let next = unsafe { sys::dict_find(self.raw.as_ptr(), key) };
+    pub fn get(&self, key: MessageKey) -> Option<Value<'_>> {
+        let next = unsafe { sys::dict_find(self.raw.as_ptr(), *key) };
         Tuple::from_raw(next).map(|e| e.value())
     }
 
@@ -173,33 +173,33 @@ impl DictionaryBuilder {
         })
     }
 
-    pub fn write_bytes(&mut self, key: u32, value: &[u8]) -> DictionaryWriteResult {
+    pub fn write_bytes(&mut self, key: MessageKey, value: &[u8]) -> DictionaryWriteResult {
         let Ok(size) = u16::try_from(value.len()) else {
             return Err(DictionaryWriteError::InvalidArgs);
         };
         to_write_result(unsafe {
-            sys::dict_write_data(self.raw.as_ptr(), key, value.as_ptr(), size)
+            sys::dict_write_data(self.raw.as_ptr(), *key, value.as_ptr(), size)
         })
     }
-    pub fn write_cstr(&mut self, key: u32, value: &CStr) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_cstring(self.raw.as_ptr(), key, value.as_ptr()) })
+    pub fn write_cstr(&mut self, key: MessageKey, value: &CStr) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_cstring(self.raw.as_ptr(), *key, value.as_ptr()) })
     }
-    pub fn write_u8(&mut self, key: u32, value: u8) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_uint8(self.raw.as_ptr(), key, value) })
+    pub fn write_u8(&mut self, key: MessageKey, value: u8) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_uint8(self.raw.as_ptr(), *key, value) })
     }
-    pub fn write_u16(&mut self, key: u32, value: u16) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_uint16(self.raw.as_ptr(), key, value) })
+    pub fn write_u16(&mut self, key: MessageKey, value: u16) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_uint16(self.raw.as_ptr(), *key, value) })
     }
-    pub fn write_u32(&mut self, key: u32, value: u32) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_uint32(self.raw.as_ptr(), key, value) })
+    pub fn write_u32(&mut self, key: MessageKey, value: u32) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_uint32(self.raw.as_ptr(), *key, value) })
     }
-    pub fn write_i8(&mut self, key: u32, value: i8) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_int8(self.raw.as_ptr(), key, value) })
+    pub fn write_i8(&mut self, key: MessageKey, value: i8) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_int8(self.raw.as_ptr(), *key, value) })
     }
-    pub fn write_i16(&mut self, key: u32, value: i16) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_int16(self.raw.as_ptr(), key, value) })
+    pub fn write_i16(&mut self, key: MessageKey, value: i16) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_int16(self.raw.as_ptr(), *key, value) })
     }
-    pub fn write_i32(&mut self, key: u32, value: i32) -> DictionaryWriteResult {
-        to_write_result(unsafe { sys::dict_write_int32(self.raw.as_ptr(), key, value) })
+    pub fn write_i32(&mut self, key: MessageKey, value: i32) -> DictionaryWriteResult {
+        to_write_result(unsafe { sys::dict_write_int32(self.raw.as_ptr(), *key, value) })
     }
 }

@@ -13,6 +13,7 @@ mod custom_alloc;
 mod dictionary;
 mod font;
 mod globals;
+mod key;
 mod layer;
 pub mod log;
 mod persist;

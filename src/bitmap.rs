@@ -7,6 +7,7 @@ use alloc::rc::Rc;
 
 use crate::{
     GRect, GSize,
+    key::ResourceId,
     sys::{self, GBitmapFormat},
 };
 
@@ -55,8 +56,8 @@ gbitmap_destroy
 */
 
 impl Bitmap {
-    pub fn from_resource(resource_id: u32) -> Option<Self> {
-        unsafe { Self::from_ptr(sys::gbitmap_create_with_resource(resource_id)) }
+    pub fn from_resource(resource_id: ResourceId) -> Option<Self> {
+        unsafe { Self::from_ptr(sys::gbitmap_create_with_resource(*resource_id)) }
     }
 
     pub fn new_empty(size: GSize, format: GBitmapFormat) -> Option<Self> {

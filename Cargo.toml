@@ -12,6 +12,7 @@ bench = false
 [dependencies]
 critical-section = "1.2.0"
 cortex-m = { version = "0.7.6", features = ["critical-section-single-core"] }
+proc = { path = "./proc/" }
 
 [build-dependencies]
 bindgen = "0.72.1"

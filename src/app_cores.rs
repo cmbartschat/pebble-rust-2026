@@ -8,6 +8,10 @@ use crate::{
     sys::{GTextAlignment_GTextAlignmentRight, TimeUnits_MINUTE_UNIT},
 };
 
+proc::resource_ids!(resource_ids);
+
+proc::message_keys!(message_keys);
+
 extern crate alloc;
 
 struct Core {
@@ -50,11 +54,6 @@ fn write_number(data: &mut Vec<u8>, mut d: u32) {
 fn write_number_to_layer(layer: &mut TextLayer, v: u32) {
     let mut str = Vec::with_capacity(16);
 
-    // write!(&mut str, "{}", v).unwrap();
-
-    // let mut data = Vec::with_capacity(16);
-    // write_number(&mut data, v);
-
     if v >= 10_000_000 {
         str.extend_from_slice(b">10M");
     } else if v >= 1000 * 1000 {
@@ -74,49 +73,11 @@ fn write_number_to_layer(layer: &mut TextLayer, v: u32) {
         write_number(&mut str, v)
     }
 
-    // if false {
-    //     if v > 10_000_000 {
-    //         str.push_str(">10M");
-    //     } else if v > 1_000_000 {
-    //         str.push_str("1-10M");
-    //     } else if v > 100_000 {
-    //         str.push_str("100K-1M");
-    //     } else if v > 10_000 {
-    //         str.push_str("10K-100K");
-    //     } else if v > 1_000 {
-    //         str.push_str("1K-10K");
-    //     } else {
-    //         str.push_str("<1K");
-    //     }
-    // } else if false {
-    //     if v >= 10_000_000 {
-    //         // write!(&mut str, "{}", v / 1_000_000).unwrap();
-    //         // str.push('M');
-    //         str.push_str(">10M");
-    //     } else if v >= 1000 * 1000 {
-    //         write_digit(&mut str, v / 1_000_000);
-    //         write!(&mut str, "{}", v / 1_000_000).unwrap();
-    //         str.push('.');
-    //         write!(&mut str, "{}", (v % 1_000_000) / 100_1000).unwrap();
-    //         str.push('M');
-    //     } else if v >= 10_000 {
-    //         write!(&mut str, "{}", v / 1_000).unwrap();
-    //         str.push('K');
-    //     } else if v >= 1000 {
-    //         write!(&mut str, "{}", v / 1_000).unwrap();
-    //         str.push('.');
-    //         write!(&mut str, "{}", (v % 1_000) / 100).unwrap();
-    //         str.push('K');
-    //     } else {
-    //         write!(&mut str, "{}", v).unwrap();
-    //     }
-    // }
-
     layer.set_text_bytes(&str);
 }
 
 pub fn run_cores() {
-    let sprites = Bitmap::from_resource(1).unwrap();
+    let sprites = Bitmap::from_resource(resource_ids::SPRITES).unwrap();
     let core_sprites = (0..8)
         .map(|i| {
             (
@@ -178,12 +139,6 @@ pub fn run_cores() {
             }
         }
 
-        // cycle_layer.set_alignment(GTextAlignment_GTextAlignmentLeft);
-
-        // log_c_str(c"setting alignment");
-        // cycle_layer.set_alignment(2);
-        // log_c_str(c"set alignment");
-
         state.cores.iter_mut().for_each(|c| {
             let sprite = if state.status == Status::Loaded {
                 if c.level < 7 && c.broken {
@@ -218,7 +173,7 @@ pub fn run_cores() {
 
     APP.set_message_handler(move |d| {
         log_c_str(c"got message");
-        match d.get(10003) {
+        match d.get(message_keys::TYPE) {
             Some(Value::CStr(t)) if *t == c"RESET" => {
                 log_c_str(c"received reset");
 
@@ -227,12 +182,14 @@ pub fn run_cores() {
                 update(&mut state);
             }
             Some(Value::CStr(t)) if *t == c"STATE" => {
-                if let Some((level_data, broken_data)) = match (d.get(10004), d.get(10005)) {
-                    (Some(Value::Bytes(level_value)), Some(Value::Bytes(broken_value))) => {
-                        Some((level_value, broken_value))
+                if let Some((level_data, broken_data)) =
+                    match (d.get(message_keys::LEVELS), d.get(message_keys::BROKEN)) {
+                        (Some(Value::Bytes(level_value)), Some(Value::Bytes(broken_value))) => {
+                            Some((level_value, broken_value))
+                        }
+                        _ => None,
                     }
-                    _ => None,
-                } {
+                {
                     log_c_str(c"received valid state");
                     let mut state = state.borrow_mut();
                     state.status = Status::Loaded;
@@ -244,7 +201,7 @@ pub fn run_cores() {
                         state.cores[i].broken = *broken != 0;
                     });
 
-                    if let Some(cycles) = d.get(10006).and_then(|f| f.as_u32()) {
+                    if let Some(cycles) = d.get(message_keys::CYCLES).and_then(|f| f.as_u32()) {
                         state.cycles = cycles;
                     }
 
@@ -263,7 +220,7 @@ pub fn run_cores() {
     let request_update = || {
         log_c_str(c"requesting update");
         APP.send_message(|b| {
-            b.write_cstr(10003, c"REFRESH")?;
+            b.write_cstr(message_keys::TYPE, c"REFRESH")?;
             Ok(())
         })
         .is_ok()
