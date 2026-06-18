@@ -1,5 +1,5 @@
 [package]
-name = "pebble-rust-2026"
+name = "pebble_rust_2026"
 version = "0.1.0"
 edition = "2024"
 
@@ -10,8 +10,6 @@ doctest = false
 bench = false
 
 [dependencies]
-critical-section = "1.2.0"
-cortex-m = { version = "0.7.6", features = ["critical-section-single-core"] }
 proc = { path = "./proc/" }
 
 [build-dependencies]
@@ -20,7 +18,7 @@ bindgen = "0.72.1"
 [profile.release]
 panic = "abort"
 debug = true
-opt-level = 2   # or "s" for size
+opt-level = 2
 
 
 [profile.dev]

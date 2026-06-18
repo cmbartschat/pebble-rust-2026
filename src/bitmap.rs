@@ -1,7 +1,4 @@
-use core::{
-    cell::RefCell,
-    ptr::{NonNull, slice_from_raw_parts_mut},
-};
+use core::{cell::RefCell, ptr::NonNull};
 
 use alloc::rc::Rc;
 
@@ -85,23 +82,6 @@ impl Bitmap {
         };
         inner.parent = Some(self.clone());
         Some(Self::from_inner(inner))
-    }
-
-    pub fn get_data(&mut self) -> Result<&mut [u8], ()> {
-        unsafe {
-            let ptr = self.handle.borrow_mut().raw.as_ptr();
-            let bytes_per_row = sys::gbitmap_get_bytes_per_row(ptr) as usize;
-            let rows = sys::gbitmap_get_bounds(ptr).size.h as usize;
-            let len = bytes_per_row * rows;
-            let data = sys::gbitmap_get_data(ptr);
-            if data.is_null() {
-                return Err(());
-            }
-            match slice_from_raw_parts_mut(data, len).as_mut() {
-                Some(e) => Ok(e),
-                None => Err(()),
-            }
-        }
     }
 
     pub fn get_bounds(&self) -> GRect {
