@@ -1,45 +1,46 @@
 use core::ffi::c_void;
 
-use crate::sys;
+use crate::{key::MessageKey, sys};
 
 pub struct Persist;
 
 impl Persist {
-    pub fn write_bool(&self, key: u32, value: bool) {
+    pub fn write_bool(&self, key: MessageKey, value: bool) {
         unsafe {
-            sys::persist_write_bool(key, value);
+            sys::persist_write_bool(*key, value);
         }
     }
-    pub fn read_bool(&self, key: u32) -> Option<bool> {
+    pub fn read_bool(&self, key: MessageKey) -> Option<bool> {
         unsafe {
-            if !sys::persist_exists(key) {
+            if !sys::persist_exists(*key) {
                 return None;
             }
-            Some(sys::persist_read_bool(key))
+            Some(sys::persist_read_bool(*key))
         }
     }
 
-    pub fn write_int(&self, key: u32, value: i32) {
+    pub fn write_int(&self, key: MessageKey, value: i32) {
         unsafe {
-            sys::persist_write_int(key, value);
+            sys::persist_write_int(*key, value);
         }
     }
-    pub fn read_int(&self, key: u32) -> Option<i32> {
+    pub fn read_int(&self, key: MessageKey) -> Option<i32> {
         unsafe {
-            if !sys::persist_exists(key) {
+            if !sys::persist_exists(*key) {
                 return None;
             }
-            Some(sys::persist_read_int(key))
+            Some(sys::persist_read_int(*key))
         }
     }
 
-    pub fn delete(&self, key: u32) {
-        unsafe { sys::persist_delete(key) };
+    pub fn delete(&self, key: MessageKey) {
+        unsafe { sys::persist_delete(*key) };
     }
 
-    pub fn write_bytes(&self, key: u32, value: &[u8]) -> Result<(), ()> {
+    pub fn write_bytes(&self, key: MessageKey, value: &[u8]) -> Result<(), ()> {
         unsafe {
-            let result = sys::persist_write_data(key, value.as_ptr() as *const c_void, value.len());
+            let result =
+                sys::persist_write_data(*key, value.as_ptr() as *const c_void, value.len());
             if result < 0 {
                 todo!();
             }
@@ -48,14 +49,14 @@ impl Persist {
     }
     pub fn read_bytes<'a>(
         &self,
-        key: u32,
+        key: MessageKey,
         target: &'a mut [u8],
     ) -> Result<Option<&'a mut [u8]>, ()> {
         unsafe {
-            if !sys::persist_exists(key) {
+            if !sys::persist_exists(*key) {
                 return Ok(None);
             }
-            let result = sys::persist_read_data(key, target.as_ptr() as *mut c_void, target.len());
+            let result = sys::persist_read_data(*key, target.as_ptr() as *mut c_void, target.len());
             if result < 0 {
                 todo!();
             }
