@@ -6,13 +6,13 @@ fn main() {
     let home = std::env::var("HOME").unwrap();
     let sdk_root = format!("{home}/Library/Application Support/Pebble SDK/SDKs/4.9.169");
     let bindings = bindgen::Builder::default()
-        .header("wrapper.h")
+        .header("headers/entry.h")
         .clang_arg(format!("-I{sdk_root}/sdk-core/pebble/emery/include"))
         .clang_arg(format!(
             "--sysroot={sdk_root}/toolchain/arm-none-eabi/arm-none-eabi"
         ))
         .clang_arg("-D_TIME_H_")
-        .clang_arg("-I/Users/cmb/repo/pebble-rust-2026")
+        .clang_arg("-Iheaders")
         .clang_arg("--target=thumbv8m.main-none-eabi")
         .use_core()
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
