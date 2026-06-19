@@ -1,6 +1,6 @@
 use proc_macro2::Span;
 use quote::{format_ident, quote};
-use std::{collections::HashSet, path::PathBuf, str::FromStr};
+use std::{collections::HashSet, io::ErrorKind, path::PathBuf};
 
 #[derive(serde::Deserialize)]
 struct Resource {
@@ -24,10 +24,23 @@ struct Package {
     pebble: Option<Pebble>,
 }
 
-fn load_package() -> Package {
-    let path = PathBuf::from_str("/Users/cmb/repo/pebble-rust-app/package.json").unwrap();
-    let data = std::fs::read_to_string(&path).unwrap();
-    serde_json::from_str(&data).unwrap()
+fn load_package(relative_to: PathBuf) -> Package {
+    let mut folder = relative_to.parent();
+    while let Some(f) = folder {
+        let mut path = PathBuf::from(f);
+        path.push("package.json");
+        match std::fs::read_to_string(path) {
+            Ok(data) => return serde_json::from_str(&data).expect("Invalid package.json"),
+            Err(e) => {
+                if e.kind() != ErrorKind::NotFound {
+                    panic!("Unexpected error locating package.json")
+                }
+            }
+        };
+        folder = f.parent();
+    }
+
+    panic!("Unable to find package.json for resource_ids/message_keys");
 }
 
 #[proc_macro]
@@ -40,7 +53,12 @@ pub fn resource_ids(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
         .into();
     };
 
-    let package = load_package();
+    let package = load_package(
+        ident
+            .span()
+            .local_file()
+            .expect("Unexpected call to resource_ids"),
+    );
 
     let resources = package
         .pebble
@@ -95,7 +113,12 @@ pub fn message_keys(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
         .into();
     };
 
-    let package = load_package();
+    let package = load_package(
+        ident
+            .span()
+            .local_file()
+            .expect("Unexpected call to message_keys"),
+    );
 
     let message_keys = package
         .pebble
