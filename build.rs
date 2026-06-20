@@ -3,13 +3,21 @@ use std::io::Write as _;
 use std::path::PathBuf;
 
 fn main() {
-    let home = std::env::var("HOME").unwrap();
-    let sdk_root = format!("{home}/Library/Application Support/Pebble SDK/SDKs/4.9.169");
+    let include_path = String::from_utf8(
+        std::process::Command::new("pebble")
+            .args(["sdk", "include-path", "emery"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+
     let bindings = bindgen::Builder::default()
         .header("headers/entry.h")
-        .clang_arg(format!("-I{sdk_root}/sdk-core/pebble/emery/include"))
+        .clang_arg(format!("-I{}", include_path.trim_ascii()))
         .clang_arg(format!(
-            "--sysroot={sdk_root}/toolchain/arm-none-eabi/arm-none-eabi"
+            "--sysroot={}/../../../../toolchain/arm-none-eabi/arm-none-eabi",
+            include_path.trim_ascii()
         ))
         .clang_arg("-D_TIME_H_")
         .clang_arg("-Iheaders")
