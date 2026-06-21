@@ -1,0 +1,137 @@
+use core::{ffi::c_void, ptr::NonNull};
+
+use alloc::boxed::Box;
+
+use crate::{
+    APP, log_c_str,
+    sys::{self, window_destroy},
+};
+
+type Callback = Box<dyn FnMut() + 'static>;
+
+pub(crate) struct WindowUserData {
+    pub(crate) load_handler: Option<Callback>,
+    pub(crate) appear_handler: Option<Callback>,
+    pub(crate) disappear_handler: Option<Callback>,
+    pub(crate) unload_handler: Option<Callback>,
+}
+
+pub(crate) struct WindowRaw {
+    raw: NonNull<sys::Window>,
+}
+
+impl Drop for WindowRaw {
+    fn drop(&mut self) {
+        log_c_str(c"destroying window");
+        unsafe { window_destroy(self.raw.as_ptr()) };
+    }
+}
+
+impl WindowRaw {
+    pub fn new() -> Option<Self> {
+        let window = unsafe { sys::window_create() };
+
+        let res = Self {
+            raw: NonNull::new(window)?,
+        };
+
+        let handlers = sys::WindowHandlers {
+            load: Some(global_handle_load),
+            appear: Some(global_handle_appear),
+            disappear: Some(global_handle_disappear),
+            unload: Some(global_handle_unload),
+        };
+        unsafe { sys::window_set_window_handlers(window, handlers) };
+
+        Some(res)
+    }
+
+    fn as_ptr_mut(&mut self) -> *mut sys::Window {
+        self.raw.as_ptr()
+    }
+
+    fn as_ptr(&self) -> *const sys::Window {
+        self.raw.as_ptr()
+    }
+
+    pub fn set_background_color(&mut self, color: sys::GColor) {
+        unsafe { sys::window_set_background_color(self.as_ptr_mut(), color) };
+    }
+
+    pub(crate) unsafe fn get_root_layer(&self) -> *mut sys::Layer {
+        unsafe { sys::window_get_root_layer(self.as_ptr()) }
+    }
+
+    pub(crate) fn stack_push(&mut self, animated: bool) {
+        unsafe { sys::window_stack_push(self.as_ptr_mut(), animated) };
+    }
+
+    pub(crate) fn stack_remove(&mut self, animated: bool) {
+        unsafe { sys::window_stack_remove(self.as_ptr_mut(), animated) };
+    }
+
+    pub unsafe fn set_user_data(&mut self, data: *mut WindowUserData) {
+        unsafe { sys::window_set_user_data(self.as_ptr_mut(), data as *mut c_void) };
+    }
+
+    pub(crate) fn is_equal(&self, other: *const sys::Window) -> bool {
+        self.as_ptr() == other
+    }
+}
+
+extern "C" fn global_handle_load(window: *mut sys::Window) {
+    unsafe {
+        let void_ptr = sys::window_get_user_data(window);
+        let user_data_ptr = void_ptr as *mut WindowUserData;
+        let Some(data) = user_data_ptr.as_mut() else {
+            panic!("Window does not have a user data");
+        };
+        let Some(handler) = data.load_handler.as_mut() else {
+            return;
+        };
+        handler();
+    }
+}
+
+extern "C" fn global_handle_appear(window: *mut sys::Window) {
+    unsafe {
+        let void_ptr = sys::window_get_user_data(window);
+        let user_data_ptr = void_ptr as *mut WindowUserData;
+        let Some(data) = user_data_ptr.as_mut() else {
+            panic!("Window does not have a user data");
+        };
+        let Some(handler) = data.appear_handler.as_mut() else {
+            return;
+        };
+        handler();
+    }
+}
+
+extern "C" fn global_handle_disappear(window: *mut sys::Window) {
+    unsafe {
+        let void_ptr = sys::window_get_user_data(window);
+        let user_data_ptr = void_ptr as *mut WindowUserData;
+        let Some(data) = user_data_ptr.as_mut() else {
+            panic!("Window does not have a user data");
+        };
+        let Some(handler) = data.disappear_handler.as_mut() else {
+            return;
+        };
+        handler();
+    }
+}
+
+extern "C" fn global_handle_unload(window: *mut sys::Window) {
+    unsafe {
+        let void_ptr = sys::window_get_user_data(window);
+        let user_data_ptr = void_ptr as *mut WindowUserData;
+        APP.notify_unload(window);
+        let Some(data) = user_data_ptr.as_mut() else {
+            panic!("Window does not have a user data");
+        };
+        let Some(handler) = data.load_handler.as_mut() else {
+            return;
+        };
+        handler();
+    }
+}

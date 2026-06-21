@@ -4,15 +4,15 @@ use core::{
     ptr::null_mut,
 };
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 
 use crate::{
+    Window,
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
     log::log_c_str,
     persist::Persist,
     sys::{self},
-    window::Window,
 };
 
 type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static>>;
@@ -20,6 +20,7 @@ type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static
 pub struct AppState {
     timer_callback: Option<Box<dyn FnMut() + 'static>>,
     inbox_received_callback: InboxReceivedCallback,
+    visible_windows: Vec<Window>,
 }
 
 pub struct App {
@@ -31,6 +32,7 @@ pub static APP: App = App { persist: Persist };
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
     timer_callback: None,
     inbox_received_callback: None,
+    visible_windows: Vec::new(),
 });
 
 extern "C" fn global_message_handler(
@@ -110,12 +112,6 @@ extern "C" fn global_outbox_sent_handler(
 }
 
 impl App {
-    pub fn show_window(&self, window: &Window) {
-        unsafe { sys::window_stack_push(window.raw.as_ptr(), true) };
-    }
-    pub fn show_window_immediate(&self, window: &Window) {
-        unsafe { sys::window_stack_push(window.raw.as_ptr(), false) };
-    }
     pub fn event_loop(&self) {
         unsafe { sys::app_event_loop() };
     }
@@ -212,6 +208,43 @@ impl App {
             app_message_result_from_raw(sys::app_message_outbox_send())?;
         }
         Ok(())
+    }
+
+    fn show_inner(&self, window: Window, animated: bool) {
+        unsafe {
+            with_state(|state| {
+                window.handle.borrow_mut().stack_push(animated);
+                state.visible_windows.push(window.retain());
+            });
+        }
+    }
+
+    pub fn show(&self, window: Window) {
+        self.show_inner(window, true);
+    }
+
+    pub fn show_immediate(&self, window: Window) {
+        self.show_inner(window, false);
+    }
+
+    fn hide_inner(&self, window: Window, animated: bool) {
+        window.handle.borrow_mut().stack_remove(animated);
+    }
+
+    pub fn hide(&self, window: Window) {
+        self.hide_inner(window, true);
+    }
+
+    pub fn hide_immediate(&self, window: Window) {
+        self.hide_inner(window, false);
+    }
+
+    pub(crate) fn notify_unload(&self, window: *const sys::Window) {
+        unsafe {
+            with_state(|state| {
+                state.visible_windows.retain(|f| !f.is_equal(window));
+            })
+        }
     }
 }
 

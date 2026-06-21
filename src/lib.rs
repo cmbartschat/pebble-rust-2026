@@ -12,6 +12,7 @@ mod custom_alloc;
 mod dictionary;
 mod font;
 mod globals;
+mod handle;
 mod key;
 mod layer;
 mod log;

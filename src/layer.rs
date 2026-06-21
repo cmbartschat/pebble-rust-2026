@@ -9,6 +9,7 @@ use alloc::{
 use crate::{
     color::GCOLOR_BLACK,
     context::GContext,
+    handle::Handle,
     log::log_c_str,
     sys::{self, GRect},
 };
@@ -48,7 +49,7 @@ impl LayerInner {
 
 #[derive(Clone)]
 pub struct Layer {
-    pub(crate) handle: Rc<RefCell<LayerInner>>,
+    pub(crate) handle: Handle<LayerInner>,
 }
 
 impl ChildLayer for Layer {
