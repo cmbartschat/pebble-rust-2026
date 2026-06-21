@@ -61,9 +61,7 @@ impl Timer {
         frequency: Duration,
         mut user_callback: impl FnMut() -> bool + 'static,
     ) -> Option<Self> {
-        log_c_str(c"repeat");
         let update_loop_ref = Rc::new(RefCell::<Box<dyn FnMut()>>::new(Box::new(|| {})));
-        log_c_str(c"constructed update_loop_ref");
 
         let res = Self {
             handle: Rc::new(RefCell::new(None)),
@@ -85,11 +83,9 @@ impl Timer {
                 log_c_str(c"repeating timer failed to schedule");
             }
         });
-        log_c_str(c"defined update");
 
         {
             *update_loop_ref.borrow_mut() = update;
-            log_c_str(c"stored update");
         }
 
         res.handle
@@ -97,8 +93,6 @@ impl Timer {
             .replace(Timer::once_inner(frequency, move || {
                 update_loop_ref.borrow_mut()();
             })?);
-
-        log_c_str(c"started timer");
 
         Some(res)
     }
