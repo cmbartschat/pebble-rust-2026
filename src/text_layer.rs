@@ -122,4 +122,16 @@ impl TextLayer {
             unsafe { sys::text_layer_set_text_alignment(inner.raw.as_ptr(), alignment) };
         });
     }
+
+    pub fn set_bounds(&mut self, bounds: GRect) {
+        self.inner_mut(|inner| {
+            inner.base_layer.set_bounds(bounds);
+        });
+    }
+
+    pub fn set_frame(&mut self, frame: GRect) {
+        self.inner_mut(|inner| {
+            inner.base_layer.set_frame(frame);
+        });
+    }
 }

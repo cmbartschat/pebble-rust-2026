@@ -142,4 +142,12 @@ impl Layer {
     unsafe fn as_ptr(&self) -> *mut sys::Layer {
         self.handle.borrow_mut().raw.as_ptr()
     }
+
+    pub(crate) fn get_bounds(&self) -> GRect {
+        unsafe { sys::layer_get_bounds(self.as_ptr()) }
+    }
+
+    pub(crate) fn set_frame(&mut self, frame: GRect) {
+        unsafe { sys::layer_set_frame(self.as_ptr(), frame) }
+    }
 }

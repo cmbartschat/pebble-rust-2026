@@ -3,8 +3,9 @@ use core::pin::Pin;
 use alloc::boxed::Box;
 
 use crate::{
-    Layer,
+    ClickConfigBuilder, GRect, Layer,
     handle::new_handle,
+    input::context::InputContext,
     layer::{ChildLayer, LayerInner},
     sys::{self},
     window::raw::{WindowRaw, WindowUserData},
@@ -16,6 +17,7 @@ pub struct WindowInner {
     // window itself
     raw: super::raw::WindowRaw,
     user_data: Pin<Box<WindowUserData>>,
+    input_context: Pin<Box<InputContext>>,
 }
 
 impl WindowInner {
@@ -30,12 +32,15 @@ impl WindowInner {
             unload_handler: None,
         });
 
+        let input_context = Box::pin(InputContext::default());
+
         let mut res = WindowInner {
             root_layer: Layer {
                 handle: new_handle(layer),
             },
             raw,
             user_data,
+            input_context,
         };
 
         unsafe {
@@ -99,5 +104,22 @@ impl WindowInner {
 
     pub(crate) fn stack_remove(&mut self, animated: bool) {
         self.raw.stack_remove(animated);
+    }
+
+    fn reset_input_handler(&mut self) {
+        unsafe {
+            let input_context: &mut InputContext = &mut self.input_context;
+            self.raw
+                .set_click_context(input_context as *mut InputContext)
+        };
+    }
+
+    pub fn set_click_provider(&mut self, configure: impl Fn(&mut ClickConfigBuilder) + 'static) {
+        self.input_context.configure_click = Some(Box::new(configure));
+        self.reset_input_handler();
+    }
+
+    pub fn get_bounds(&self) -> GRect {
+        self.root_layer.get_bounds()
     }
 }

@@ -1,6 +1,7 @@
 use alloc::rc::Rc;
 
 use crate::{
+    ClickConfigBuilder, GRect,
     handle::{Handle, WeakHandle, new_handle},
     layer::ChildLayer,
     sys::{self},
@@ -73,6 +74,14 @@ impl Window {
 
     pub fn clear_disappear_handler(&mut self) {
         self.handle.borrow_mut().clear_disappear_handler();
+    }
+
+    pub fn set_click_provider(&mut self, builder: impl Fn(&mut ClickConfigBuilder) + 'static) {
+        self.handle.borrow_mut().set_click_provider(builder);
+    }
+
+    pub fn get_bounds(&self) -> GRect {
+        self.handle.borrow().get_bounds()
     }
 }
 

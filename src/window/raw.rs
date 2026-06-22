@@ -3,7 +3,8 @@ use core::{ffi::c_void, ptr::NonNull};
 use alloc::boxed::Box;
 
 use crate::{
-    APP, log_c_str,
+    APP,
+    input::{context::InputContext, handlers::global_click_config_handler},
     sys::{self, window_destroy},
 };
 
@@ -22,7 +23,6 @@ pub(crate) struct WindowRaw {
 
 impl Drop for WindowRaw {
     fn drop(&mut self) {
-        log_c_str(c"destroying window");
         unsafe { window_destroy(self.raw.as_ptr()) };
     }
 }
@@ -76,6 +76,16 @@ impl WindowRaw {
 
     pub(crate) fn is_equal(&self, other: *const sys::Window) -> bool {
         self.as_ptr() == other
+    }
+
+    pub(crate) unsafe fn set_click_context(&mut self, context: *mut InputContext) {
+        unsafe {
+            sys::window_set_click_config_provider_with_context(
+                self.as_ptr_mut(),
+                Some(global_click_config_handler),
+                context as *mut c_void,
+            );
+        }
     }
 }
 
