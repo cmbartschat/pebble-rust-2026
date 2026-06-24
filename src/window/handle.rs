@@ -3,6 +3,7 @@ use alloc::rc::Rc;
 use crate::{
     ClickConfigBuilder, GRect,
     handle::{Handle, WeakHandle, new_handle},
+    input::context::InputReceiver,
     layer::ChildLayer,
     sys::{self},
     window::inner::WindowInner,
@@ -82,6 +83,14 @@ impl Window {
 
     pub fn get_bounds(&self) -> GRect {
         self.handle.borrow().get_bounds()
+    }
+
+    pub(crate) fn retain_input_receiver(&mut self, receiver: impl InputReceiver + 'static) {
+        self.handle.borrow_mut().retain_input_receiver(receiver);
+    }
+
+    pub(crate) fn remove_input_receiver(&mut self, receiver: &dyn InputReceiver) {
+        self.handle.borrow_mut().remove_input_receiver(receiver);
     }
 }
 

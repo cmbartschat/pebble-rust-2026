@@ -1,23 +1,29 @@
-use core::pin::Pin;
+use core::{ffi::c_void, pin::Pin};
 
 use alloc::boxed::Box;
 
 use crate::{
     ClickConfigBuilder, GRect, Layer,
     handle::new_handle,
-    input::context::InputContext,
+    input::context::{InputContext, InputReceiver},
     layer::{ChildLayer, LayerInner},
     sys::{self},
     window::raw::{WindowRaw, WindowUserData},
 };
+
+struct ConnectedInput {
+    handle: Box<dyn InputReceiver>,
+}
 
 pub struct WindowInner {
     // incoming references
     root_layer: Layer,
     // window itself
     raw: super::raw::WindowRaw,
+    // referenced by window
     user_data: Pin<Box<WindowUserData>>,
     input_context: Pin<Box<InputContext>>,
+    connected_input: Option<ConnectedInput>,
 }
 
 impl WindowInner {
@@ -35,6 +41,7 @@ impl WindowInner {
         let input_context = Box::pin(InputContext::default());
 
         let mut res = WindowInner {
+            connected_input: None,
             root_layer: Layer {
                 handle: new_handle(layer),
             },
@@ -106,20 +113,47 @@ impl WindowInner {
         self.raw.stack_remove(animated);
     }
 
-    fn reset_input_handler(&mut self) {
-        unsafe {
-            let input_context: &mut InputContext = &mut self.input_context;
-            self.raw
-                .set_click_context(input_context as *mut InputContext)
-        };
+    fn refresh_input_handler(&mut self) {
+        if self.connected_input.is_none() {
+            unsafe {
+                let input_context: &mut InputContext = &mut self.input_context;
+                self.raw
+                    .set_click_context(input_context as *mut InputContext)
+            };
+        }
     }
 
     pub fn set_click_provider(&mut self, configure: impl Fn(&mut ClickConfigBuilder) + 'static) {
         self.input_context.configure_click = Some(Box::new(configure));
-        self.reset_input_handler();
+        self.refresh_input_handler();
     }
 
     pub fn get_bounds(&self) -> GRect {
         self.root_layer.get_bounds()
+    }
+
+    pub(crate) fn retain_input_receiver(&mut self, receiver: impl InputReceiver + 'static) {
+        self.connected_input = Some(ConnectedInput {
+            handle: Box::new(receiver),
+        })
+    }
+
+    pub(crate) fn remove_input_receiver(&mut self, receiver: &dyn InputReceiver) {
+        if self
+            .connected_input
+            .as_ref()
+            .is_some_and(|f| f.handle.get_id() == receiver.get_id())
+        {
+            self.connected_input = None;
+        }
+    }
+
+    pub(crate) fn create_simple_menu_layer(
+        &mut self,
+        frame: GRect,
+        options: &[sys::SimpleMenuSection],
+        context: *mut c_void,
+    ) -> *mut sys::SimpleMenuLayer {
+        self.raw.create_simple_menu_layer(frame, options, context)
     }
 }

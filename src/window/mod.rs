@@ -1,4 +1,4 @@
 mod handle;
 mod inner;
 mod raw;
-pub use handle::Window;
+pub use handle::{WeakWindow, Window};

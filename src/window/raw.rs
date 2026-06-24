@@ -3,7 +3,7 @@ use core::{ffi::c_void, ptr::NonNull};
 use alloc::boxed::Box;
 
 use crate::{
-    APP,
+    APP, GRect,
     input::{context::InputContext, handlers::global_click_config_handler},
     sys::{self, window_destroy},
 };
@@ -85,6 +85,23 @@ impl WindowRaw {
                 Some(global_click_config_handler),
                 context as *mut c_void,
             );
+        }
+    }
+
+    pub(crate) fn create_simple_menu_layer(
+        &mut self,
+        frame: GRect,
+        options: &[sys::SimpleMenuSection],
+        context: *mut c_void,
+    ) -> *mut sys::SimpleMenuLayer {
+        unsafe {
+            sys::simple_menu_layer_create(
+                frame,
+                self.as_ptr_mut(),
+                options.as_ptr(),
+                options.len() as i32,
+                context,
+            )
         }
     }
 }
