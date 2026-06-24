@@ -1,16 +1,9 @@
-use core::{cell::RefCell, ptr::NonNull};
+use core::ptr::NonNull;
 
-use alloc::{
-    boxed::Box,
-    rc::{Rc, Weak},
-    vec::Vec,
-};
+use alloc::{boxed::Box, vec::Vec};
 
 use crate::{
-    color::GCOLOR_BLACK,
-    context::GContext,
-    handle::Handle,
-    log::log_c_str,
+    handle::{Handle, WeakHandle, new_handle},
     sys::{self, GRect},
 };
 
@@ -22,7 +15,7 @@ pub trait ChildLayer {
 
 pub struct LayerInner {
     pub(crate) raw: NonNull<sys::Layer>,
-    parent: Option<Weak<RefCell<LayerInner>>>,
+    parent: Option<WeakHandle<LayerInner>>,
     children: Vec<Box<dyn ChildLayer>>,
     owned: bool,
 }
@@ -53,10 +46,6 @@ pub struct Layer {
 }
 
 impl ChildLayer for Layer {
-    // fn base(&self) -> RefMut<LayerInner> {
-    //     self.handle.borrow_mut()
-    // }
-
     fn remove_from_parent(&self) {
         unsafe { sys::layer_remove_from_parent(self.as_ptr()) };
 
@@ -87,28 +76,13 @@ impl ChildLayer for Layer {
     }
 }
 
-#[unsafe(no_mangle)]
-extern "C" fn global_layer_update_handler(_layer: *mut sys::Layer, ctx: *mut sys::GContext) {
-    log_c_str(c"global_layer_update_handler");
-    let Ok(mut ctx) = GContext::from_raw(ctx) else {
-        return;
-    };
-
-    ctx.set_fill_color(GCOLOR_BLACK);
-    ctx.fill_rect(GRect::new(50, 50, 250, 250));
-}
-
-pub struct LayerCreateFailed;
-
 impl Layer {
-    pub fn new(r: GRect) -> Result<Self, LayerCreateFailed> {
+    pub fn new(r: GRect) -> Option<Self> {
         unsafe {
             let layer = sys::layer_create(r);
-            let Some(handle) = LayerInner::from_ptr(layer, true) else {
-                return Err(LayerCreateFailed);
-            };
-            Ok(Self {
-                handle: Rc::new(RefCell::new(handle)),
+            let handle = LayerInner::from_ptr(layer, true)?;
+            Some(Self {
+                handle: new_handle(handle),
             })
         }
     }

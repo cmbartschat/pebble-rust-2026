@@ -94,13 +94,11 @@ pub struct SimpleMenuItem {
 }
 
 extern "C" fn global_simple_menu_select_handler(index: i32, context: *mut c_void) {
-    log_c_str(c"called select on menu item");
     let context = unsafe { (context as *mut SimpleMenuContext).as_mut() }.unwrap();
     let mut count: i32 = 0;
     for section in context.sections.iter_mut() {
         for item in section.items.iter_mut() {
             if count == index {
-                log_c_str(c"found callback");
                 item.callback.as_mut()();
                 return;
             }

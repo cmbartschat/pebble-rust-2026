@@ -1,16 +1,14 @@
-use core::{cell::RefCell, ffi::CStr, ptr::NonNull};
+use core::{ffi::CStr, ptr::NonNull};
 
 use alloc::{rc::Rc, vec::Vec};
 
 use crate::{
     Layer,
     font::Font,
+    handle::{Handle, new_handle},
     layer::{ChildLayer, LayerInner},
     sys::{self, GColor, GRect, GTextAlignment},
 };
-
-#[derive(Debug)]
-pub struct TextLayerCreateFailed;
 
 struct TextLayerInner {
     raw: NonNull<sys::TextLayer>,
@@ -21,7 +19,7 @@ struct TextLayerInner {
 
 #[derive(Clone)]
 pub struct TextLayer {
-    handle: Rc<RefCell<TextLayerInner>>,
+    handle: Handle<TextLayerInner>,
 }
 
 impl ChildLayer for TextLayer {
@@ -39,29 +37,25 @@ impl ChildLayer for TextLayer {
 }
 
 impl TextLayer {
-    pub fn new(r: GRect) -> Result<Self, TextLayerCreateFailed> {
+    pub fn new(r: GRect) -> Option<Self> {
         unsafe {
-            let Some(raw) = NonNull::new(sys::text_layer_create(r)) else {
-                return Err(TextLayerCreateFailed);
-            };
-            // todo!()
+            let raw = NonNull::new(sys::text_layer_create(r))?;
 
             let base = LayerInner::from_ptr(sys::text_layer_get_layer(raw.as_ptr()), false);
             let Some(base_layer) = base else {
-                // let Some(base_layer) = NonNull::new(sys::text_layer_get_layer(layer)) else {
                 sys::text_layer_destroy(raw.as_ptr());
-                return Err(TextLayerCreateFailed);
+                return None;
             };
 
-            Ok(Self {
-                handle: Rc::new(RefCell::new(TextLayerInner {
+            Some(Self {
+                handle: new_handle(TextLayerInner {
                     raw,
                     base_layer: Layer {
-                        handle: Rc::new(RefCell::new(base_layer)),
+                        handle: new_handle(base_layer),
                     },
                     text_vec: Vec::new(),
                     font: None,
-                })),
+                }),
             })
         }
     }
