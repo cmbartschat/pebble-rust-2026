@@ -156,7 +156,7 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.load_handler.as_mut() else {
+        let Some(handler) = data.unload_handler.as_mut() else {
             return;
         };
         handler();
