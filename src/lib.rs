@@ -2,6 +2,7 @@
 
 extern crate alloc;
 
+mod action_bar_layer;
 mod app;
 mod app_message_result;
 mod bitmap;
@@ -26,6 +27,7 @@ mod time;
 mod timer;
 mod window;
 
+pub use crate::action_bar_layer::{ActionBarLayer, IconLocation};
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
