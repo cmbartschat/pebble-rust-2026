@@ -104,6 +104,10 @@ impl WindowRaw {
             )
         }
     }
+
+    pub(crate) fn add_action_bar_layer(&mut self, layer: *mut sys::ActionBarLayer) {
+        unsafe { sys::action_bar_layer_add_to_window(layer, self.as_ptr_mut()) };
+    }
 }
 
 extern "C" fn global_handle_load(window: *mut sys::Window) {

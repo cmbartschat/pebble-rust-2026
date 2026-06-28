@@ -156,4 +156,8 @@ impl WindowInner {
     ) -> *mut sys::SimpleMenuLayer {
         self.raw.create_simple_menu_layer(frame, options, context)
     }
+
+    pub(crate) fn add_action_bar_layer(&mut self, layer: *mut sys::ActionBarLayer) {
+        self.raw.add_action_bar_layer(layer);
+    }
 }
