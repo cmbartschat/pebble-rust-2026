@@ -77,9 +77,9 @@ impl ChildLayer for Layer {
 }
 
 impl Layer {
-    pub fn new(r: GRect) -> Option<Self> {
+    pub fn new(frame: GRect) -> Option<Self> {
         unsafe {
-            let layer = sys::layer_create(r);
+            let layer = sys::layer_create(frame);
             let handle = LayerInner::from_ptr(layer, true)?;
             Some(Self {
                 handle: new_handle(handle),
@@ -117,11 +117,11 @@ impl Layer {
         self.handle.borrow_mut().raw.as_ptr()
     }
 
-    pub(crate) fn get_bounds(&self) -> GRect {
+    pub fn get_bounds(&self) -> GRect {
         unsafe { sys::layer_get_bounds(self.as_ptr()) }
     }
 
-    pub(crate) fn set_frame(&mut self, frame: GRect) {
+    pub fn set_frame(&mut self, frame: GRect) {
         unsafe { sys::layer_set_frame(self.as_ptr(), frame) }
     }
 }
