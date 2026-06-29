@@ -8,8 +8,8 @@ use crate::{
 };
 
 struct StatusBarLayerInner {
-    raw: NonNull<sys::StatusBarLayer>,
     base_layer: Layer,
+    raw: NonNull<sys::StatusBarLayer>,
 }
 
 #[derive(Clone)]
@@ -100,5 +100,11 @@ impl From<StatusBarSeparatorMode> for c_uint {
                 sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeDotted
             }
         }
+    }
+}
+
+impl Drop for StatusBarLayerInner {
+    fn drop(&mut self) {
+        unsafe { sys::status_bar_layer_destroy(self.raw.as_ptr()) };
     }
 }
