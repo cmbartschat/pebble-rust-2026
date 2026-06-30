@@ -3,6 +3,7 @@
 extern crate alloc;
 
 mod action_bar_layer;
+mod action_menu;
 mod angle;
 mod app;
 mod app_message_result;
@@ -30,6 +31,9 @@ mod timer;
 mod window;
 
 pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
+pub use crate::action_menu::{
+    ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
+};
 pub use crate::angle::Angle;
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
