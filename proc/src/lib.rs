@@ -24,8 +24,10 @@ struct Package {
     pebble: Option<Pebble>,
 }
 
-fn load_package(relative_to: PathBuf) -> Package {
-    let mut folder = relative_to.parent();
+fn load_package() -> Package {
+    let manifest_dir =
+        PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set"));
+    let mut folder = Some(manifest_dir.as_path());
     while let Some(f) = folder {
         let mut path = PathBuf::from(f);
         path.push("package.json");
@@ -53,12 +55,7 @@ pub fn resource_ids(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
         .into();
     };
 
-    let package = load_package(
-        ident
-            .span()
-            .local_file()
-            .expect("Unexpected call to resource_ids"),
-    );
+    let package = load_package();
 
     let resources = package
         .pebble
@@ -113,12 +110,7 @@ pub fn message_keys(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
         .into();
     };
 
-    let package = load_package(
-        ident
-            .span()
-            .local_file()
-            .expect("Unexpected call to message_keys"),
-    );
+    let package = load_package();
 
     let message_keys = package
         .pebble
