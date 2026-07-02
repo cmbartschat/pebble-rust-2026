@@ -85,3 +85,36 @@ impl Ratio {
         (self.value * factor) / (sys::TRIG_MAX_RATIO as i32)
     }
 }
+
+mod sys_math {
+    unsafe extern "C" {
+        pub fn rand() -> u32;
+        pub fn srand(_: u32);
+    }
+}
+
+pub struct Random {
+    value: u32,
+}
+
+impl Random {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        let value = unsafe { sys_math::rand() };
+        Self { value }
+    }
+
+    pub fn seed(seed: u32) {
+        unsafe { sys_math::srand(seed) }
+    }
+
+    pub fn uniform(&self, range: u32) -> u32 {
+        self.value % range
+    }
+}
+
+impl From<Random> for u32 {
+    fn from(value: Random) -> Self {
+        value.value
+    }
+}
