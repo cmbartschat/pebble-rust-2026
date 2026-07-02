@@ -56,7 +56,8 @@ impl From<ActionMenuChildLevel> for ActionMenuItem {
 }
 
 pub struct ActionMenuLevel {
-    items: Vec<ActionMenuItem>, // raw: NonNull<sys::ActionMenuLevel>,
+    items: Vec<ActionMenuItem>,
+    display_mode: ActionMenuLevelDisplayMode,
 }
 
 impl Default for ActionMenuLevel {
@@ -67,7 +68,14 @@ impl Default for ActionMenuLevel {
 
 impl ActionMenuLevel {
     pub fn new() -> Self {
-        Self { items: Vec::new() }
+        Self {
+            items: Vec::new(),
+            display_mode: ActionMenuLevelDisplayMode::Wide,
+        }
+    }
+
+    pub fn set_display_mode(&mut self, mode: ActionMenuLevelDisplayMode) {
+        self.display_mode = mode;
     }
 
     pub fn add_child(&mut self, label: &str, child: Self) {
@@ -88,7 +96,7 @@ impl ActionMenuLevel {
 
     pub(crate) unsafe fn as_raw(&self) -> *mut sys::ActionMenuLevel {
         let level = unsafe { sys::action_menu_level_create(self.items.len() as u16) };
-
+        unsafe { sys::action_menu_level_set_display_mode(level, self.display_mode.into()) };
         for item in self.items.iter() {
             match item {
                 ActionMenuItem::ChildLevel(child) => unsafe {
