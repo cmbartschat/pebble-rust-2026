@@ -236,7 +236,7 @@ impl SimpleMenuLayer {
     }
 
     pub fn detach(&mut self) {
-        let mut inner = self.handle.borrow_mut();
+        let inner = self.handle.borrow_mut();
         inner.base_layer.remove_from_parent();
         if let Some(mut window) = inner.window.upgrade() {
             window.remove_input_receiver(self)

@@ -105,7 +105,7 @@ impl WeakWindow {
             handle: Rc::downgrade(&window.handle),
         }
     }
-    pub fn upgrade(&mut self) -> Option<Window> {
+    pub fn upgrade(&self) -> Option<Window> {
         Some(Window {
             handle: self.handle.upgrade()?,
         })

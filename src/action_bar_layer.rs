@@ -78,7 +78,7 @@ impl ActionBarLayer {
         let extra = self.clone();
         self.inner_mut(|inner| unsafe {
             sys::action_bar_layer_remove_from_window(inner.raw.as_ptr());
-            if let Some(mut window) = inner.attached_window.take().and_then(|mut e| e.upgrade()) {
+            if let Some(mut window) = inner.attached_window.take().and_then(|e| e.upgrade()) {
                 window.remove_input_receiver(&extra);
             }
         });
