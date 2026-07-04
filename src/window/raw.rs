@@ -157,7 +157,6 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
     unsafe {
         let void_ptr = sys::window_get_user_data(window);
         let user_data_ptr = void_ptr as *mut WindowUserData;
-        APP.notify_unload(window);
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
@@ -166,4 +165,5 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
         };
         handler();
     }
+    APP.notify_unload(window);
 }
