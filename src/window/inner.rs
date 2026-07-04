@@ -69,7 +69,7 @@ impl WindowInner {
         self.root_layer.add_child(child);
     }
 
-    pub fn set_load_handler(&mut self, callback: impl FnMut() + 'static) {
+    pub fn set_load_handler(&mut self, callback: impl FnOnce() + 'static) {
         self.user_data.load_handler = Some(Box::new(callback));
     }
 
@@ -77,7 +77,7 @@ impl WindowInner {
         self.user_data.load_handler = None;
     }
 
-    pub fn set_unload_handler(&mut self, callback: impl FnMut() + 'static) {
+    pub fn set_unload_handler(&mut self, callback: impl FnOnce() + 'static) {
         self.user_data.unload_handler = Some(Box::new(callback));
     }
 

@@ -9,12 +9,13 @@ use crate::{
 };
 
 type Callback = Box<dyn FnMut() + 'static>;
+type OnceCallback = Box<dyn FnOnce() + 'static>;
 
 pub(crate) struct WindowUserData {
-    pub(crate) load_handler: Option<Callback>,
+    pub(crate) load_handler: Option<OnceCallback>,
     pub(crate) appear_handler: Option<Callback>,
     pub(crate) disappear_handler: Option<Callback>,
-    pub(crate) unload_handler: Option<Callback>,
+    pub(crate) unload_handler: Option<OnceCallback>,
 }
 
 pub(crate) struct WindowRaw {
@@ -117,7 +118,7 @@ extern "C" fn global_handle_load(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.load_handler.as_mut() else {
+        let Some(handler) = data.load_handler.take() else {
             return;
         };
         handler();
@@ -160,7 +161,7 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.unload_handler.as_mut() else {
+        let Some(handler) = data.unload_handler.take() else {
             return;
         };
         handler();

@@ -45,7 +45,7 @@ impl Window {
         self.handle.borrow().is_equal(other)
     }
 
-    pub fn set_load_handler(&mut self, callback: impl FnMut() + 'static) {
+    pub fn set_load_handler(&mut self, callback: impl FnOnce() + 'static) {
         self.handle.borrow_mut().set_load_handler(callback);
     }
 
@@ -53,7 +53,7 @@ impl Window {
         self.handle.borrow_mut().clear_load_handler();
     }
 
-    pub fn set_unload_handler(&mut self, callback: impl FnMut() + 'static) {
+    pub fn set_unload_handler(&mut self, callback: impl FnOnce() + 'static) {
         self.handle.borrow_mut().set_unload_handler(callback);
     }
 
