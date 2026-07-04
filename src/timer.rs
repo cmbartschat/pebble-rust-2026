@@ -2,7 +2,7 @@ use core::{cell::RefCell, ffi::c_void, ptr::NonNull, time::Duration};
 
 use alloc::{boxed::Box, rc::Rc};
 
-use crate::{log::log_c_str, sys};
+use crate::sys;
 
 extern "C" fn global_timer_handler(target: *mut c_void) {
     unsafe {
@@ -29,6 +29,7 @@ impl TimerInner {
     }
 }
 
+#[derive(Clone)]
 pub struct Timer {
     handle: Rc<RefCell<Option<TimerInner>>>,
 }
@@ -59,40 +60,32 @@ impl Timer {
 
     pub fn repeat(
         frequency: Duration,
-        mut user_callback: impl FnMut() -> bool + 'static,
+        user_callback: impl FnMut() -> bool + 'static,
     ) -> Option<Self> {
-        let update_loop_ref = Rc::new(RefCell::<Box<dyn FnMut()>>::new(Box::new(|| {})));
+        let _update_loop_ref = Rc::new(RefCell::<Box<dyn FnMut()>>::new(Box::new(|| {})));
 
         let res = Self {
             handle: Rc::new(RefCell::new(None)),
         };
 
-        let handle_ref = res.handle.clone();
-        let update_loop_ref_inner = update_loop_ref.clone();
-        let update = Box::new(move || {
-            if !user_callback() {
-                return;
-            }
-            let inner = update_loop_ref_inner.clone();
-
-            if let Some(new_inner) = Timer::once_inner(frequency, move || {
-                inner.borrow_mut()();
-            }) {
-                handle_ref.borrow_mut().replace(new_inner);
-            } else {
-                log_c_str(c"repeating timer failed to schedule");
-            }
-        });
-
-        {
-            *update_loop_ref.borrow_mut() = update;
+        fn schedule_next(
+            me: Timer,
+            frequency: Duration,
+            mut user_callback: impl FnMut() -> bool + 'static,
+        ) {
+            let new_inner = Timer::once_inner(frequency, {
+                let me = me.clone();
+                move || {
+                    if !user_callback() {
+                        return;
+                    }
+                    schedule_next(me, frequency, user_callback);
+                }
+            });
+            *me.handle.borrow_mut() = new_inner;
         }
 
-        res.handle
-            .borrow_mut()
-            .replace(Timer::once_inner(frequency, move || {
-                update_loop_ref.borrow_mut()();
-            })?);
+        schedule_next(res.clone(), frequency, user_callback);
 
         Some(res)
     }
