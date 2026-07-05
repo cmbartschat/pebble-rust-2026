@@ -1,93 +1,121 @@
-use core::{cell::RefCell, ffi::c_void, ptr::NonNull, time::Duration};
+use core::{ffi::c_void, time::Duration};
 
 use alloc::{boxed::Box, rc::Rc};
 
-use crate::sys;
+use crate::{
+    handle::{Handle, WeakHandle, new_handle},
+    log_c_str,
+    raw_timer::RawTimer,
+};
 
-extern "C" fn global_timer_handler(target: *mut c_void) {
-    unsafe {
-        let callback = Box::from_raw(target as *mut Box<dyn FnOnce()>);
+struct OnceContext {
+    callback: Option<Box<dyn FnOnce()>>,
+    handle: WeakHandle<Option<RawTimer>>,
+}
+
+impl OnceContext {
+    pub fn dispatch(mut self) {
+        if let Some(handle) = self.handle.upgrade() {
+            handle.take();
+        }
+        let Some(callback) = self.callback.take() else {
+            log_c_str(c"Unexpected: OnceContext dispatch missing callback");
+            return;
+        };
+
         callback();
     }
 }
 
-struct TimerInner {
-    raw: NonNull<sys::AppTimer>,
+struct RepeatContext {
+    frequency: Duration,
+    callback: Box<dyn FnMut() -> bool>,
+    handle: WeakHandle<Option<RawTimer>>,
 }
 
-impl TimerInner {
-    unsafe fn from_ptr(ptr: *mut sys::AppTimer) -> Option<Self> {
-        Some(Self {
-            raw: NonNull::new(ptr)?,
-        })
-    }
+enum RepeatState {
+    Continuing,
+    Stopped,
+}
 
-    fn cancel(self) {
-        unsafe {
-            sys::app_timer_cancel(self.raw.as_ptr());
-        };
+impl RepeatContext {
+    pub fn dispatch(&mut self) -> RepeatState {
+        let handle = self.handle.upgrade();
+
+        if let Some(handle) = handle {
+            handle.take();
+        }
+
+        let should_repeat = self.callback.as_mut()();
+        if !should_repeat {
+            return RepeatState::Stopped;
+        }
+
+        let handle = self.handle.upgrade();
+        let new_timer: Option<RawTimer> = RawTimer::start(
+            self.frequency,
+            self as *mut RepeatContext as *mut c_void,
+            Some(global_timer_repeat_handler),
+            drop_timer_repeat_context,
+        );
+
+        if new_timer.is_none() {
+            log_c_str(c"Unexpected: repeated timer failed to repeat");
+            return RepeatState::Stopped;
+        }
+
+        if let Some(handle) = handle {
+            handle.replace(new_timer);
+        }
+
+        RepeatState::Continuing
     }
 }
 
 #[derive(Clone)]
 pub struct Timer {
-    handle: Rc<RefCell<Option<TimerInner>>>,
+    handle: Handle<Option<RawTimer>>,
 }
 
 impl Timer {
-    fn from_inner(timer: TimerInner) -> Option<Self> {
-        Some(Self {
-            handle: Rc::new(RefCell::new(Some(timer))),
-        })
-    }
-
-    fn once_inner(delay: Duration, callback: impl FnOnce() + 'static) -> Option<TimerInner> {
-        let callback: Box<Box<dyn FnOnce()>> = Box::new(Box::new(callback));
-        unsafe {
-            let ptr = sys::app_timer_register(
-                delay.as_millis().min(u32::MAX as u128) as u32,
-                Some(global_timer_handler),
-                Box::into_raw(callback) as *mut c_void,
-            );
-
-            TimerInner::from_ptr(ptr)
-        }
-    }
-
     pub fn once(delay: Duration, callback: impl FnOnce() + 'static) -> Option<Self> {
-        Self::from_inner(Self::once_inner(delay, callback)?)
+        let handle = new_handle(None);
+        let context = Box::new(OnceContext {
+            callback: Some(Box::new(callback)),
+            handle: Rc::downgrade(&handle),
+        });
+
+        let raw = RawTimer::start(
+            delay,
+            Box::into_raw(context) as *mut c_void,
+            Some(global_timer_once_handler),
+            drop_timer_once_context,
+        )?;
+
+        *handle.borrow_mut() = Some(raw);
+        Some(Self { handle })
     }
 
-    pub fn repeat(
-        frequency: Duration,
-        user_callback: impl FnMut() -> bool + 'static,
-    ) -> Option<Self> {
-        let _update_loop_ref = Rc::new(RefCell::<Box<dyn FnMut()>>::new(Box::new(|| {})));
+    pub fn repeat<F>(frequency: Duration, callback: F) -> Option<Self>
+    where
+        F: FnMut() -> bool + 'static,
+    {
+        let handle = new_handle(None);
+        let context = Box::new(RepeatContext {
+            callback: Box::new(callback),
+            handle: Rc::downgrade(&handle),
+            frequency,
+        });
 
-        let res = Self {
-            handle: Rc::new(RefCell::new(None)),
-        };
+        let raw = RawTimer::start(
+            frequency,
+            Box::into_raw(context) as *mut c_void,
+            Some(global_timer_repeat_handler),
+            drop_timer_repeat_context,
+        )?;
 
-        fn schedule_next(
-            me: Timer,
-            frequency: Duration,
-            mut user_callback: impl FnMut() -> bool + 'static,
-        ) {
-            let new_inner = Timer::once_inner(frequency, {
-                let me = me.clone();
-                move || {
-                    if !user_callback() {
-                        return;
-                    }
-                    schedule_next(me, frequency, user_callback);
-                }
-            });
-            *me.handle.borrow_mut() = new_inner;
-        }
-
-        schedule_next(res.clone(), frequency, user_callback);
-
-        Some(res)
+        *handle.borrow_mut() = Some(raw);
+        Some(Self { handle })
     }
 
     pub fn cancel(self) {
@@ -95,4 +123,32 @@ impl Timer {
             inner.cancel();
         }
     }
+}
+
+extern "C" fn global_timer_once_handler(data: *mut c_void) {
+    unsafe {
+        let data = Box::from_raw(data as *mut OnceContext);
+        data.dispatch();
+    }
+}
+
+fn drop_timer_once_context(data: *mut c_void) {
+    drop(unsafe { Box::from_raw(data as *mut OnceContext) });
+}
+
+extern "C" fn global_timer_repeat_handler(data: *mut c_void) {
+    match unsafe {
+        let Some(data) = (data as *mut RepeatContext).as_mut() else {
+            log_c_str(c"Unexpected: Repeat handler called without context");
+            return;
+        };
+        data.dispatch()
+    } {
+        RepeatState::Continuing => {}
+        RepeatState::Stopped => drop_timer_repeat_context(data),
+    }
+}
+
+fn drop_timer_repeat_context(data: *mut c_void) {
+    drop(unsafe { Box::from_raw(data as *mut RepeatContext) });
 }

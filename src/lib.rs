@@ -22,6 +22,7 @@ mod layer;
 mod log;
 mod mutex;
 mod persist;
+mod raw_timer;
 mod rect;
 mod simple_menu_layer;
 mod status_bar_layer;
