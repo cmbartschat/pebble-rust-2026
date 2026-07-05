@@ -9,6 +9,5 @@ Rust bindings and safe rust wrappers for the Pebble Smartwatch SDK.
 
 ## Known Issues
 
-- The memory allocator doesn't respect alignment larger than 4, e.g. 8 byte alignment for u64, so things might misbehave there
 - Only Emery (Pebble Time 2) is supported
 - Using `format!()` or related Display traits causes a crash
