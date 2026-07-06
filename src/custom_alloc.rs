@@ -57,14 +57,17 @@ impl Allocator {
 
 unsafe impl GlobalAlloc for Allocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        log_c_str(c"alloc");
         Allocator::alloc_inner(layout, |c| unsafe { malloc(c) })
     }
 
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        Allocator::alloc_inner(layout, |c| unsafe { calloc(1, c) })
-    }
+    // unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+    //     log_c_str(c"alloc_zeroed");
+    //     Allocator::alloc_inner(layout, |c| unsafe { calloc(1, c) })
+    // }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        log_c_str(c"dealloc");
         if layout.align() > NATIVE_ALIGN {
             unsafe {
                 let base = *(ptr as *mut *mut u8).sub(1);
@@ -76,6 +79,7 @@ unsafe impl GlobalAlloc for Allocator {
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        log_c_str(c"realloc");
         if layout.align() > NATIVE_ALIGN {
             unsafe {
                 let new_ptr =
