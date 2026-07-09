@@ -31,6 +31,7 @@ mod text_layer;
 mod time;
 mod timer;
 mod window;
+mod fmt;
 
 pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
@@ -49,7 +50,7 @@ pub use crate::font::{Font, SystemFont};
 pub use crate::input::button::Button;
 pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
 pub use crate::layer::Layer;
-pub use crate::log::log_c_str;
+pub use crate::log::{log_c_str, log_str};
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};

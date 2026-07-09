@@ -10,4 +10,4 @@ Rust bindings and safe rust wrappers for the Pebble Smartwatch SDK.
 ## Known Issues
 
 - Only Emery (Pebble Time 2) is supported
-- Using `format!()` or related Display traits causes a crash
+- Using `format!()` or related Display traits causes a crash, use `fmt` or `log_fmt` to convert data to strings.
