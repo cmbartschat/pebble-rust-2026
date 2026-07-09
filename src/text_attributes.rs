@@ -8,7 +8,6 @@ use crate::{Font, GPoint, GRect, sys};
 pub struct TextAttributes {
     raw: Option<NonNull<sys::GTextAttributes>>,
     pub(crate) overflow: TextOverflowMode,
-    pub(crate) alignment: TextAlignment,
     pub(crate) font: Font,
 }
 
@@ -17,7 +16,6 @@ impl TextAttributes {
         Self {
             raw: None,
             overflow: TextOverflowMode::WordWrap,
-            alignment: TextAlignment::Left,
             font,
         }
     }
@@ -42,11 +40,6 @@ impl TextAttributes {
 
     pub fn set_overflow(mut self, mode: TextOverflowMode) -> Self {
         self.overflow = mode;
-        self
-    }
-
-    pub fn set_alignment(mut self, alignment: TextAlignment) -> Self {
-        self.alignment = alignment;
         self
     }
 

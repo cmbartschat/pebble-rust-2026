@@ -3,7 +3,7 @@ use core::ptr::NonNull;
 
 use crate::bitmap::Bitmap;
 use crate::sys::{GColor, GPoint, GRect};
-use crate::{TextAttributes, sys};
+use crate::{TextAlignment, TextAttributes, sys};
 
 pub struct GContext {
     raw: NonNull<sys::GContext>,
@@ -73,7 +73,13 @@ impl GContext {
         };
     }
 
-    pub fn draw_text(&mut self, text: &CStr, bounds: GRect, attributes: &TextAttributes) {
+    pub fn draw_text(
+        &mut self,
+        text: &CStr,
+        bounds: GRect,
+        alignment: TextAlignment,
+        attributes: &TextAttributes,
+    ) {
         unsafe {
             sys::graphics_draw_text(
                 self.as_ptr_mut(),
@@ -81,7 +87,7 @@ impl GContext {
                 attributes.font.handle.borrow().raw.as_ptr(),
                 bounds,
                 attributes.overflow.into(),
-                attributes.alignment.into(),
+                alignment.into(),
                 attributes.get_raw(),
             );
         };
