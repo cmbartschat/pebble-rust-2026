@@ -13,6 +13,7 @@ pub mod color;
 mod context;
 mod custom_alloc;
 mod dictionary;
+mod fmt;
 mod font;
 mod globals;
 mod handle;
@@ -27,11 +28,11 @@ mod rect;
 mod simple_menu_layer;
 mod status_bar_layer;
 pub mod sys;
+mod text_attributes;
 mod text_layer;
 mod time;
 mod timer;
 mod window;
-mod fmt;
 
 pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
@@ -55,6 +56,7 @@ pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
 pub use crate::sys::{GPoint, GRect, GSize};
+pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;
 pub use crate::time::Time;
 pub use crate::timer::Timer;

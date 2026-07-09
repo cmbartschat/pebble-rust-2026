@@ -1,8 +1,9 @@
+use core::ffi::CStr;
 use core::ptr::NonNull;
 
 use crate::bitmap::Bitmap;
-use crate::sys;
 use crate::sys::{GColor, GPoint, GRect};
+use crate::{TextAttributes, sys};
 
 pub struct GContext {
     raw: NonNull<sys::GContext>,
@@ -69,6 +70,20 @@ impl GContext {
                 bitmap.handle.borrow().raw.as_ptr(),
                 bounds,
             )
+        };
+    }
+
+    pub fn draw_text(&mut self, text: &CStr, bounds: GRect, attributes: &TextAttributes) {
+        unsafe {
+            sys::graphics_draw_text(
+                self.as_ptr_mut(),
+                text.as_ptr(),
+                attributes.font.handle.borrow().raw.as_ptr(),
+                bounds,
+                attributes.overflow.into(),
+                attributes.alignment.into(),
+                attributes.get_raw(),
+            );
         };
     }
 

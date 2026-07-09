@@ -1,34 +1,51 @@
 use core::ptr::NonNull;
 
-use crate::sys;
+use crate::{
+    handle::{Handle, new_handle},
+    key::ResourceId,
+    sys,
+};
 
-#[derive(Clone)]
-pub struct Font {
+pub struct FontInner {
     pub(crate) raw: NonNull<sys::FontInfo>,
     custom: bool,
 }
 
-impl Font {
+impl FontInner {
     pub fn load_custom(resource_id: u32) -> Option<Self> {
         let font = unsafe {
             let handle = sys::resource_get_handle(resource_id);
             sys::fonts_load_custom_font(handle)
         };
 
-        Some(Font {
+        Some(FontInner {
             raw: NonNull::new(font)?,
             custom: true,
         })
     }
 }
 
-impl Drop for Font {
+impl Drop for FontInner {
     fn drop(&mut self) {
         if self.custom {
             unsafe { sys::fonts_unload_custom_font(self.raw.as_ptr()) };
         }
     }
 }
+
+#[derive(Clone)]
+pub struct Font {
+    pub(crate) handle: Handle<FontInner>,
+}
+
+impl Font {
+    pub fn load_custom(resource: ResourceId) -> Option<Self> {
+        Some(Self {
+            handle: new_handle(FontInner::load_custom(*resource)?),
+        })
+    }
+}
+
 pub enum SystemFont {
     Bitham30Black,
     Bitham34MediumNumbers,
@@ -89,8 +106,10 @@ impl SystemFont {
 
         let font = unsafe { sys::fonts_get_system_font(ptr) };
         Some(Font {
-            raw: NonNull::new(font)?,
-            custom: false,
+            handle: new_handle(FontInner {
+                raw: NonNull::new(font)?,
+                custom: false,
+            }),
         })
     }
 }

@@ -63,7 +63,9 @@ impl TextLayer {
     pub fn set_font(&mut self, font: &Rc<Font>) {
         self.inner_mut(|inner| {
             inner.font = Some(font.clone());
-            unsafe { sys::text_layer_set_font(inner.raw.as_ptr(), font.raw.as_ptr()) };
+            unsafe {
+                sys::text_layer_set_font(inner.raw.as_ptr(), font.handle.borrow().raw.as_ptr())
+            };
         });
     }
 
