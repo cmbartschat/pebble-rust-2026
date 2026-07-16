@@ -1,8 +1,6 @@
 use crate::{Angle, GAlign, GEdgeInsets, GPoint, GRect, GSize};
 
-use crate::sys::{
-    self, GOvalScaleMode_GOvalScaleModeFillCircle, GOvalScaleMode_GOvalScaleModeFitCircle,
-};
+use crate::sys;
 
 impl GRect {
     pub fn new(x: i16, y: i16, w: i16, h: i16) -> Self {
@@ -16,7 +14,7 @@ impl GRect {
         unsafe {
             sys::grect_centered_from_polar(
                 bounds,
-                GOvalScaleMode_GOvalScaleModeFitCircle,
+                sys::GOvalScaleMode_GOvalScaleModeFitCircle,
                 angle.value,
                 size,
             )
@@ -27,7 +25,7 @@ impl GRect {
         unsafe {
             sys::grect_centered_from_polar(
                 bounds,
-                GOvalScaleMode_GOvalScaleModeFillCircle,
+                sys::GOvalScaleMode_GOvalScaleModeFillCircle,
                 angle.value,
                 size,
             )

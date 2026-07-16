@@ -2,8 +2,8 @@ use core::ffi::{CStr, c_int};
 use core::ptr::NonNull;
 
 use crate::bitmap::Bitmap;
-use crate::sys::{GColor, GPoint, GRect};
 use crate::{Angle, TextAlignment, TextAttributes, sys};
+use crate::{GColor, GPoint, GRect};
 
 pub struct GContext {
     raw: NonNull<sys::GContext>,

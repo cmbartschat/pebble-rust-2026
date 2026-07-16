@@ -1,6 +1,6 @@
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::sys::{self, TRIG_MAX_ANGLE};
+use crate::sys;
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct Angle {
@@ -122,7 +122,7 @@ impl AbsoluteAngle {
         if by.value < 0 {
             return self;
         }
-        if by.value > TRIG_MAX_ANGLE as i32 {
+        if by.value > sys::TRIG_MAX_ANGLE as i32 {
             return target;
         }
         let by = by.value as u16;

@@ -1,4 +1,5 @@
-use crate::sys::{self, GColor};
+use crate::GColor;
+use crate::sys;
 
 pub const GCOLOR_BLACK: GColor = GColor { argb: 0b11000000 };
 pub const GCOLOR_OXFORD_BLUE: GColor = GColor { argb: 0b11000001 };

@@ -58,7 +58,7 @@ pub use crate::log::{log_c_str, log_str};
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
-pub use crate::sys::{GEdgeInsets, GPoint, GRect, GSize};
+pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};
 pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;
 pub use crate::time::Time;
