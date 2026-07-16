@@ -11,21 +11,13 @@ impl GPoint {
 
     pub fn new_on_circle(bounds: GRect, angle: Angle) -> Self {
         unsafe {
-            sys::gpoint_from_polar(
-                bounds,
-                GOvalScaleMode_GOvalScaleModeFitCircle,
-                angle.value as i32,
-            )
+            sys::gpoint_from_polar(bounds, GOvalScaleMode_GOvalScaleModeFitCircle, angle.value)
         }
     }
 
     pub fn new_on_oval(bounds: GRect, angle: Angle) -> Self {
         unsafe {
-            sys::gpoint_from_polar(
-                bounds,
-                GOvalScaleMode_GOvalScaleModeFillCircle,
-                angle.value as i32,
-            )
+            sys::gpoint_from_polar(bounds, GOvalScaleMode_GOvalScaleModeFillCircle, angle.value)
         }
     }
 }

@@ -17,7 +17,7 @@ impl GRect {
             sys::grect_centered_from_polar(
                 bounds,
                 GOvalScaleMode_GOvalScaleModeFitCircle,
-                angle.value as i32,
+                angle.value,
                 size,
             )
         }
@@ -28,7 +28,7 @@ impl GRect {
             sys::grect_centered_from_polar(
                 bounds,
                 GOvalScaleMode_GOvalScaleModeFillCircle,
-                angle.value as i32,
+                angle.value,
                 size,
             )
         }

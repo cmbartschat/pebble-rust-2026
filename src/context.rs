@@ -1,9 +1,9 @@
-use core::ffi::CStr;
+use core::ffi::{CStr, c_int};
 use core::ptr::NonNull;
 
 use crate::bitmap::Bitmap;
 use crate::sys::{GColor, GPoint, GRect};
-use crate::{TextAlignment, TextAttributes, sys};
+use crate::{Angle, TextAlignment, TextAttributes, sys};
 
 pub struct GContext {
     raw: NonNull<sys::GContext>,
@@ -113,7 +113,7 @@ impl GContext {
         &mut self,
         bitmap: &Bitmap,
         source_center: GPoint,
-        rotation: i32, // TODO(christoph): Create angle class
+        rotation: Angle,
         destination_center: GPoint,
     ) {
         unsafe {
@@ -121,7 +121,7 @@ impl GContext {
                 self.as_ptr_mut(),
                 bitmap.handle.borrow().raw.as_ptr(),
                 source_center,
-                rotation,
+                rotation.value as c_int,
                 destination_center,
             )
         };
@@ -133,5 +133,61 @@ impl GContext {
 
     pub fn set_stroke_width(&mut self, width: u8) {
         unsafe { sys::graphics_context_set_stroke_width(self.as_ptr_mut(), width) };
+    }
+
+    pub fn draw_arc(&mut self, bounds: GRect, start: Angle, end: Angle) {
+        unsafe {
+            sys::graphics_draw_arc(
+                self.as_ptr_mut(),
+                bounds,
+                sys::GOvalScaleMode_GOvalScaleModeFitCircle,
+                start.value,
+                end.value,
+            )
+        };
+    }
+
+    pub fn draw_stretched_arc(&mut self, bounds: GRect, start: Angle, end: Angle) {
+        unsafe {
+            sys::graphics_draw_arc(
+                self.as_ptr_mut(),
+                bounds,
+                sys::GOvalScaleMode_GOvalScaleModeFillCircle,
+                start.value,
+                end.value,
+            )
+        };
+    }
+
+    pub fn fill_radial(&mut self, bounds: GRect, thickness: u16, start: Angle, end: Angle) {
+        unsafe {
+            sys::graphics_fill_radial(
+                self.as_ptr_mut(),
+                bounds,
+                sys::GOvalScaleMode_GOvalScaleModeFitCircle,
+                thickness,
+                start.value,
+                end.value,
+            )
+        };
+    }
+
+    pub fn fill_stretched_radial(
+        &mut self,
+        bounds: GRect,
+        thickness: u16,
+        start: Angle,
+        end: Angle,
+    ) {
+        unsafe {
+            sys::graphics_fill_radial(
+                self.as_ptr_mut(),
+                bounds,
+                sys::GOvalScaleMode_GOvalScaleModeFillCircle,
+                thickness,
+                start.value,
+                end.value,
+            )
+        };
     }
 }

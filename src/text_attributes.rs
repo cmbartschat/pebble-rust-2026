@@ -11,6 +11,14 @@ pub struct TextAttributes {
     pub(crate) font: Font,
 }
 
+impl Drop for TextAttributes {
+    fn drop(&mut self) {
+        if let Some(raw) = self.raw.map(|f| f.as_ptr()) {
+            unsafe { sys::graphics_text_attributes_destroy(raw) };
+        }
+    }
+}
+
 impl TextAttributes {
     pub fn new(font: Font) -> Self {
         Self {
