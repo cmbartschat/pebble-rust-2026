@@ -3,15 +3,13 @@ use core::{cell::RefCell, ffi::c_void, pin::Pin, ptr::NonNull};
 use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
-    ClickConfigBuilder, Window,
+    ClickConfigBuilder, GColor, Window,
     bitmap::Bitmap,
     input::{
         context::{InputContext, InputReceiver},
         handlers::global_click_config_handler,
     },
-    sys::{
-        self, ButtonId_BUTTON_ID_DOWN, ButtonId_BUTTON_ID_SELECT, ButtonId_BUTTON_ID_UP, GColor,
-    },
+    sys,
     window::WeakWindow,
 };
 
@@ -99,9 +97,11 @@ impl ActionBarLayer {
         self.inner_mut(|inner| {
             unsafe {
                 let (target, location) = match location {
-                    ActionButton::Up => (&mut inner.bitmap_up, ButtonId_BUTTON_ID_UP),
-                    ActionButton::Select => (&mut inner.bitmap_select, ButtonId_BUTTON_ID_SELECT),
-                    ActionButton::Down => (&mut inner.bitmap_down, ButtonId_BUTTON_ID_DOWN),
+                    ActionButton::Up => (&mut inner.bitmap_up, sys::ButtonId_BUTTON_ID_UP),
+                    ActionButton::Select => {
+                        (&mut inner.bitmap_select, sys::ButtonId_BUTTON_ID_SELECT)
+                    }
+                    ActionButton::Down => (&mut inner.bitmap_down, sys::ButtonId_BUTTON_ID_DOWN),
                 };
 
                 sys::action_bar_layer_set_icon_animated(

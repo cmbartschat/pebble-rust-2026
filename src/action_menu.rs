@@ -8,10 +8,10 @@ use core::{
 use alloc::{boxed::Box, ffi::CString, vec::Vec};
 
 use crate::{
+    GColor,
     color::{GCOLOR_BLACK, GCOLOR_DUKE_BLUE},
     handle::{Handle, new_handle},
-    log_c_str,
-    sys::{self, GColor},
+    log_c_str, sys,
 };
 
 struct ActionData {

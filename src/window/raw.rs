@@ -3,9 +3,9 @@ use core::{ffi::c_void, ptr::NonNull};
 use alloc::boxed::Box;
 
 use crate::{
-    APP, GRect,
+    APP, GColor, GRect,
     input::{context::InputContext, handlers::global_click_config_handler},
-    sys::{self, window_destroy},
+    sys,
 };
 
 type Callback = Box<dyn FnMut() + 'static>;
@@ -24,7 +24,7 @@ pub(crate) struct WindowRaw {
 
 impl Drop for WindowRaw {
     fn drop(&mut self) {
-        unsafe { window_destroy(self.raw.as_ptr()) };
+        unsafe { sys::window_destroy(self.raw.as_ptr()) };
     }
 }
 
@@ -55,7 +55,7 @@ impl WindowRaw {
         self.raw.as_ptr()
     }
 
-    pub fn set_background_color(&mut self, color: sys::GColor) {
+    pub fn set_background_color(&mut self, color: GColor) {
         unsafe { sys::window_set_background_color(self.as_ptr_mut(), color) };
     }
 

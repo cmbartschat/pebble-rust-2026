@@ -48,9 +48,9 @@ checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
 
 [[package]]
 name = "bitflags"
-version = "2.13.0"
+version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
+checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
 
 [[package]]
 name = "cexpr"
@@ -198,6 +198,7 @@ name = "pebble_rust_2026"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "bitflags",
  "cortex-m",
  "critical-section",
  "proc",

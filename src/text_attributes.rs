@@ -97,19 +97,10 @@ impl From<TextOverflowMode> for c_uint {
     }
 }
 
+#[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum TextAlignment {
-    Left,
-    Center,
-    Right,
-}
-
-impl From<TextAlignment> for c_uint {
-    fn from(value: TextAlignment) -> Self {
-        match value {
-            TextAlignment::Left => sys::GTextAlignment_GTextAlignmentLeft,
-            TextAlignment::Center => sys::GTextAlignment_GTextAlignmentCenter,
-            TextAlignment::Right => sys::GTextAlignment_GTextAlignmentRight,
-        }
-    }
+    Left = sys::GTextAlignment_GTextAlignmentLeft,
+    Center = sys::GTextAlignment_GTextAlignmentCenter,
+    Right = sys::GTextAlignment_GTextAlignmentRight,
 }

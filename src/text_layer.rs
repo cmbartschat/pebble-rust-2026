@@ -3,11 +3,11 @@ use core::{ffi::CStr, ptr::NonNull};
 use alloc::{rc::Rc, vec::Vec};
 
 use crate::{
-    Layer,
+    GColor, GRect, Layer, TextAlignment,
     font::Font,
     handle::{Handle, new_handle},
     layer::{ChildLayer, LayerInner},
-    sys::{self, GColor, GRect, GTextAlignment},
+    sys,
 };
 
 struct TextLayerInner {
@@ -113,9 +113,14 @@ impl TextLayer {
         });
     }
 
-    pub fn set_alignment(&mut self, alignment: GTextAlignment) {
+    pub fn set_alignment(&mut self, alignment: TextAlignment) {
         self.inner_mut(|inner| {
-            unsafe { sys::text_layer_set_text_alignment(inner.raw.as_ptr(), alignment) };
+            unsafe {
+                sys::text_layer_set_text_alignment(
+                    inner.raw.as_ptr(),
+                    alignment as sys::GTextAlignment,
+                )
+            };
         });
     }
 

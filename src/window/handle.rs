@@ -1,11 +1,11 @@
 use alloc::rc::Rc;
 
 use crate::{
-    ClickConfigBuilder, GRect,
+    ClickConfigBuilder, GColor, GRect,
     handle::{Handle, WeakHandle, new_handle},
     input::context::InputReceiver,
     layer::ChildLayer,
-    sys::{self},
+    sys,
     window::inner::WindowInner,
 };
 
@@ -20,7 +20,7 @@ impl Window {
         })
     }
 
-    pub fn set_background_color(&mut self, color: sys::GColor) {
+    pub fn set_background_color(&mut self, color: GColor) {
         self.handle.borrow_mut().set_background_color(color);
     }
 

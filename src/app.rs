@@ -7,12 +7,12 @@ use core::{
 use alloc::{boxed::Box, vec::Vec};
 
 use crate::{
-    Window,
+    TimeUnits, Window,
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
     log::log_c_str,
     persist::Persist,
-    sys::{self},
+    sys,
 };
 
 type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static>>;
@@ -115,11 +115,11 @@ impl App {
     pub fn event_loop(&self) {
         unsafe { sys::app_event_loop() };
     }
-    pub fn set_tick_handler(&self, unit: sys::TimeUnits, callback: impl FnMut() + 'static) {
+    pub fn set_tick_handler(&self, unit: TimeUnits, callback: impl FnMut() + 'static) {
         unsafe {
             with_state(|state| {
                 state.timer_callback = Some(Box::new(callback));
-                sys::tick_timer_service_subscribe(unit, Some(tick_handler));
+                sys::tick_timer_service_subscribe(unit.bits(), Some(tick_handler));
             });
         };
     }

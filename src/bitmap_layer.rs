@@ -3,10 +3,10 @@ use core::{cell::RefCell, ptr::NonNull};
 use alloc::rc::Rc;
 
 use crate::{
-    Layer,
+    GRect, Layer,
     bitmap::Bitmap,
     layer::{ChildLayer, LayerInner},
-    sys::{self, GRect},
+    sys,
 };
 
 struct BitmapLayerInner {

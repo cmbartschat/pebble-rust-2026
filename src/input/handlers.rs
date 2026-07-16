@@ -6,7 +6,7 @@ use crate::{
         click::{ClickCallback, ClickRecognizer},
         context::InputContext,
     },
-    sys::{self},
+    sys,
 };
 
 fn dispatch_click(recognizer: *mut c_void, handler: &mut Option<ClickCallback>) {

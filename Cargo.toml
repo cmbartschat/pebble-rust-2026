@@ -9,6 +9,7 @@ doctest = false
 bench = false
 
 [dependencies]
+bitflags = "2.13.1"
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 critical-section = "1.2.0"
 proc = { path = "./proc/" }

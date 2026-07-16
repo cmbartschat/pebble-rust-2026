@@ -27,13 +27,6 @@ pub struct LocalTime {
 }
 
 impl LocalTime {
-    // pub fn from_time() -> Self {
-    //     unsafe {
-    //         let value: sys::time_t = sys::time(null_mut());
-    //         Self { value }
-    //     }
-    // }
-
     pub fn second(&self) -> i32 {
         self.value.tm_sec
     }
@@ -65,5 +58,17 @@ impl LocalTime {
             panic!("Time overflowed buffer");
         }
         CString::new(&buffer[0..written]).unwrap()
+    }
+}
+
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct TimeUnits: u32 {
+     const Second = sys::TimeUnits_SECOND_UNIT;
+    const Minute = sys::TimeUnits_MINUTE_UNIT;
+    const Hour = sys::TimeUnits_HOUR_UNIT;
+    const Day = sys::TimeUnits_DAY_UNIT;
+    const Month = sys::TimeUnits_MONTH_UNIT;
+    const Year = sys::TimeUnits_YEAR_UNIT;
     }
 }

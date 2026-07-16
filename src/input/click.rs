@@ -2,10 +2,7 @@ use core::{ffi::c_void, marker::PhantomData, ops::RangeInclusive, time::Duration
 
 use alloc::boxed::Box;
 
-use crate::{
-    Button, log_c_str,
-    sys::{self},
-};
+use crate::{Button, log_c_str, sys};
 
 pub type ClickCallback = Box<dyn FnMut(&ClickRecognizer) + 'static>;
 

@@ -1,10 +1,10 @@
 use core::{ffi::c_uint, ptr::NonNull};
 
 use crate::{
-    Layer,
+    GColor, Layer,
     handle::{Handle, new_handle},
     layer::{ChildLayer, LayerInner},
-    sys::{self, GColor},
+    sys,
 };
 
 struct StatusBarLayerInner {

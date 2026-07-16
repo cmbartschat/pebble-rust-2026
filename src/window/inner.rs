@@ -3,11 +3,11 @@ use core::{ffi::c_void, pin::Pin};
 use alloc::boxed::Box;
 
 use crate::{
-    ClickConfigBuilder, GRect, Layer,
+    ClickConfigBuilder, GColor, GRect, Layer,
     handle::new_handle,
     input::context::{InputContext, InputReceiver},
     layer::{ChildLayer, LayerInner},
-    sys::{self},
+    sys,
     window::raw::{WindowRaw, WindowUserData},
 };
 
@@ -58,7 +58,7 @@ impl WindowInner {
         Some(res)
     }
 
-    pub fn set_background_color(&mut self, color: sys::GColor) {
+    pub fn set_background_color(&mut self, color: GColor) {
         self.raw.set_background_color(color);
     }
 

@@ -8,12 +8,11 @@ use core::{
 use alloc::{boxed::Box, ffi::CString, vec::Vec};
 
 use crate::{
-    Bitmap, Layer, Window,
+    Bitmap, GRect, Layer, Window,
     handle::{Handle, new_handle},
     input::context::InputReceiver,
     layer::{ChildLayer, LayerInner},
-    log_c_str,
-    sys::{self, GRect},
+    log_c_str, sys,
     window::WeakWindow,
 };
 

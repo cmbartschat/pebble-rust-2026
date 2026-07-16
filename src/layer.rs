@@ -3,8 +3,9 @@ use core::ptr::NonNull;
 use alloc::{boxed::Box, vec::Vec};
 
 use crate::{
+    GRect,
     handle::{Handle, WeakHandle, new_handle},
-    sys::{self, GRect},
+    sys,
 };
 
 pub trait ChildLayer {

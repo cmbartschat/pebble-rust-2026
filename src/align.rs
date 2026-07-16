@@ -1,12 +1,14 @@
+use crate::sys;
+
 #[repr(u32)]
 pub enum GAlign {
-    Center = 0,
-    TopLeft = 1,
-    TopRight = 2,
-    Top = 3,
-    Left = 4,
-    Bottom = 5,
-    Right = 6,
-    BottomRight = 7,
-    BottomLeft = 8,
+    Center = sys::GAlign_GAlignCenter,
+    TopLeft = sys::GAlign_GAlignTopLeft,
+    TopRight = sys::GAlign_GAlignTopRight,
+    Top = sys::GAlign_GAlignTop,
+    Left = sys::GAlign_GAlignLeft,
+    Bottom = sys::GAlign_GAlignBottom,
+    Right = sys::GAlign_GAlignRight,
+    BottomRight = sys::GAlign_GAlignBottomRight,
+    BottomLeft = sys::GAlign_GAlignBottomLeft,
 }

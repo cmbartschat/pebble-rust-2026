@@ -51,8 +51,8 @@ impl GContext {
         };
     }
 
-    pub fn fill_selective_round_rect(&mut self, rect: GRect, radius: u16, mask: sys::GCornerMask) {
-        unsafe { sys::graphics_fill_rect(self.as_ptr_mut(), rect, radius, mask) };
+    pub fn fill_selective_round_rect(&mut self, rect: GRect, radius: u16, mask: CornerMask) {
+        unsafe { sys::graphics_fill_rect(self.as_ptr_mut(), rect, radius, mask.bits()) };
     }
 
     pub fn draw_circle(&mut self, point: GPoint, radius: u16) {
@@ -87,7 +87,7 @@ impl GContext {
                 attributes.font.handle.borrow().raw.as_ptr(),
                 bounds,
                 attributes.overflow.into(),
-                alignment.into(),
+                alignment as sys::GTextAlignment,
                 attributes.get_raw(),
             );
         };
@@ -105,8 +105,10 @@ impl GContext {
         unsafe { sys::graphics_context_set_text_color(self.as_ptr_mut(), color) };
     }
 
-    pub fn set_compositing_mode(&mut self, mode: sys::GCompOp) {
-        unsafe { sys::graphics_context_set_compositing_mode(self.as_ptr_mut(), mode) };
+    pub fn set_compositing_mode(&mut self, mode: CompOp) {
+        unsafe {
+            sys::graphics_context_set_compositing_mode(self.as_ptr_mut(), mode as sys::GCompOp)
+        };
     }
 
     pub fn draw_rotated_bitmap(
@@ -189,5 +191,31 @@ impl GContext {
                 end.value,
             )
         };
+    }
+}
+
+#[repr(u32)]
+pub enum CompOp {
+    Assign = sys::GCompOp_GCompOpAssign,
+    AssignInverted = sys::GCompOp_GCompOpAssignInverted,
+    Or = sys::GCompOp_GCompOpOr,
+    And = sys::GCompOp_GCompOpAnd,
+    Clear = sys::GCompOp_GCompOpClear,
+    Set = sys::GCompOp_GCompOpSet,
+}
+
+bitflags::bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct CornerMask: u32 {
+        const None = sys::GCornerMask_GCornerNone;
+        const TopLeft = sys::GCornerMask_GCornerTopLeft;
+        const TopRight = sys::GCornerMask_GCornerTopRight;
+        const BottomLeft = sys::GCornerMask_GCornerBottomLeft;
+        const BottomRight = sys::GCornerMask_GCornerBottomRight;
+        const All = sys::GCornerMask_GCornersAll;
+        const Top = sys::GCornerMask_GCornersTop;
+        const Bottom = sys::GCornerMask_GCornersBottom;
+        const Left = sys::GCornerMask_GCornersLeft;
+        const Right = sys::GCornerMask_GCornersRight;
     }
 }

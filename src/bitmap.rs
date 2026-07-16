@@ -2,11 +2,7 @@ use core::{cell::RefCell, ptr::NonNull};
 
 use alloc::rc::Rc;
 
-use crate::{
-    GRect, GSize,
-    key::ResourceId,
-    sys::{self, GBitmapFormat},
-};
+use crate::{GRect, GSize, key::ResourceId, sys};
 
 pub(crate) struct BitmapInner {
     pub(crate) raw: NonNull<sys::GBitmap>,
@@ -33,32 +29,18 @@ pub struct Bitmap {
     pub(crate) handle: Rc<RefCell<BitmapInner>>,
 }
 
-/*
-
-gbitmap_get_bytes_per_row
-gbitmap_get_format
-gbitmap_get_data
-gbitmap_set_data
-gbitmap_get_bounds
-gbitmap_set_bounds
-gbitmap_get_palette
-gbitmap_set_palette
-gbitmap_create_with_data
-gbitmap_create_as_sub_bitmap
-gbitmap_create_from_png_data
-gbitmap_create_blank
-gbitmap_create_blank_with_palette
-gbitmap_create_palettized_from_1bit
-gbitmap_destroy
-*/
-
 impl Bitmap {
     pub fn from_resource(resource_id: ResourceId) -> Option<Self> {
         unsafe { Self::from_ptr(sys::gbitmap_create_with_resource(*resource_id)) }
     }
 
-    pub fn new_empty(size: GSize, format: GBitmapFormat) -> Option<Self> {
-        unsafe { Self::from_ptr(sys::gbitmap_create_blank(size, format)) }
+    pub fn new_empty(size: GSize, format: BitmapFormat) -> Option<Self> {
+        unsafe {
+            Self::from_ptr(sys::gbitmap_create_blank(
+                size,
+                format as sys::GBitmapFormat,
+            ))
+        }
     }
 
     unsafe fn from_ptr(ptr: *mut sys::GBitmap) -> Option<Self> {
@@ -75,7 +57,7 @@ impl Bitmap {
         }
     }
 
-    pub fn extract(&self, bounds: sys::GRect) -> Option<Bitmap> {
+    pub fn extract(&self, bounds: GRect) -> Option<Bitmap> {
         let mut inner = unsafe {
             let ptr = sys::gbitmap_create_as_sub_bitmap(self.handle.borrow().raw.as_ptr(), bounds);
             BitmapInner::from_ptr(ptr)?
@@ -87,4 +69,14 @@ impl Bitmap {
     pub fn get_bounds(&self) -> GRect {
         unsafe { sys::gbitmap_get_bounds(self.handle.borrow().raw.as_ptr()) }
     }
+}
+
+#[repr(u32)]
+pub enum BitmapFormat {
+    OneBit = sys::GBitmapFormat_GBitmapFormat1Bit,
+    EightBit = sys::GBitmapFormat_GBitmapFormat8Bit,
+    OneBitPalette = sys::GBitmapFormat_GBitmapFormat1BitPalette,
+    TwoBitPalette = sys::GBitmapFormat_GBitmapFormat2BitPalette,
+    FourBitPalette = sys::GBitmapFormat_GBitmapFormat4BitPalette,
+    EightBitCircular = sys::GBitmapFormat_GBitmapFormat8BitCircular,
 }
