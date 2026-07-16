@@ -4,7 +4,7 @@ use crate::sys;
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct Angle {
-    value: u16,
+    pub(crate) value: u16,
 }
 
 impl Angle {

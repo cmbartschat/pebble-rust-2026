@@ -4,6 +4,7 @@ extern crate alloc;
 
 mod action_bar_layer;
 mod action_menu;
+mod align;
 mod angle;
 mod app;
 mod app_message_result;
@@ -38,6 +39,7 @@ pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
+pub use crate::align::GAlign;
 pub use crate::angle::{Angle, Random};
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
@@ -55,7 +57,7 @@ pub use crate::log::{log_c_str, log_str};
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
-pub use crate::sys::{GPoint, GRect, GSize};
+pub use crate::sys::{GEdgeInsets, GPoint, GRect, GSize};
 pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;
 pub use crate::time::Time;
