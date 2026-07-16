@@ -24,6 +24,7 @@ mod layer;
 mod log;
 mod mutex;
 mod persist;
+mod point;
 mod raw_timer;
 mod rect;
 mod simple_menu_layer;
