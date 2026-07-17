@@ -28,6 +28,7 @@ mod point;
 mod raw_timer;
 mod rect;
 mod simple_menu_layer;
+mod size;
 mod status_bar_layer;
 pub mod sys;
 mod text_attributes;
