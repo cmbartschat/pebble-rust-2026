@@ -1,6 +1,6 @@
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::sys;
+use crate::{GSize, sys};
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct Angle {
@@ -27,6 +27,12 @@ impl Angle {
     pub fn cos(self) -> Ratio {
         Ratio {
             value: unsafe { sys::cos_lookup(self.value) },
+        }
+    }
+
+    pub fn atan2(size: GSize) -> Angle {
+        Self {
+            value: unsafe { sys::atan2_lookup(size.h, size.w) },
         }
     }
 
