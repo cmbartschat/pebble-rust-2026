@@ -18,6 +18,7 @@ mod fmt;
 mod font;
 mod globals;
 mod handle;
+pub mod heap;
 mod input;
 mod key;
 mod layer;
