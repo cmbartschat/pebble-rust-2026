@@ -32,47 +32,56 @@ impl GRect {
         }
     }
 
+    #[must_use]
     pub fn inset(self, insets: GEdgeInsets) -> Self {
         unsafe { sys::grect_inset(self, insets) }
     }
 
+    #[must_use]
     pub fn shrink(self, amount: i32) -> Self {
         unsafe { sys::grect_crop(self, amount) }
     }
 
+    #[must_use]
     pub fn expand(self, amount: i32) -> Self {
         self.shrink(-amount)
     }
 
+    #[must_use]
     pub fn center_point(&self) -> GPoint {
         unsafe { sys::grect_center_point(self) }
     }
 
-    pub fn clip(&mut self, clipper: &GRect) {
-        unsafe { sys::grect_clip(self, clipper) };
+    #[must_use]
+    pub fn clip(mut self, clipper: &GRect) -> Self {
+        unsafe { sys::grect_clip(&mut self, clipper) };
+        self
     }
 
-    pub fn align(&mut self, container: &GRect, align: GAlign) {
-        unsafe { sys::grect_align(self, container, align as sys::GAlign, false) };
+    #[must_use]
+    pub fn align(mut self, container: &GRect, align: GAlign) -> Self {
+        unsafe { sys::grect_align(&mut self, container, align as sys::GAlign, false) };
+        self
     }
 
-    pub fn clip_align(&mut self, container: &GRect, align: GAlign) {
-        unsafe { sys::grect_align(self, container, align as sys::GAlign, true) };
+    #[must_use]
+    pub fn clip_align(mut self, container: &GRect, align: GAlign) -> Self {
+        unsafe { sys::grect_align(&mut self, container, align as sys::GAlign, true) };
+        self
     }
 
-    pub fn is_empty(self) -> bool {
-        unsafe { sys::grect_is_empty(&self) }
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        unsafe { sys::grect_is_empty(self) }
     }
 
-    pub fn standardize(&mut self) {
-        unsafe { sys::grect_standardize(self) }
-    }
-
-    pub fn to_standardized(mut self) -> Self {
+    #[must_use]
+    pub fn standardize(mut self) -> Self {
         unsafe { sys::grect_standardize(&mut self) }
         self
     }
 
+    #[must_use]
     pub fn contains_point(&self, p: GPoint) -> bool {
         unsafe { sys::grect_contains_point(self, &p) }
     }
