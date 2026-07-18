@@ -147,3 +147,105 @@ pub fn message_keys(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
     }
     .into()
 }
+
+struct ParsedColor {
+    value: u8, // argb
+}
+
+fn parse_hex_digit(b1: u8, b2: u8) -> Option<u8> {
+    let bytes = [b1, b2];
+    let str = str::from_utf8(&bytes).ok()?;
+    u8::from_str_radix(str, 16).ok()
+}
+
+fn get_2bit_value(value: u8) -> Option<u8> {
+    Some(match value {
+        0xff => 0b11,
+        0xaa => 0b10,
+        0x55 => 0b01,
+        0x00 => 0,
+        _ => return None,
+    })
+}
+
+fn make_argb(a: u8, r: u8, g: u8, b: u8) -> Option<u8> {
+    Some(
+        (get_2bit_value(a)? << 6)
+            + (get_2bit_value(r)? << 4)
+            + (get_2bit_value(g)? << 2)
+            + get_2bit_value(b)?,
+    )
+}
+
+fn parse_hex_literal(mut literal: &str) -> Option<ParsedColor> {
+    literal = literal
+        .trim_start_matches('"')
+        .trim_start_matches('#')
+        .trim_end_matches('"');
+
+    let digits: Vec<u8> = literal.as_bytes().iter().map(ToOwned::to_owned).collect();
+    let value;
+    match digits.len() {
+        3 => {
+            let r = parse_hex_digit(digits[0], digits[0])?;
+            let g = parse_hex_digit(digits[1], digits[1])?;
+            let b = parse_hex_digit(digits[2], digits[2])?;
+            value = make_argb(0xff, r, g, b);
+        }
+        4 => {
+            let r = parse_hex_digit(digits[0], digits[0])?;
+            let g = parse_hex_digit(digits[1], digits[1])?;
+            let b = parse_hex_digit(digits[2], digits[2])?;
+            let a = parse_hex_digit(digits[3], digits[3])?;
+            value = make_argb(a, r, g, b);
+        }
+        6 => {
+            let r = parse_hex_digit(digits[0], digits[1])?;
+            let g = parse_hex_digit(digits[2], digits[3])?;
+            let b = parse_hex_digit(digits[4], digits[5])?;
+            value = make_argb(0xff, r, g, b);
+        }
+        8 => {
+            let r = parse_hex_digit(digits[0], digits[1])?;
+            let g = parse_hex_digit(digits[2], digits[3])?;
+            let b = parse_hex_digit(digits[4], digits[5])?;
+            let a = parse_hex_digit(digits[6], digits[7])?;
+            value = make_argb(a, r, g, b);
+        }
+        _ => return None,
+    }
+
+    let value = value.expect("Hex codes can only include ff, aa, 55, or 00 digits.");
+    Some(ParsedColor { value })
+}
+
+#[proc_macro]
+pub fn hex_color(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut token_iter = token_stream.into_iter();
+
+    let Some(proc_macro::TokenTree::Literal(literal)) = token_iter.next() else {
+        return quote! {
+            compile_error!("Expected hex string like: hex_color!(\"#ff00ff\")");
+        }
+        .into();
+    };
+
+    if token_iter.next().is_some() {
+        return quote! {
+            compile_error!("Unexpected additional token after hex code");
+        }
+        .into();
+    }
+
+    let parsed: ParsedColor =
+        parse_hex_literal(&literal.to_string()).expect("Hex code failed to parse");
+
+    let argb_token = proc_macro2::Literal::u8_suffixed(parsed.value);
+
+    quote! {
+        pebble_rust_2026::GColor{
+            argb: #argb_token,
+        }
+    }
+    .into()
+}
