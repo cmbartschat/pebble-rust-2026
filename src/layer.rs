@@ -1,6 +1,6 @@
 use core::ptr::NonNull;
 
-use alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
 use crate::{
     GRect,
@@ -9,8 +9,9 @@ use crate::{
 };
 
 pub trait ChildLayer {
-    fn is_same(&self, other: &Layer) -> bool;
-    fn set_parent(&mut self, other: &mut Layer);
+    fn id(&self) -> usize;
+    fn ptr_to_child_with(&mut self) -> *mut sys::Layer;
+    fn record_new_parent(&self, parent: &Layer);
     fn remove_from_parent(&self);
 }
 
@@ -39,6 +40,26 @@ impl LayerInner {
             owned,
         })
     }
+
+    pub(crate) fn release_child<T>(&mut self, child: &T)
+    where
+        T: Clone + ChildLayer + 'static,
+    {
+        let Some(child_index) = self.children.iter().position(|e| e.id() == child.id()) else {
+            return;
+        };
+        self.children.swap_remove(child_index);
+    }
+
+    pub(crate) fn retain_child<T>(&mut self, child: &mut T)
+    where
+        T: Clone + ChildLayer + 'static,
+    {
+        if self.children.iter().any(|e| e.id() == child.id()) {
+            return;
+        };
+        self.children.push(Box::new(child.clone()));
+    }
 }
 
 #[derive(Clone)]
@@ -50,30 +71,26 @@ impl ChildLayer for Layer {
     fn remove_from_parent(&self) {
         unsafe { sys::layer_remove_from_parent(self.as_ptr()) };
 
-        let self_mut = self.handle.borrow_mut();
+        let mut inner = self.handle.borrow_mut();
 
-        let Some(parent_weak) = &self_mut.parent else {
-            return;
+        if let Some(Some(parent_rc)) = inner.parent.take().map(|f| f.upgrade()) {
+            // NOTE(christoph): If remove_from_parent is being called from the Layer's Drop impl,
+            // missing the reference would be expected. Otherwise an invariant is being violated.
+            parent_rc.borrow_mut().release_child(self);
         };
-
-        let Some(parent_rc) = parent_weak.upgrade() else {
-            return;
-        };
-
-        let mut parent_mut = parent_rc.borrow_mut();
-        let Some(child_index) = parent_mut.children.iter().position(|e| e.is_same(self)) else {
-            return;
-        };
-
-        parent_mut.children.swap_remove(child_index);
     }
 
-    fn is_same(&self, other: &Layer) -> bool {
-        self.handle.borrow().raw == other.handle.borrow().raw
+    fn id(&self) -> usize {
+        self.handle.borrow().raw.as_ptr() as usize
     }
 
-    fn set_parent(&mut self, parent: &mut Layer) {
-        unsafe { sys::layer_add_child(parent.as_ptr(), self.as_ptr()) };
+    fn ptr_to_child_with(&mut self) -> *mut sys::Layer {
+        self.handle.borrow_mut().raw.as_ptr()
+    }
+
+    fn record_new_parent(&self, parent: &Layer) {
+        self.remove_from_parent();
+        self.handle.borrow_mut().parent = Some(Rc::downgrade(&parent.handle))
     }
 }
 
@@ -92,12 +109,12 @@ impl Layer {
     where
         T: Clone + ChildLayer + 'static,
     {
-        child.remove_from_parent();
+        child.record_new_parent(self);
         {
-            let mut parent_mut = self.handle.borrow_mut();
-            parent_mut.children.push(Box::new(child.clone()));
+            let mut inner = self.handle.borrow_mut();
+            inner.retain_child(child);
+            unsafe { sys::layer_add_child(inner.raw.as_ptr(), child.ptr_to_child_with()) };
         }
-        child.set_parent(self);
     }
 
     pub fn mark_dirty(&mut self) {
@@ -122,7 +139,15 @@ impl Layer {
         unsafe { sys::layer_get_bounds(self.as_ptr()) }
     }
 
+    pub fn get_frame(&self) -> GRect {
+        unsafe { sys::layer_get_frame(self.as_ptr()) }
+    }
+
     pub fn set_frame(&mut self, frame: GRect) {
         unsafe { sys::layer_set_frame(self.as_ptr(), frame) }
+    }
+
+    pub fn remove(&mut self) {
+        ChildLayer::remove_from_parent(self);
     }
 }

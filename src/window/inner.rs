@@ -145,6 +145,7 @@ impl WindowInner {
             .is_some_and(|f| f.handle.get_id() == receiver.get_id())
         {
             self.connected_input = None;
+            self.refresh_input_handler();
         }
     }
 

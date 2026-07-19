@@ -17,6 +17,12 @@ struct TextLayerInner {
     text_vec: Vec<u8>,
 }
 
+impl Drop for TextLayerInner {
+    fn drop(&mut self) {
+        unsafe { sys::text_layer_destroy(self.raw.as_ptr()) }
+    }
+}
+
 #[derive(Clone)]
 pub struct TextLayer {
     handle: Handle<TextLayerInner>,
@@ -27,12 +33,19 @@ impl ChildLayer for TextLayer {
         self.handle.borrow_mut().base_layer.remove_from_parent();
     }
 
-    fn is_same(&self, other: &Layer) -> bool {
-        self.handle.borrow().base_layer.is_same(other)
+    fn id(&self) -> usize {
+        self.handle.borrow().base_layer.id()
     }
 
-    fn set_parent(&mut self, other: &mut Layer) {
-        self.handle.borrow_mut().base_layer.set_parent(other);
+    fn ptr_to_child_with(&mut self) -> *mut sys::Layer {
+        self.handle.borrow_mut().base_layer.ptr_to_child_with()
+    }
+
+    fn record_new_parent(&self, parent: &Layer) {
+        self.handle
+            .borrow_mut()
+            .base_layer
+            .record_new_parent(parent);
     }
 }
 
@@ -134,5 +147,9 @@ impl TextLayer {
         self.inner_mut(|inner| {
             inner.base_layer.set_frame(frame);
         });
+    }
+
+    pub fn remove(&mut self) {
+        ChildLayer::remove_from_parent(self);
     }
 }
