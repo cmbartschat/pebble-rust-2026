@@ -161,4 +161,8 @@ impl WindowInner {
     pub(crate) fn add_action_bar_layer(&mut self, layer: *mut sys::ActionBarLayer) {
         self.raw.add_action_bar_layer(layer);
     }
+
+    pub(crate) fn set_scroll_layer_click_config(&mut self, layer: *mut sys::ScrollLayer) {
+        self.raw.set_scroll_layer_click_config(layer);
+    }
 }

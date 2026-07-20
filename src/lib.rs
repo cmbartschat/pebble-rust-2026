@@ -11,6 +11,7 @@ mod app_message_result;
 mod bitmap;
 mod bitmap_layer;
 pub mod color;
+mod content_indicator;
 mod context;
 mod custom_alloc;
 mod dictionary;
@@ -28,6 +29,7 @@ mod persist;
 mod point;
 mod raw_timer;
 mod rect;
+mod scroll_layer;
 mod simple_menu_layer;
 mod size;
 mod status_bar_layer;
@@ -49,6 +51,9 @@ pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
 pub use crate::bitmap::{Bitmap, BitmapFormat};
 pub use crate::bitmap_layer::BitmapLayer;
+pub use crate::content_indicator::{
+    ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
+};
 pub use crate::context::{CompOp, CornerMask, GContext};
 pub use crate::custom_alloc::Allocator;
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
@@ -58,6 +63,8 @@ pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
 pub use crate::layer::Layer;
 pub use crate::log::{log_c_str, log_str};
 pub use crate::mutex::{Mutex, MutexToken};
+pub use crate::scroll_layer::ScrollLayer;
+
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};

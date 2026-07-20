@@ -109,6 +109,10 @@ impl WindowRaw {
     pub(crate) fn add_action_bar_layer(&mut self, layer: *mut sys::ActionBarLayer) {
         unsafe { sys::action_bar_layer_add_to_window(layer, self.as_ptr_mut()) };
     }
+
+    pub(crate) fn set_scroll_layer_click_config(&mut self, layer: *mut sys::ScrollLayer) {
+        unsafe { sys::scroll_layer_set_click_config_onto_window(layer, self.as_ptr_mut()) };
+    }
 }
 
 extern "C" fn global_handle_load(window: *mut sys::Window) {
