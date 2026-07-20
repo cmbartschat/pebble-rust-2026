@@ -71,7 +71,7 @@ impl Bitmap {
     }
 }
 
-#[repr(u32)]
+#[repr(u8)]
 pub enum BitmapFormat {
     OneBit = sys::GBitmapFormat_GBitmapFormat1Bit,
     EightBit = sys::GBitmapFormat_GBitmapFormat8Bit,

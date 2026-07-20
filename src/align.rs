@@ -1,6 +1,6 @@
 use crate::sys;
 
-#[repr(u32)]
+#[repr(u8)]
 pub enum GAlign {
     Center = sys::GAlign_GAlignCenter,
     TopLeft = sys::GAlign_GAlignTopLeft,

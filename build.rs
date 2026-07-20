@@ -22,6 +22,7 @@ fn main() {
         .clang_arg("-D_TIME_H_")
         .clang_arg("-Iheaders")
         .clang_arg("--target=thumbv8m.main-none-eabi")
+        .clang_arg("-fshort-enums")
         .use_core()
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()

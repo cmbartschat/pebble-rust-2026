@@ -1,5 +1,5 @@
 use core::{
-    ffi::{CStr, c_uint, c_void},
+    ffi::{CStr, c_void},
     pin::Pin,
     ptr::{NonNull, addr_of_mut, null_mut},
     str::FromStr,
@@ -96,7 +96,7 @@ impl ActionMenuLevel {
 
     pub(crate) unsafe fn as_raw(&self) -> *mut sys::ActionMenuLevel {
         let level = unsafe { sys::action_menu_level_create(self.items.len() as u16) };
-        unsafe { sys::action_menu_level_set_display_mode(level, self.display_mode.into()) };
+        unsafe { sys::action_menu_level_set_display_mode(level, self.display_mode as u8) };
         for item in self.items.iter() {
             match item {
                 ActionMenuItem::ChildLevel(child) => unsafe {
@@ -181,7 +181,7 @@ impl ActionMenu {
             },
             will_close: None,
             did_close: Some(global_handle_action_menu_did_close),
-            align: builder.align.into(),
+            align: builder.align as u8,
         };
         let action_menu = unsafe { sys::action_menu_open(addr_of_mut!(config)) };
 
@@ -207,38 +207,18 @@ impl ActionMenu {
     }
 }
 
+#[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum ActionMenuAlign {
-    Top,
-    Center,
+    Top = sys::ActionMenuAlign_ActionMenuAlignTop,
+    Center = sys::ActionMenuAlign_ActionMenuAlignCenter,
 }
 
-impl From<ActionMenuAlign> for c_uint {
-    fn from(value: ActionMenuAlign) -> Self {
-        match value {
-            ActionMenuAlign::Top => sys::ActionMenuAlign_ActionMenuAlignTop,
-            ActionMenuAlign::Center => sys::ActionMenuAlign_ActionMenuAlignCenter,
-        }
-    }
-}
-
+#[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum ActionMenuLevelDisplayMode {
-    Wide,
-    Thin,
-}
-
-impl From<ActionMenuLevelDisplayMode> for c_uint {
-    fn from(value: ActionMenuLevelDisplayMode) -> Self {
-        match value {
-            ActionMenuLevelDisplayMode::Wide => {
-                sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeWide
-            }
-            ActionMenuLevelDisplayMode::Thin => {
-                sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeThin
-            }
-        }
-    }
+    Wide = sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeWide,
+    Thin = sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeThin,
 }
 
 extern "C" fn global_handle_action_menu_did_close(

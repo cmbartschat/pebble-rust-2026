@@ -73,7 +73,7 @@ extern "C" fn tick_handler(_tick_time: *mut sys::tm, _units_changed: sys::TimeUn
     }
 }
 
-extern "C" fn global_inbox_dropped_handler(_: u32, _: *mut c_void) {
+extern "C" fn global_inbox_dropped_handler(_: u16, _: *mut c_void) {
     log_c_str(c"inbox_dropped");
 }
 

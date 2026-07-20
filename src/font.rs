@@ -46,6 +46,7 @@ impl Font {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum SystemFont {
     Bitham30Black,
     Bitham34MediumNumbers,

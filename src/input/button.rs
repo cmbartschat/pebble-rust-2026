@@ -1,22 +1,12 @@
 use crate::sys;
 
+#[repr(u8)]
 #[derive(PartialEq, Clone, Copy)]
 pub enum Button {
-    Back,
-    Up,
-    Select,
-    Down,
-}
-
-impl From<Button> for sys::ButtonId {
-    fn from(val: Button) -> Self {
-        match val {
-            Button::Back => sys::ButtonId_BUTTON_ID_BACK,
-            Button::Up => sys::ButtonId_BUTTON_ID_UP,
-            Button::Select => sys::ButtonId_BUTTON_ID_SELECT,
-            Button::Down => sys::ButtonId_BUTTON_ID_DOWN,
-        }
-    }
+    Back = sys::ButtonId_BUTTON_ID_BACK,
+    Up = sys::ButtonId_BUTTON_ID_UP,
+    Select = sys::ButtonId_BUTTON_ID_SELECT,
+    Down = sys::ButtonId_BUTTON_ID_DOWN,
 }
 
 impl From<sys::ButtonId> for Button {

@@ -1,4 +1,4 @@
-use core::{ffi::c_uint, ptr::NonNull};
+use core::ptr::NonNull;
 
 use crate::{
     GColor, Layer,
@@ -86,7 +86,7 @@ impl StatusBarLayer {
         unsafe {
             sys::status_bar_layer_set_separator_mode(
                 self.handle.borrow_mut().raw.as_ptr(),
-                mode.into(),
+                mode as u8,
             )
         }
     }
@@ -96,22 +96,11 @@ impl StatusBarLayer {
     }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum StatusBarSeparatorMode {
-    None,
-    Dotted,
-}
-
-impl From<StatusBarSeparatorMode> for c_uint {
-    fn from(value: StatusBarSeparatorMode) -> c_uint {
-        match value {
-            StatusBarSeparatorMode::None => {
-                sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeNone
-            }
-            StatusBarSeparatorMode::Dotted => {
-                sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeDotted
-            }
-        }
-    }
+    None = sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeNone,
+    Dotted = sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeDotted,
 }
 
 impl Drop for StatusBarLayerInner {

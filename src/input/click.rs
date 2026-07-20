@@ -58,14 +58,14 @@ impl<'a> ClickConfigBuilder<'a> {
         if let Some(repeat) = repeat_after {
             unsafe {
                 sys::window_single_repeating_click_subscribe(
-                    button.into(),
+                    button as u8,
                     duration_to_millis(repeat),
                     Some(global_handler),
                 );
             }
         } else {
             unsafe {
-                sys::window_single_click_subscribe(button.into(), Some(global_handler));
+                sys::window_single_click_subscribe(button as u8, Some(global_handler));
             }
         }
     }
@@ -108,7 +108,7 @@ impl<'a> ClickConfigBuilder<'a> {
 
         unsafe {
             sys::window_long_click_subscribe(
-                button.into(),
+                button as u8,
                 duration_to_millis(delay),
                 Some(global_start_handler),
                 Some(global_release_handler),
@@ -137,7 +137,7 @@ impl<'a> ClickConfigBuilder<'a> {
 
         unsafe {
             sys::window_multi_click_subscribe(
-                button.into(),
+                button as u8,
                 *range.start(),
                 *range.end(),
                 duration_to_millis(delay),

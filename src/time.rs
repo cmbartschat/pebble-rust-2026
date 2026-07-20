@@ -132,7 +132,7 @@ impl TryFrom<LocalTime> for Time {
 
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct TimeUnits: u32 {
+    pub struct TimeUnits: u8 {
         const Second = sys::TimeUnits_SECOND_UNIT;
         const Minute = sys::TimeUnits_MINUTE_UNIT;
         const Hour = sys::TimeUnits_HOUR_UNIT;

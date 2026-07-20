@@ -96,20 +96,18 @@ impl ActionBarLayer {
     pub fn set_icon(&mut self, location: ActionButton, icon: Bitmap) {
         self.inner_mut(|inner| {
             unsafe {
-                let (target, location) = match location {
-                    ActionButton::Up => (&mut inner.bitmap_up, sys::ButtonId_BUTTON_ID_UP),
-                    ActionButton::Select => {
-                        (&mut inner.bitmap_select, sys::ButtonId_BUTTON_ID_SELECT)
-                    }
-                    ActionButton::Down => (&mut inner.bitmap_down, sys::ButtonId_BUTTON_ID_DOWN),
-                };
-
                 sys::action_bar_layer_set_icon_animated(
                     inner.raw.as_ptr(),
-                    location,
+                    location as u8,
                     icon.handle.borrow().raw.as_ptr(),
                     true,
                 );
+
+                let target = match location {
+                    ActionButton::Up => &mut inner.bitmap_up,
+                    ActionButton::Select => &mut inner.bitmap_select,
+                    ActionButton::Down => &mut inner.bitmap_down,
+                };
 
                 *target = Some(icon);
             };
@@ -133,8 +131,10 @@ impl InputReceiver for ActionBarLayer {
     }
 }
 
+#[repr(u8)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq)]
 pub enum ActionButton {
-    Up,
-    Select,
-    Down,
+    Up = sys::ButtonId_BUTTON_ID_UP,
+    Select = sys::ButtonId_BUTTON_ID_SELECT,
+    Down = sys::ButtonId_BUTTON_ID_DOWN,
 }

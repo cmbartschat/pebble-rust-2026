@@ -1,7 +1,4 @@
-use core::{
-    ffi::c_uint,
-    ptr::{NonNull, null_mut},
-};
+use core::ptr::{NonNull, null_mut};
 
 use crate::{Font, GPoint, GRect, sys};
 
@@ -78,26 +75,15 @@ impl TextAttributes {
     }
 }
 
+#[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum TextOverflowMode {
-    TrailingEllipsis,
-    Fill,
-    WordWrap,
+    TrailingEllipsis = sys::GTextOverflowMode_GTextOverflowModeTrailingEllipsis,
+    Fill = sys::GTextOverflowMode_GTextOverflowModeFill,
+    WordWrap = sys::GTextOverflowMode_GTextOverflowModeWordWrap,
 }
 
-impl From<TextOverflowMode> for c_uint {
-    fn from(value: TextOverflowMode) -> Self {
-        match value {
-            TextOverflowMode::TrailingEllipsis => {
-                sys::GTextOverflowMode_GTextOverflowModeTrailingEllipsis
-            }
-            TextOverflowMode::Fill => sys::GTextOverflowMode_GTextOverflowModeFill,
-            TextOverflowMode::WordWrap => sys::GTextOverflowMode_GTextOverflowModeWordWrap,
-        }
-    }
-}
-
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum TextAlignment {
     Left = sys::GTextAlignment_GTextAlignmentLeft,

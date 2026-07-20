@@ -86,7 +86,7 @@ impl GContext {
                 text.as_ptr(),
                 attributes.font.handle.borrow().raw.as_ptr(),
                 bounds,
-                attributes.overflow.into(),
+                attributes.overflow as u8,
                 alignment as sys::GTextAlignment,
                 attributes.get_raw(),
             );
@@ -194,7 +194,7 @@ impl GContext {
     }
 }
 
-#[repr(u32)]
+#[repr(u8)]
 pub enum CompOp {
     Assign = sys::GCompOp_GCompOpAssign,
     AssignInverted = sys::GCompOp_GCompOpAssignInverted,
@@ -206,7 +206,7 @@ pub enum CompOp {
 
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct CornerMask: u32 {
+    pub struct CornerMask: u8 {
         const None = sys::GCornerMask_GCornerNone;
         const TopLeft = sys::GCornerMask_GCornerTopLeft;
         const TopRight = sys::GCornerMask_GCornerTopRight;
