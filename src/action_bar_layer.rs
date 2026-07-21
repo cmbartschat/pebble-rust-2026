@@ -5,6 +5,7 @@ use alloc::{boxed::Box, rc::Rc};
 use crate::{
     ClickConfigBuilder, GColor, Window,
     bitmap::Bitmap,
+    handle::WeakHandle,
     input::{
         context::{InputContext, InputReceiver},
         handlers::global_click_config_handler,
@@ -123,6 +124,10 @@ impl ActionBarLayer {
             );
         });
     }
+
+    pub fn downgrade(&self) -> WeakActionBarLayer {
+        WeakActionBarLayer::from(self)
+    }
 }
 
 impl InputReceiver for ActionBarLayer {
@@ -137,4 +142,22 @@ pub enum ActionButton {
     Up = sys::ButtonId_BUTTON_ID_UP,
     Select = sys::ButtonId_BUTTON_ID_SELECT,
     Down = sys::ButtonId_BUTTON_ID_DOWN,
+}
+
+#[derive(Clone)]
+pub struct WeakActionBarLayer {
+    handle: WeakHandle<ActionBarLayerInner>,
+}
+
+impl WeakActionBarLayer {
+    pub fn from(layer: &ActionBarLayer) -> Self {
+        Self {
+            handle: Rc::downgrade(&layer.handle),
+        }
+    }
+    pub fn upgrade(&self) -> Option<ActionBarLayer> {
+        Some(ActionBarLayer {
+            handle: self.handle.upgrade()?,
+        })
+    }
 }

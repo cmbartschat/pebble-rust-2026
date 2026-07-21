@@ -1,10 +1,10 @@
 use core::{ffi::c_void, pin::Pin, ptr::NonNull};
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     ClickConfigBuilder, ClickRecognizer, ContentIndicator, GPoint, GRect, GSize, Layer, Window,
-    handle::{Handle, new_handle},
+    handle::{Handle, WeakHandle, new_handle},
     input::{
         context::{InputContext, InputReceiver},
         handlers::global_click_config_handler,
@@ -265,10 +265,32 @@ impl ScrollLayer {
             }
         })
     }
+
+    pub fn downgrade(&self) -> WeakScrollLayer {
+        WeakScrollLayer::from(self)
+    }
 }
 
 impl InputReceiver for ScrollLayer {
     fn get_id(&self) -> usize {
         self.handle.as_ptr() as usize
+    }
+}
+
+#[derive(Clone)]
+pub struct WeakScrollLayer {
+    handle: WeakHandle<ScrollLayerInner>,
+}
+
+impl WeakScrollLayer {
+    pub fn from(layer: &ScrollLayer) -> Self {
+        Self {
+            handle: Rc::downgrade(&layer.handle),
+        }
+    }
+    pub fn upgrade(&self) -> Option<ScrollLayer> {
+        Some(ScrollLayer {
+            handle: self.handle.upgrade()?,
+        })
     }
 }

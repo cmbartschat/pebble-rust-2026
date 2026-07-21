@@ -5,11 +5,11 @@ use core::{
     str::FromStr,
 };
 
-use alloc::{boxed::Box, ffi::CString, vec::Vec};
+use alloc::{boxed::Box, ffi::CString, rc::Rc, vec::Vec};
 
 use crate::{
     Bitmap, GRect, Layer, Window,
-    handle::{Handle, new_handle},
+    handle::{Handle, WeakHandle, new_handle},
     input::context::InputReceiver,
     layer::{ChildLayer, LayerInner},
     log_c_str, sys,
@@ -248,10 +248,32 @@ impl SimpleMenuLayer {
     pub fn remove(&mut self) {
         ChildLayer::remove_from_parent(self);
     }
+
+    pub fn downgrade(&self) -> WeakSimpleMenuLayer {
+        WeakSimpleMenuLayer::from(self)
+    }
 }
 
 impl InputReceiver for SimpleMenuLayer {
     fn get_id(&self) -> usize {
         self.handle.borrow().raw.raw.as_ptr() as usize
+    }
+}
+
+#[derive(Clone)]
+pub struct WeakSimpleMenuLayer {
+    handle: WeakHandle<SimpleMenuLayerInner>,
+}
+
+impl WeakSimpleMenuLayer {
+    pub fn from(layer: &SimpleMenuLayer) -> Self {
+        Self {
+            handle: Rc::downgrade(&layer.handle),
+        }
+    }
+    pub fn upgrade(&self) -> Option<SimpleMenuLayer> {
+        Some(SimpleMenuLayer {
+            handle: self.handle.upgrade()?,
+        })
     }
 }
