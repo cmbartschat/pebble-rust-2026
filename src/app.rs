@@ -214,7 +214,7 @@ impl App {
         unsafe {
             with_state(|state| {
                 window.handle.borrow_mut().stack_push(animated);
-                state.visible_windows.push(window.retain());
+                state.visible_windows.push(window);
             });
         }
     }
@@ -227,15 +227,18 @@ impl App {
         self.show_inner(window, false);
     }
 
-    fn hide_inner(&self, window: Window, animated: bool) {
-        window.handle.borrow_mut().stack_remove(animated);
+    fn hide_inner(&self, window: &mut Window, animated: bool) {
+        unsafe {
+            let window = window.handle.borrow_mut().as_ptr_mut();
+            sys::window_stack_remove(window, animated)
+        };
     }
 
-    pub fn hide(&self, window: Window) {
+    pub fn hide(&self, window: &mut Window) {
         self.hide_inner(window, true);
     }
 
-    pub fn hide_immediate(&self, window: Window) {
+    pub fn hide_immediate(&self, window: &mut Window) {
         self.hide_inner(window, false);
     }
 

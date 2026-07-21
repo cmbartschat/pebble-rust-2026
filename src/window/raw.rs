@@ -1,21 +1,27 @@
-use core::{ffi::c_void, ptr::NonNull};
+use core::{cell::RefCell, ffi::c_void, ptr::NonNull};
 
 use alloc::boxed::Box;
 
 use crate::{
-    APP, GColor, GRect,
+    APP, GColor, GRect, Mutex, MutexToken,
+    effect::Effect,
     input::{context::InputContext, handlers::global_click_config_handler},
     sys,
 };
 
-type Callback = Box<dyn FnMut() + 'static>;
-type OnceCallback = Box<dyn FnOnce() + 'static>;
+pub type Callback = Box<dyn FnMut() + 'static>;
 
-pub(crate) struct WindowUserData {
-    pub(crate) load_handler: Option<OnceCallback>,
+pub(crate) struct WindowUserDataInner {
+    pub(crate) load_handler: Option<Callback>,
     pub(crate) appear_handler: Option<Callback>,
     pub(crate) disappear_handler: Option<Callback>,
-    pub(crate) unload_handler: Option<OnceCallback>,
+    pub(crate) unload_handler: Option<Callback>,
+    pub(crate) appear_effect: Effect,
+    pub(crate) load_effect: Effect,
+}
+
+pub(crate) struct WindowUserData {
+    pub(crate) inner: Mutex<RefCell<WindowUserDataInner>>,
 }
 
 pub(crate) struct WindowRaw {
@@ -47,7 +53,7 @@ impl WindowRaw {
         Some(res)
     }
 
-    fn as_ptr_mut(&mut self) -> *mut sys::Window {
+    pub(crate) fn as_ptr_mut(&mut self) -> *mut sys::Window {
         self.raw.as_ptr()
     }
 
@@ -65,10 +71,6 @@ impl WindowRaw {
 
     pub(crate) fn stack_push(&mut self, animated: bool) {
         unsafe { sys::window_stack_push(self.as_ptr_mut(), animated) };
-    }
-
-    pub(crate) fn stack_remove(&mut self, animated: bool) {
-        unsafe { sys::window_stack_remove(self.as_ptr_mut(), animated) };
     }
 
     pub unsafe fn set_user_data(&mut self, data: *mut WindowUserData) {
@@ -122,10 +124,13 @@ extern "C" fn global_handle_load(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.load_handler.take() else {
-            return;
-        };
-        handler();
+        MutexToken::with(|t| {
+            let mut data = data.inner.borrow_mut(t);
+            if let Some(handler) = &mut data.load_handler {
+                handler();
+            };
+            data.load_effect.mount();
+        });
     }
 }
 
@@ -136,10 +141,14 @@ extern "C" fn global_handle_appear(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.appear_handler.as_mut() else {
-            return;
-        };
-        handler();
+
+        MutexToken::with(|t| {
+            let mut data = data.inner.borrow_mut(t);
+            if let Some(handler) = &mut data.appear_handler {
+                handler();
+            };
+            data.appear_effect.mount();
+        });
     }
 }
 
@@ -150,10 +159,13 @@ extern "C" fn global_handle_disappear(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.disappear_handler.as_mut() else {
-            return;
-        };
-        handler();
+        MutexToken::with(|t| {
+            let mut data = data.inner.borrow_mut(t);
+            data.appear_effect.unmount();
+            if let Some(handler) = &mut data.disappear_handler {
+                handler();
+            };
+        });
     }
 }
 
@@ -164,10 +176,13 @@ extern "C" fn global_handle_unload(window: *mut sys::Window) {
         let Some(data) = user_data_ptr.as_mut() else {
             panic!("Window does not have a user data");
         };
-        let Some(handler) = data.unload_handler.take() else {
-            return;
-        };
-        handler();
+        MutexToken::with(|t| {
+            let mut data = data.inner.borrow_mut(t);
+            data.load_effect.unmount();
+            if let Some(handler) = &mut data.unload_handler {
+                handler();
+            };
+        });
     }
     APP.notify_unload(window);
 }

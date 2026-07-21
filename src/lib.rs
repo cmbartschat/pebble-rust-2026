@@ -15,6 +15,7 @@ mod content_indicator;
 mod context;
 mod custom_alloc;
 mod dictionary;
+mod effect;
 mod fmt;
 mod font;
 mod globals;

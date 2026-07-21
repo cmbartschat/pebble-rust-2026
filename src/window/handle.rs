@@ -1,7 +1,8 @@
-use alloc::rc::Rc;
+use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     ClickConfigBuilder, GColor, GRect,
+    effect::EffectCallback,
     handle::{Handle, WeakHandle, new_handle},
     input::context::InputReceiver,
     layer::ChildLayer,
@@ -45,16 +46,20 @@ impl Window {
         self.handle.borrow().is_equal(other)
     }
 
-    pub fn set_load_handler(&mut self, callback: impl FnOnce() + 'static) {
-        self.handle.borrow_mut().set_load_handler(callback);
+    pub fn set_load_handler(&mut self, callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow_mut()
+            .set_load_handler(Box::new(callback));
     }
 
     pub fn clear_load_handler(&mut self) {
         self.handle.borrow_mut().clear_load_handler();
     }
 
-    pub fn set_unload_handler(&mut self, callback: impl FnOnce() + 'static) {
-        self.handle.borrow_mut().set_unload_handler(callback);
+    pub fn set_unload_handler(&mut self, callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow_mut()
+            .set_unload_handler(Box::new(callback));
     }
 
     pub fn clear_unload_handler(&mut self) {
@@ -62,7 +67,9 @@ impl Window {
     }
 
     pub fn set_appear_handler(&mut self, callback: impl FnMut() + 'static) {
-        self.handle.borrow_mut().set_appear_handler(callback);
+        self.handle
+            .borrow_mut()
+            .set_appear_handler(Box::new(callback));
     }
 
     pub fn clear_appear_handler(&mut self) {
@@ -70,7 +77,9 @@ impl Window {
     }
 
     pub fn set_disappear_handler(&mut self, callback: impl FnMut() + 'static) {
-        self.handle.borrow_mut().set_disappear_handler(callback);
+        self.handle
+            .borrow_mut()
+            .set_disappear_handler(Box::new(callback));
     }
 
     pub fn clear_disappear_handler(&mut self) {
@@ -91,6 +100,14 @@ impl Window {
 
     pub(crate) fn remove_input_receiver(&mut self, receiver: &dyn InputReceiver) {
         self.handle.borrow_mut().remove_input_receiver(receiver);
+    }
+
+    pub fn set_appear_effect(&mut self, callback: EffectCallback) {
+        self.handle.borrow_mut().set_appear_effect(callback);
+    }
+
+    pub fn set_load_effect(&mut self, callback: EffectCallback) {
+        self.handle.borrow_mut().set_load_effect(callback);
     }
 }
 

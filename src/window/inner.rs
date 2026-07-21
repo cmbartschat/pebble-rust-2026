@@ -1,14 +1,15 @@
-use core::{ffi::c_void, pin::Pin};
+use core::{cell::RefCell, ffi::c_void, pin::Pin};
 
 use alloc::boxed::Box;
 
 use crate::{
-    ClickConfigBuilder, GColor, GRect, Layer,
+    ClickConfigBuilder, GColor, GRect, Layer, Mutex, MutexToken,
+    effect::{Effect, EffectCallback},
     handle::new_handle,
     input::context::{InputContext, InputReceiver},
     layer::{ChildLayer, LayerInner},
     sys,
-    window::raw::{WindowRaw, WindowUserData},
+    window::raw::{Callback, WindowRaw, WindowUserData, WindowUserDataInner},
 };
 
 struct ConnectedInput {
@@ -32,10 +33,14 @@ impl WindowInner {
         let layer = unsafe { LayerInner::from_ptr(raw.get_root_layer(), false)? };
 
         let user_data = Box::pin(WindowUserData {
-            load_handler: None,
-            appear_handler: None,
-            disappear_handler: None,
-            unload_handler: None,
+            inner: Mutex::new(RefCell::new(WindowUserDataInner {
+                load_handler: None,
+                appear_handler: None,
+                disappear_handler: None,
+                unload_handler: None,
+                appear_effect: Effect::None,
+                load_effect: Effect::None,
+            })),
         });
 
         let input_context = Box::pin(InputContext::default());
@@ -58,6 +63,10 @@ impl WindowInner {
         Some(res)
     }
 
+    pub(crate) unsafe fn as_ptr_mut(&mut self) -> *mut sys::Window {
+        self.raw.as_ptr_mut()
+    }
+
     pub fn set_background_color(&mut self, color: GColor) {
         self.raw.set_background_color(color);
     }
@@ -69,36 +78,58 @@ impl WindowInner {
         self.root_layer.add_child(child);
     }
 
-    pub fn set_load_handler(&mut self, callback: impl FnOnce() + 'static) {
-        self.user_data.load_handler = Some(Box::new(callback));
+    fn edit_context(&mut self, callback: impl FnOnce(&mut WindowUserDataInner)) {
+        MutexToken::with(|t| {
+            callback(&mut self.user_data.inner.borrow_mut(t));
+        });
+    }
+
+    pub fn set_load_handler(&mut self, callback: Callback) {
+        self.edit_context(|user_data| {
+            user_data.load_handler = Some(Box::new(callback));
+        });
     }
 
     pub fn clear_load_handler(&mut self) {
-        self.user_data.load_handler = None;
+        self.edit_context(|user_data| {
+            user_data.load_handler = None;
+        });
     }
 
-    pub fn set_unload_handler(&mut self, callback: impl FnOnce() + 'static) {
-        self.user_data.unload_handler = Some(Box::new(callback));
+    pub fn set_unload_handler(&mut self, callback: Callback) {
+        self.edit_context(|user_data| {
+            user_data.unload_handler = Some(Box::new(callback));
+        })
     }
 
     pub fn clear_unload_handler(&mut self) {
-        self.user_data.unload_handler = None;
+        self.edit_context(|user_data| {
+            user_data.unload_handler = None;
+        })
     }
 
-    pub fn set_appear_handler(&mut self, callback: impl FnMut() + 'static) {
-        self.user_data.appear_handler = Some(Box::new(callback));
+    pub fn set_appear_handler(&mut self, callback: Callback) {
+        self.edit_context(|user_data| {
+            user_data.appear_handler = Some(Box::new(callback));
+        })
     }
 
     pub fn clear_appear_handler(&mut self) {
-        self.user_data.appear_handler = None;
+        self.edit_context(|user_data| {
+            user_data.appear_handler = None;
+        });
     }
 
-    pub fn set_disappear_handler(&mut self, callback: impl FnMut() + 'static) {
-        self.user_data.disappear_handler = Some(Box::new(callback));
+    pub fn set_disappear_handler(&mut self, callback: Callback) {
+        self.edit_context(|user_data| {
+            user_data.disappear_handler = Some(Box::new(callback));
+        });
     }
 
     pub fn clear_disappear_handler(&mut self) {
-        self.user_data.disappear_handler = None;
+        self.edit_context(|user_data| {
+            user_data.disappear_handler = None;
+        });
     }
 
     pub(crate) fn is_equal(&self, other: *const sys::Window) -> bool {
@@ -107,10 +138,6 @@ impl WindowInner {
 
     pub(crate) fn stack_push(&mut self, animated: bool) {
         self.raw.stack_push(animated);
-    }
-
-    pub(crate) fn stack_remove(&mut self, animated: bool) {
-        self.raw.stack_remove(animated);
     }
 
     fn refresh_input_handler(&mut self) {
@@ -164,5 +191,17 @@ impl WindowInner {
 
     pub(crate) fn set_scroll_layer_click_config(&mut self, layer: *mut sys::ScrollLayer) {
         self.raw.set_scroll_layer_click_config(layer);
+    }
+
+    pub(crate) fn set_appear_effect(&mut self, callback: EffectCallback) {
+        self.edit_context(|user_data| {
+            user_data.appear_effect.set_callback(callback);
+        });
+    }
+
+    pub(crate) fn set_load_effect(&mut self, callback: EffectCallback) {
+        self.edit_context(|user_data| {
+            user_data.load_effect.set_callback(callback);
+        });
     }
 }
