@@ -28,6 +28,7 @@ pub struct App {
     pub unobstructed_area: service::UnobstructedArea,
     pub battery_state: service::BatteryState,
     pub compass: service::Compass,
+    pub bluetooth_connection: service::BluetoothConnection,
 }
 
 pub static APP: App = App {
@@ -36,6 +37,7 @@ pub static APP: App = App {
     unobstructed_area: service::UnobstructedArea::new(),
     battery_state: service::BatteryState::new(),
     compass: service::Compass::new(),
+    bluetooth_connection: service::BluetoothConnection::new(),
 };
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
