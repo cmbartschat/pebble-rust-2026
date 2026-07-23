@@ -24,12 +24,14 @@ pub struct AppState {
 
 pub struct App {
     pub persist: crate::persist::Persist,
-    pub touch: service::touch::Touch,
+    pub touch: service::Touch,
+    pub unobstructed_area: service::UnobstructedArea,
 }
 
 pub static APP: App = App {
     persist: crate::persist::Persist,
-    touch: service::touch::Touch::new(),
+    touch: service::Touch::new(),
+    unobstructed_area: service::UnobstructedArea::new(),
 };
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
