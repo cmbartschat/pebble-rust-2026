@@ -1,9 +1,12 @@
+mod accel;
 mod battery;
 mod bluetooth;
 mod compass;
 mod global_callback;
 mod touch;
 mod unobstructed_area;
+pub use accel::Accel;
+pub use accel::{AccelAxis, AccelData, AccelRawData, AccelSamplingRate};
 pub use battery::{BatteryChargeState, BatteryState};
 pub use bluetooth::BluetoothConnection;
 pub use compass::{Compass, CompassHeading};

@@ -69,6 +69,7 @@ pub use crate::scroll_layer::ScrollLayer;
 pub use crate::service::BatteryChargeState;
 pub use crate::service::CompassHeading;
 pub use crate::service::TouchEvent;
+pub use crate::service::{AccelAxis, AccelData, AccelRawData, AccelSamplingRate};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};
