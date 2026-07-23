@@ -31,6 +31,7 @@ mod point;
 mod raw_timer;
 mod rect;
 mod scroll_layer;
+mod service;
 mod simple_menu_layer;
 mod size;
 mod status_bar_layer;
@@ -65,7 +66,7 @@ pub use crate::layer::Layer;
 pub use crate::log::{log_c_str, log_str};
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::scroll_layer::ScrollLayer;
-
+pub use crate::service::touch::TouchEvent;
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};

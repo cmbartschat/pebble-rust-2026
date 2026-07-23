@@ -11,8 +11,7 @@ use crate::{
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
     log::log_c_str,
-    persist::Persist,
-    sys,
+    service, sys,
 };
 
 type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static>>;
@@ -24,10 +23,14 @@ pub struct AppState {
 }
 
 pub struct App {
-    pub persist: Persist,
+    pub persist: crate::persist::Persist,
+    pub touch: service::touch::Touch,
 }
 
-pub static APP: App = App { persist: Persist };
+pub static APP: App = App {
+    persist: crate::persist::Persist,
+    touch: service::touch::Touch::new(),
+};
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
     timer_callback: None,
