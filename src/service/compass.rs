@@ -1,10 +1,6 @@
 use alloc::boxed::Box;
 
-use crate::{
-    Angle,
-    service::global_callback::GlobalCallback,
-    sys::{self},
-};
+use crate::{Angle, service::global_callback::GlobalCallback, sys};
 
 pub struct Compass;
 

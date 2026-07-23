@@ -10,7 +10,7 @@ use crate::{
         handlers::global_click_config_handler,
     },
     layer::{ChildLayer, LayerInner},
-    sys::{self, ScrollLayerCallbacks},
+    sys,
     window::WeakWindow,
 };
 
@@ -118,7 +118,7 @@ impl ScrollLayer {
 
             sys::scroll_layer_set_callbacks(
                 raw.as_ptr(),
-                ScrollLayerCallbacks {
+                sys::ScrollLayerCallbacks {
                     click_config_provider: Some(global_click_config_handler),
                     content_offset_changed_handler: None,
                 },

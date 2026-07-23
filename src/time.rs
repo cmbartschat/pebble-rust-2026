@@ -1,9 +1,6 @@
 use alloc::ffi::CString;
 
-use crate::{
-    log::log_c_str,
-    sys::{self, mktime},
-};
+use crate::{log::log_c_str, sys};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Time {
@@ -106,7 +103,7 @@ impl TryFrom<&mut LocalTime> for Time {
     type Error = ();
 
     fn try_from(value: &mut LocalTime) -> Result<Self, Self::Error> {
-        let res = unsafe { mktime(&mut value.value) };
+        let res = unsafe { sys::mktime(&mut value.value) };
         if res == -1 {
             return Err(());
         }

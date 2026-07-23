@@ -1,9 +1,6 @@
 use alloc::boxed::Box;
 
-use crate::{
-    service::global_callback::GlobalCallback,
-    sys::{self},
-};
+use crate::{service::global_callback::GlobalCallback, sys};
 
 pub struct BluetoothConnection;
 

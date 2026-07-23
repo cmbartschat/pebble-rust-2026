@@ -2,11 +2,7 @@ use core::ffi::c_void;
 
 use alloc::boxed::Box;
 
-use crate::{
-    GRect, log_c_str,
-    service::global_callback::GlobalCallback,
-    sys::{self, UnobstructedAreaHandlers},
-};
+use crate::{GRect, log_c_str, service::global_callback::GlobalCallback, sys};
 
 pub struct UnobstructedArea {
     callback: GlobalCallback<GRect, ()>,
@@ -23,7 +19,7 @@ impl UnobstructedArea {
         self.callback.set(handler);
         unsafe {
             sys::unobstructed_area_service_subscribe(
-                UnobstructedAreaHandlers {
+                sys::UnobstructedAreaHandlers {
                     did_change: None,
                     change: None,
                     will_change: Some(global_unobstructed_area_handler),

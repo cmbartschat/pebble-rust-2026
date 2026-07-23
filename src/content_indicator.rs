@@ -1,9 +1,6 @@
 use core::ptr::{NonNull, null};
 
-use crate::{
-    GAlign, GColor, Layer, color,
-    sys::{self},
-};
+use crate::{GAlign, GColor, Layer, color, sys};
 
 pub struct ContentIndicator {
     raw: NonNull<sys::ContentIndicator>,
