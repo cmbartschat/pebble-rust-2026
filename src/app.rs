@@ -31,6 +31,7 @@ pub struct App {
     pub bluetooth_connection: service::BluetoothConnection,
     pub accel: service::Accel,
     pub focus: service::AppFocus,
+    pub wakeup: service::Wakeup,
 }
 
 pub static APP: App = App {
@@ -42,6 +43,7 @@ pub static APP: App = App {
     bluetooth_connection: service::BluetoothConnection::new(),
     accel: service::Accel::new(),
     focus: service::AppFocus::new(),
+    wakeup: service::Wakeup::new(),
 };
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
