@@ -1,7 +1,7 @@
 use alloc::boxed::Box;
 
 use crate::{
-    Time, log_fmt,
+    Time,
     service::global_callback::GlobalCallback,
     status_code::{StatusError, parse_status_result},
     sys,
@@ -18,7 +18,6 @@ impl Wakeup {
 
     pub fn schedule(&self, time: Time, reason: i32) -> Result<(), StatusError> {
         let res = unsafe { sys::wakeup_schedule(time.epoch_seconds(), reason, false) };
-        unsafe { log_fmt!(c"sys::wakeup_schedule result: %d", res) };
         parse_status_result(res.min(0) as i8).map(|_| ())
     }
 
