@@ -64,9 +64,7 @@ impl<P, T> GlobalCallback<P, T> {
         addr_of!(self.inner) as *const c_void as *mut c_void
     }
 
-    pub unsafe fn dispatch_callback(context: *mut c_void, data: P) -> Option<T> {
-        let mutex =
-            (unsafe { (context as *mut Mutex<RefCell<GlobalCallbackInner<P, T>>>).as_ref() })?;
+    fn dispatch_on(mutex: &Mutex<RefCell<GlobalCallbackInner<P, T>>>, data: P) -> Option<T> {
         MutexToken::with(|t| {
             let mut callback = {
                 match mutex.borrow_mut(t).extract() {
@@ -81,5 +79,16 @@ impl<P, T> GlobalCallback<P, T> {
 
             Some(res)
         })
+    }
+
+    pub unsafe fn dispatch_callback(context: *mut c_void, data: P) -> Option<T> {
+        let mutex =
+            (unsafe { (context as *mut Mutex<RefCell<GlobalCallbackInner<P, T>>>).as_ref() })?;
+
+        Self::dispatch_on(mutex, data)
+    }
+
+    pub(crate) fn dispatch(&self, data: P) -> Option<T> {
+        Self::dispatch_on(&self.inner, data)
     }
 }
