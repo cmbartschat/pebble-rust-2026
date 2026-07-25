@@ -3,10 +3,16 @@ use core::ptr::NonNull;
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
 use crate::{
-    GRect,
+    GContext, GRect,
     handle::{Handle, WeakHandle, new_handle},
+    log_c_str,
+    service::GlobalCallbackInner,
     sys,
 };
+
+pub struct LayerContext {
+    back_to_self: WeakHandle<LayerInner>,
+}
 
 pub trait ChildLayer {
     fn id(&self) -> usize;
@@ -19,6 +25,7 @@ pub struct LayerInner {
     pub(crate) raw: NonNull<sys::Layer>,
     parent: Option<WeakHandle<LayerInner>>,
     children: Vec<Box<dyn ChildLayer>>,
+    render: GlobalCallbackInner<Box<dyn FnMut(Layer, GContext)>>,
     owned: bool,
 }
 
@@ -37,6 +44,7 @@ impl LayerInner {
             raw: NonNull::new(ptr)?,
             parent: None,
             children: Vec::new(),
+            render: GlobalCallbackInner::new(),
             owned,
         })
     }
@@ -97,11 +105,15 @@ impl ChildLayer for Layer {
 impl Layer {
     pub fn new(frame: GRect) -> Option<Self> {
         unsafe {
-            let layer = sys::layer_create(frame);
+            // Same as sys::layer_create
+            let layer = sys::layer_create_with_data(frame, size_of::<Option<LayerContext>>());
             let handle = LayerInner::from_ptr(layer, true)?;
-            Some(Self {
-                handle: new_handle(handle),
-            })
+            let handle = new_handle(handle);
+            let context = (sys::layer_get_data(layer) as *mut Option<LayerContext>).as_mut()?;
+            *context = Some(LayerContext {
+                back_to_self: Rc::downgrade(&handle),
+            });
+            Some(Self { handle })
         }
     }
 
@@ -125,12 +137,32 @@ impl Layer {
         unsafe { sys::layer_set_bounds(self.as_ptr(), bounds) };
     }
 
-    pub fn set_update_proc(
+    fn _set_update_proc(
+        &mut self,
+        proc: Option<unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext)>,
+        callback: Option<Box<dyn FnMut(Layer, GContext)>>,
+    ) {
+        let mut inner = self.handle.borrow_mut();
+        unsafe { sys::layer_set_update_proc(inner.raw.as_ptr(), proc) };
+        unsafe { sys::layer_mark_dirty(inner.raw.as_ptr()) };
+        inner.render.set(callback);
+    }
+
+    pub fn set_raw_update_proc(
         &mut self,
         proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),
     ) {
-        unsafe { sys::layer_set_update_proc(self.as_ptr(), Some(proc)) };
+        self._set_update_proc(Some(proc), None);
     }
+
+    pub fn set_update_proc(&mut self, callback: Box<dyn FnMut(Layer, GContext)>) {
+        self._set_update_proc(Some(global_layer_update_handler), Some(callback));
+    }
+
+    pub fn clear_update_proc(&mut self) {
+        self._set_update_proc(None, None);
+    }
+
     unsafe fn as_ptr(&self) -> *mut sys::Layer {
         self.handle.borrow_mut().raw.as_ptr()
     }
@@ -149,5 +181,43 @@ impl Layer {
 
     pub fn remove(&mut self) {
         ChildLayer::remove_from_parent(self);
+    }
+}
+
+extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys::GContext) {
+    let ptr = unsafe { (sys::layer_get_data(layer) as *mut LayerContext).as_ref() };
+    let Some(inner_ref) = ptr.as_ref() else {
+        log_c_str(c"Unexpected: Layer data is null");
+        return;
+    };
+    let Some(ctx) = GContext::from_raw(ctx) else {
+        log_c_str(c"Unexpected: Layer context is null");
+        return;
+    };
+    let Some(inner_ref) = inner_ref.back_to_self.upgrade() else {
+        log_c_str(c"Unexpected: Layer inner is destroyed");
+        return;
+    };
+
+    let callback = {
+        let mut layer = inner_ref.borrow_mut();
+        layer.render.extract()
+    };
+
+    match callback {
+        Some(mut callback) => {
+            callback(
+                Layer {
+                    handle: inner_ref.clone(),
+                },
+                ctx,
+            );
+
+            let mut layer = inner_ref.borrow_mut();
+            layer.render.restore(callback);
+        }
+        None => {
+            log_c_str(c"Unexpected: Layer has no render function");
+        }
     }
 }

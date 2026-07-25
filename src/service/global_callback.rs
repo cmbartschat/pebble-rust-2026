@@ -6,29 +6,29 @@ use crate::{Mutex, MutexToken};
 
 type Callback<P, T> = Box<dyn FnMut(P) -> T>;
 
-struct GlobalCallbackInner<P, T> {
-    callback: Option<Callback<P, T>>,
+pub struct GlobalCallbackInner<F> {
+    callback: Option<F>,
     configured: bool,
 }
 
-impl<P, T> GlobalCallbackInner<P, T> {
+impl<T> GlobalCallbackInner<T> {
     pub const fn new() -> Self {
         Self {
             callback: None,
             configured: false,
         }
     }
-    pub fn set(&mut self, callback: Option<Callback<P, T>>) {
+    pub fn set(&mut self, callback: Option<T>) {
         self.callback = callback;
         self.configured = true;
     }
 
-    pub fn extract(&mut self) -> Option<Callback<P, T>> {
+    pub fn extract(&mut self) -> Option<T> {
         self.configured = false;
         self.callback.take()
     }
 
-    pub fn restore(&mut self, callback: Callback<P, T>) {
+    pub fn restore(&mut self, callback: T) {
         if self.configured {
             self.configured = false;
             return;
@@ -38,7 +38,7 @@ impl<P, T> GlobalCallbackInner<P, T> {
 }
 
 pub struct GlobalCallback<P, T> {
-    inner: Mutex<RefCell<GlobalCallbackInner<P, T>>>,
+    inner: Mutex<RefCell<GlobalCallbackInner<Callback<P, T>>>>,
 }
 
 impl<P, T> GlobalCallback<P, T> {
@@ -64,7 +64,10 @@ impl<P, T> GlobalCallback<P, T> {
         addr_of!(self.inner) as *const c_void as *mut c_void
     }
 
-    fn dispatch_on(mutex: &Mutex<RefCell<GlobalCallbackInner<P, T>>>, data: P) -> Option<T> {
+    fn dispatch_on(
+        mutex: &Mutex<RefCell<GlobalCallbackInner<Callback<P, T>>>>,
+        data: P,
+    ) -> Option<T> {
         MutexToken::with(|t| {
             let mut callback = {
                 match mutex.borrow_mut(t).extract() {
@@ -82,8 +85,9 @@ impl<P, T> GlobalCallback<P, T> {
     }
 
     pub unsafe fn dispatch_callback(context: *mut c_void, data: P) -> Option<T> {
-        let mutex =
-            (unsafe { (context as *mut Mutex<RefCell<GlobalCallbackInner<P, T>>>).as_ref() })?;
+        let mutex = (unsafe {
+            (context as *mut Mutex<RefCell<GlobalCallbackInner<Callback<P, T>>>>).as_ref()
+        })?;
 
         Self::dispatch_on(mutex, data)
     }
