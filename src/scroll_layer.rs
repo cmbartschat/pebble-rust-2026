@@ -269,6 +269,14 @@ impl ScrollLayer {
     pub fn downgrade(&self) -> WeakScrollLayer {
         WeakScrollLayer::from(self)
     }
+
+    pub fn get_hidden(&self) -> bool {
+        self.handle.borrow().base_layer.get_hidden()
+    }
+
+    pub fn set_hidden(&mut self, hidden: bool) {
+        self.handle.borrow_mut().base_layer.set_hidden(hidden)
+    }
 }
 
 impl InputReceiver for ScrollLayer {

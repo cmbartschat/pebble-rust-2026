@@ -1,7 +1,7 @@
 use core::ptr::NonNull;
 
 use crate::{
-    GColor, Layer,
+    GColor, GPoint, GRect, Layer,
     handle::{Handle, new_handle},
     layer::{ChildLayer, LayerInner},
     sys,
@@ -93,6 +93,25 @@ impl StatusBarLayer {
 
     pub fn remove(&mut self) {
         ChildLayer::remove_from_parent(self);
+    }
+
+    pub fn get_hidden(&self) -> bool {
+        self.handle.borrow().base_layer.get_hidden()
+    }
+
+    pub fn set_hidden(&mut self, hidden: bool) {
+        self.handle.borrow_mut().base_layer.set_hidden(hidden)
+    }
+
+    pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {
+        self.handle
+            .borrow_mut()
+            .base_layer
+            .convert_point_to_screen(point)
+    }
+
+    pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
+        self.handle.borrow().base_layer.convert_rect_to_screen(rect)
     }
 }
 

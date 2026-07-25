@@ -3,7 +3,7 @@ use core::ptr::NonNull;
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
 use crate::{
-    GContext, GRect,
+    GContext, GPoint, GRect,
     handle::{Handle, WeakHandle, new_handle},
     log_c_str,
     service::GlobalCallbackInner,
@@ -177,6 +177,34 @@ impl Layer {
 
     pub fn set_frame(&mut self, frame: GRect) {
         unsafe { sys::layer_set_frame(self.as_ptr(), frame) }
+    }
+
+    pub fn get_clips(&self) -> bool {
+        unsafe { sys::layer_get_clips(self.as_ptr()) }
+    }
+
+    pub fn set_clips(&mut self, clips: bool) {
+        unsafe { sys::layer_set_clips(self.as_ptr(), clips) }
+    }
+
+    pub fn get_hidden(&self) -> bool {
+        unsafe { sys::layer_get_hidden(self.as_ptr()) }
+    }
+
+    pub fn set_hidden(&mut self, hidden: bool) {
+        unsafe { sys::layer_set_hidden(self.as_ptr(), hidden) }
+    }
+
+    pub fn get_unobstructed_bounds(&self) -> GRect {
+        unsafe { sys::layer_get_unobstructed_bounds(self.as_ptr()) }
+    }
+
+    pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {
+        unsafe { sys::layer_convert_point_to_screen(self.as_ptr(), point) }
+    }
+
+    pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
+        unsafe { sys::layer_convert_rect_to_screen(self.as_ptr(), rect) }
     }
 
     pub fn remove(&mut self) {
