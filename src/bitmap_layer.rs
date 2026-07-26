@@ -3,7 +3,7 @@ use core::{cell::RefCell, ptr::NonNull};
 use alloc::rc::Rc;
 
 use crate::{
-    GPoint, GRect, Layer,
+    CompOp, GAlign, GColor, GPoint, GRect, Layer,
     bitmap::Bitmap,
     layer::{ChildLayer, LayerInner},
     sys,
@@ -111,5 +111,26 @@ impl BitmapLayer {
 
     pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
         self.handle.borrow().base_layer.convert_rect_to_screen(rect)
+    }
+
+    pub fn set_compositing_mode(&mut self, mode: CompOp) {
+        unsafe {
+            sys::bitmap_layer_set_compositing_mode(
+                self.handle.borrow_mut().raw.as_ptr(),
+                mode as u8,
+            )
+        };
+    }
+
+    pub fn set_alignment(&mut self, align: GAlign) {
+        unsafe {
+            sys::bitmap_layer_set_alignment(self.handle.borrow_mut().raw.as_ptr(), align as u8)
+        };
+    }
+
+    pub fn set_background_color(&mut self, color: GColor) {
+        unsafe {
+            sys::bitmap_layer_set_background_color(self.handle.borrow_mut().raw.as_ptr(), color)
+        };
     }
 }
