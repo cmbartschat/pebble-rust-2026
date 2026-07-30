@@ -78,6 +78,10 @@ impl WindowInner {
         self.root_layer.add_child(child);
     }
 
+    pub fn remove_child_layers(&mut self) {
+        self.root_layer.remove_child_layers();
+    }
+
     fn edit_context(&mut self, callback: impl FnOnce(&mut WindowUserDataInner)) {
         MutexToken::with(|t| {
             callback(&mut self.user_data.inner.borrow_mut(t));

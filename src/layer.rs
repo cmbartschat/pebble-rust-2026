@@ -1,4 +1,4 @@
-use core::ptr::NonNull;
+use core::{mem::swap, ptr::NonNull};
 
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
@@ -209,6 +209,17 @@ impl Layer {
 
     pub fn remove(&mut self) {
         ChildLayer::remove_from_parent(self);
+    }
+
+    pub fn remove_child_layers(&mut self) {
+        let children = {
+            let mut inner = self.handle.borrow_mut();
+            let mut empty = Vec::new();
+            swap(&mut inner.children, &mut empty);
+            empty
+        };
+
+        children.iter().for_each(|f| f.remove_from_parent());
     }
 }
 

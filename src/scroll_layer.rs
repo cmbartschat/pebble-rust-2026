@@ -258,6 +258,10 @@ impl ScrollLayer {
         ChildLayer::remove_from_parent(self);
     }
 
+    pub fn remove_child_layers(&mut self) {
+        self.handle.borrow_mut().base_layer.remove_child_layers();
+    }
+
     pub fn with_content_indicator(&mut self, f: impl FnOnce(&mut ContentIndicator)) {
         self.inner_mut(|inner| {
             if let Some(indicator) = inner.get_or_create_content_indicator() {

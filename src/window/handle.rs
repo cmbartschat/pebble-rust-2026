@@ -32,6 +32,10 @@ impl Window {
         self.handle.borrow_mut().add_child(child);
     }
 
+    pub fn remove_child_layers(&mut self) {
+        self.handle.borrow_mut().remove_child_layers();
+    }
+
     pub fn retain(&self) -> Window {
         Self {
             handle: self.handle.clone(),
