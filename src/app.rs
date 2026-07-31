@@ -230,7 +230,8 @@ impl App {
     fn show_inner(&self, window: Window, animated: bool) {
         unsafe {
             with_state(|state| {
-                window.handle.borrow_mut().stack_push(animated);
+                let window_ptr = { window.handle.borrow_mut().as_ptr_mut() };
+                sys::window_stack_push(window_ptr, animated);
                 state.visible_windows.push(window);
             });
         }
