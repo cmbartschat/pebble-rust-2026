@@ -56,7 +56,7 @@ impl LocalTime {
     }
 
     pub fn hour(&self) -> i32 {
-        self.value.tm_min
+        self.value.tm_hour
     }
 
     pub fn day(&self) -> i32 {
