@@ -78,7 +78,7 @@ pub use crate::status_code::{StatusError, StatusResult, StatusSuccess};
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};
 pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;
-pub use crate::time::{Time, TimeUnits};
+pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
 pub use crate::window::Window;
 pub use proc::*;
