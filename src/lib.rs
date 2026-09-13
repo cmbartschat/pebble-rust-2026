@@ -48,7 +48,7 @@ pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
 pub use crate::align::GAlign;
-pub use crate::angle::{Angle, Random};
+pub use crate::angle::{Angle, Random, Ratio};
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;

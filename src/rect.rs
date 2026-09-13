@@ -3,7 +3,19 @@ use crate::{Angle, GAlign, GEdgeInsets, GPoint, GRect, GSize};
 use crate::sys;
 
 impl GRect {
-    pub fn new(x: i16, y: i16, w: i16, h: i16) -> Self {
+    /// Creates a new rectangle from the origin point (top left) and the size.
+    pub const fn new_from_top_left(origin: GPoint, size: GSize) -> Self {
+        Self { origin, size }
+    }
+
+    /// Creates a new centered rectangle with the given center point and the size.
+    pub const fn new_centered(center: GPoint, size: GSize) -> Self {
+        let origin = center.subtract(size.divide(2).as_point());
+        Self { origin, size }
+    }
+
+    /// Creates a new rectangle with the given x, y, width and height.
+    pub const fn new(x: i16, y: i16, w: i16, h: i16) -> Self {
         Self {
             origin: GPoint { x, y },
             size: GSize { w, h },
