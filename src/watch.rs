@@ -232,26 +232,20 @@ pub enum WatchModel {
 impl WatchModel {
     /// Returns true if this is any model with a circular screen.
     pub const fn is_round(&self) -> bool {
-        match self {
-            Self::TimeRound | Self::Round2 => true,
-            _ => false,
-        }
+        matches!(self, Self::TimeRound | Self::Round2)
     }
 
     /// Returns true if this is any model manufactured by Core Devices (new company / repebble.com)
     pub const fn is_core_devices(&self) -> bool {
-        match self {
-            Self::TwoDuo | Self::Time2CoreDevices | Self::Round2 => true,
-            _ => false,
-        }
+        matches!(self, Self::TwoDuo | Self::Time2CoreDevices | Self::Round2)
     }
 
     /// Returns true if this model supports colors.
     pub const fn supports_color(&self) -> bool {
-        match self {
-            Self::Original | Self::Steel | Self::TwoHr | Self::TwoSe | Self::TwoDuo => false,
-            _ => true,
-        }
+        !matches!(
+            self,
+            Self::Original | Self::Steel | Self::TwoHr | Self::TwoSe | Self::TwoDuo
+        )
     }
 }
 

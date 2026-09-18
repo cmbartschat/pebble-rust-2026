@@ -31,7 +31,7 @@ impl From<DictionaryWriteError> for AppMessageError {
 
 pub type AppMessageResult<T> = Result<T, AppMessageError>;
 
-pub(crate) fn app_message_result_from_raw(v: sys::AppMessageResult) -> AppMessageResult<()> {
+pub(crate) const fn app_message_result_from_raw(v: sys::AppMessageResult) -> AppMessageResult<()> {
     use super::AppMessageError as Error;
     Err(match v {
         sys::AppMessageResult_APP_MSG_OK => return Ok(()),

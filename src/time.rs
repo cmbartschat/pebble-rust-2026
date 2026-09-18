@@ -18,11 +18,11 @@ impl Time {
         res
     }
 
-    pub fn from_epoch_seconds(seconds: sys::time_t) -> Self {
+    pub const fn from_epoch_seconds(seconds: sys::time_t) -> Self {
         Self { value: seconds }
     }
 
-    pub fn epoch_seconds(&self) -> sys::time_t {
+    pub const fn epoch_seconds(&self) -> sys::time_t {
         self.value
     }
 
@@ -49,27 +49,27 @@ impl LocalTime {
         Time::now().into()
     }
 
-    pub fn second(&self) -> i32 {
+    pub const fn second(&self) -> i32 {
         self.value.tm_sec
     }
 
-    pub fn minute(&self) -> i32 {
+    pub const fn minute(&self) -> i32 {
         self.value.tm_min
     }
 
-    pub fn hour(&self) -> i32 {
+    pub const fn hour(&self) -> i32 {
         self.value.tm_hour
     }
 
-    pub fn day(&self) -> i32 {
+    pub const fn day(&self) -> i32 {
         self.value.tm_mday
     }
 
-    pub fn month(&self) -> i32 {
+    pub const fn month(&self) -> i32 {
         self.value.tm_mon
     }
 
-    pub fn year(&self) -> i32 {
+    pub const fn year(&self) -> i32 {
         self.value.tm_year
     }
 

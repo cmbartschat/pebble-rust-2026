@@ -25,11 +25,11 @@ impl From<NonNull<sys::ScrollLayer>> for ScrollLayerRaw {
 }
 
 impl ScrollLayerRaw {
-    fn as_ptr(&self) -> *const sys::ScrollLayer {
+    const fn as_ptr(&self) -> *const sys::ScrollLayer {
         self.raw.as_ptr()
     }
 
-    fn as_ptr_mut(&mut self) -> *mut sys::ScrollLayer {
+    const fn as_ptr_mut(&mut self) -> *mut sys::ScrollLayer {
         self.raw.as_ptr()
     }
 }

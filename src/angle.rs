@@ -43,6 +43,8 @@ impl Angle {
 
     /// Creates an angle from a raw angle value between 0 and [`sys::TRIG_MAX_ANGLE`].
     ///
+    /// # Safety
+    ///
     /// This function is unsafe, because passing an invalid angle value in here
     /// will cause undefined behavior in the trigonometry functions like [`Self::sin`].
     pub const unsafe fn from_raw(value: i32) -> Self {

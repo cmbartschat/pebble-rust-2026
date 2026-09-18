@@ -25,3 +25,6 @@ opt-level = 2
 
 [profile.dev]
 panic = "abort"
+
+[lints.clippy]
+missing-const-for-fn = "warn"

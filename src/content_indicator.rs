@@ -112,7 +112,7 @@ pub struct ContentIndicatorConfig {
 }
 
 impl ContentIndicatorConfig {
-    pub fn basic(layer: Layer) -> Self {
+    pub const fn basic(layer: Layer) -> Self {
         Self {
             layer,
             times_out: false,
