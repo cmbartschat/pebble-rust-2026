@@ -37,18 +37,18 @@ pub enum WatchColor {
     TimeRound20Silver = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_SILVER_20,
     TimeRound20Black = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_BLACK_20,
     TimeRound14RoseGold = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_ROSE_GOLD_14,
-    TwoHrBlack = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK,
-    TwoHrLime = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_LIME,
-    TwoHrFlame = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_FLAME,
-    TwoHrWhite = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_WHITE,
-    TwoHrAqua = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_AQUA,
-    TwoSeBlack = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_BLACK,
-    TwoSeWhite = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_WHITE,
+    Hr2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK,
+    Hr2Lime = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_LIME,
+    Hr2Flame = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_FLAME,
+    Hr2White = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_WHITE,
+    Hr2Aqua = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_AQUA,
+    Se2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_BLACK,
+    Se2White = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_WHITE,
     Time2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_BLACK,
     Time2Silver = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_SILVER,
     Time2Gold = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_GOLD,
-    TwoDuoBlack = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
-    TwoDuoWhite = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
+    Duo2Black = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
+    Duo2White = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
     Time2CoreDevicesGray = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
     Time2CoreDevicesRed = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED,
     Time2CoreDevicesSilverBlue = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE,
@@ -86,18 +86,18 @@ impl TryFrom<u8> for WatchColor {
             WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_SILVER_20 => Self::TimeRound20Silver,
             WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_BLACK_20 => Self::TimeRound20Black,
             WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_ROSE_GOLD_14 => Self::TimeRound14RoseGold,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK => Self::TwoHrBlack,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_LIME => Self::TwoHrLime,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_FLAME => Self::TwoHrFlame,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_WHITE => Self::TwoHrWhite,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_AQUA => Self::TwoHrAqua,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_BLACK => Self::TwoSeBlack,
-            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_WHITE => Self::TwoSeWhite,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK => Self::Hr2Black,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_LIME => Self::Hr2Lime,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_FLAME => Self::Hr2Flame,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_WHITE => Self::Hr2White,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_AQUA => Self::Hr2Aqua,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_BLACK => Self::Se2Black,
+            WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_WHITE => Self::Se2White,
             WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_BLACK => Self::Time2Black,
             WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_SILVER => Self::Time2Silver,
             WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_GOLD => Self::Time2Gold,
-            WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK => Self::TwoDuoBlack,
-            WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE => Self::TwoDuoWhite,
+            WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK => Self::Duo2Black,
+            WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE => Self::Duo2White,
             WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY => {
                 Self::Time2CoreDevicesGray
             }
@@ -120,53 +120,52 @@ impl TryFrom<u8> for WatchColor {
 impl WatchColor {
     /// Returns the simplified color of this watch.
     /// The result is opinionated, but should be more helpful if you’re trying to be forwards-compatible with matching your menu/watch face to the watch color.
-    pub fn simple_color(self) -> SimpleWatchColor {
-        self.into()
+    pub const fn simple_color(self) -> SimpleWatchColor {
+        match self {
+            Self::OriginalBlack
+            | Self::SteelBlack
+            | Self::OriginalMatteBlack
+            | Self::TimeBlack
+            | Self::TimeRound20Black
+            | Self::Hr2Black
+            | Self::Time2Black
+            | Self::Duo2Black
+            | Self::Round2_20Black
+            | Self::Se2Black
+            | Self::TimeRound14Black => SimpleWatchColor::Black,
+            Self::Se2White
+            | Self::Duo2White
+            | Self::Hr2White
+            | Self::OriginalWhite
+            | Self::TimeWhite => SimpleWatchColor::White,
+            Self::Hr2Flame | Self::Time2CoreDevicesRed | Self::OriginalRed | Self::TimeRed => {
+                SimpleWatchColor::Redish
+            }
+            Self::OriginalOrange => SimpleWatchColor::Orange,
+            Self::Time2CoreDevicesGray | Self::Time2CoreDevicesSilverGray | Self::OriginalGray => {
+                SimpleWatchColor::Gray
+            }
+            Self::OriginalStainlessSteel
+            | Self::Round2_14Silver
+            | Self::TimeRound14Silver
+            | Self::TimeRound20Silver
+            | Self::SteelSilver
+            | Self::Time2Silver
+            | Self::Round2_20Silver => SimpleWatchColor::Silver,
+            Self::Hr2Aqua | Self::Time2CoreDevicesSilverBlue | Self::OriginalBlue => {
+                SimpleWatchColor::Blueish
+            }
+            Self::OriginalGreen | Self::Hr2Lime => SimpleWatchColor::Greenish,
+            Self::OriginalPink => SimpleWatchColor::Pink,
+            Self::TimeRound14RoseGold => SimpleWatchColor::RoseGold,
+            Self::Time2Gold | Self::SteelGold | Self::Round2_14Gold => SimpleWatchColor::Gold,
+        }
     }
 }
 
 impl From<WatchColor> for SimpleWatchColor {
     fn from(value: WatchColor) -> Self {
-        match value {
-            WatchColor::OriginalBlack
-            | WatchColor::SteelBlack
-            | WatchColor::OriginalMatteBlack
-            | WatchColor::TimeBlack
-            | WatchColor::TimeRound20Black
-            | WatchColor::TwoHrBlack
-            | WatchColor::Time2Black
-            | WatchColor::TwoDuoBlack
-            | WatchColor::Round2_20Black
-            | WatchColor::TwoSeBlack
-            | WatchColor::TimeRound14Black => Self::Black,
-            WatchColor::TwoSeWhite
-            | WatchColor::TwoDuoWhite
-            | WatchColor::TwoHrWhite
-            | WatchColor::OriginalWhite
-            | WatchColor::TimeWhite => Self::White,
-            WatchColor::TwoHrFlame
-            | WatchColor::Time2CoreDevicesRed
-            | WatchColor::OriginalRed
-            | WatchColor::TimeRed => Self::Redish,
-            WatchColor::OriginalOrange => Self::Orange,
-            WatchColor::Time2CoreDevicesGray
-            | WatchColor::Time2CoreDevicesSilverGray
-            | WatchColor::OriginalGray => Self::Gray,
-            WatchColor::OriginalStainlessSteel
-            | WatchColor::Round2_14Silver
-            | WatchColor::TimeRound14Silver
-            | WatchColor::TimeRound20Silver
-            | WatchColor::SteelSilver
-            | WatchColor::Time2Silver
-            | WatchColor::Round2_20Silver => Self::Silver,
-            WatchColor::TwoHrAqua
-            | WatchColor::Time2CoreDevicesSilverBlue
-            | WatchColor::OriginalBlue => Self::Blueish,
-            WatchColor::OriginalGreen | WatchColor::TwoHrLime => Self::Greenish,
-            WatchColor::OriginalPink => Self::Pink,
-            WatchColor::TimeRound14RoseGold => Self::RoseGold,
-            WatchColor::Time2Gold | WatchColor::SteelGold | WatchColor::Round2_14Gold => Self::Gold,
-        }
+        value.simple_color()
     }
 }
 
@@ -218,11 +217,11 @@ pub enum WatchModel {
     /// Pebble Time 2 (original).
     Time2 = WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_TIME_2,
     /// Pebble 2 HR.
-    TwoHr = WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_HR,
+    Hr2 = WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_HR,
     /// Pebble 2 SE.
-    TwoSe = WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_SE,
+    Se2 = WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_SE,
     /// Pebble 2 Duo (CoreDevices)
-    TwoDuo = WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_P2D,
+    Duo2 = WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_P2D,
     /// Pebble Time 2 (CoreDevices / re-manufactured version)
     Time2CoreDevices = WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_PT2,
     /// Pebble Round 2
@@ -237,14 +236,14 @@ impl WatchModel {
 
     /// Returns true if this is any model manufactured by Core Devices (new company / repebble.com)
     pub const fn is_core_devices(&self) -> bool {
-        matches!(self, Self::TwoDuo | Self::Time2CoreDevices | Self::Round2)
+        matches!(self, Self::Duo2 | Self::Time2CoreDevices | Self::Round2)
     }
 
     /// Returns true if this model supports colors.
     pub const fn supports_color(&self) -> bool {
         !matches!(
             self,
-            Self::Original | Self::Steel | Self::TwoHr | Self::TwoSe | Self::TwoDuo
+            Self::Original | Self::Steel | Self::Hr2 | Self::Se2 | Self::Duo2
         )
     }
 }
@@ -262,9 +261,9 @@ impl TryFrom<u8> for WatchModel {
             WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_TIME_ROUND_14
             | WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_TIME_ROUND_20 => Self::TimeRound,
             WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_TIME_2 => Self::Time2,
-            WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_HR => Self::TwoHr,
-            WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_SE => Self::TwoSe,
-            WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_P2D => Self::TwoDuo,
+            WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_HR => Self::Hr2,
+            WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_2_SE => Self::Se2,
+            WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_P2D => Self::Duo2,
             WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_PT2 => Self::Time2CoreDevices,
             WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_PR2 => Self::Round2,
             _ => return Err(()),
