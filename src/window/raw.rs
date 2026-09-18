@@ -40,11 +40,11 @@ impl WindowRaw {
         Some(res)
     }
 
-    pub(crate) fn as_ptr_mut(&mut self) -> *mut sys::Window {
+    pub(crate) const fn as_ptr_mut(&mut self) -> *mut sys::Window {
         self.raw.as_ptr()
     }
 
-    fn as_ptr(&self) -> *const sys::Window {
+    const fn as_ptr(&self) -> *const sys::Window {
         self.raw.as_ptr()
     }
 

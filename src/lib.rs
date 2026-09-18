@@ -41,6 +41,7 @@ mod text_attributes;
 mod text_layer;
 mod time;
 mod timer;
+mod watch;
 mod window;
 
 pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
@@ -48,7 +49,7 @@ pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
 pub use crate::align::GAlign;
-pub use crate::angle::{Angle, Random};
+pub use crate::angle::{Angle, Random, Ratio};
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
@@ -80,5 +81,6 @@ pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode
 pub use crate::text_layer::TextLayer;
 pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
+pub use crate::watch::{SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
 pub use crate::window::Window;
 pub use proc::*;

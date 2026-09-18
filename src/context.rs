@@ -16,7 +16,7 @@ impl GContext {
         })
     }
 
-    fn as_ptr_mut(&mut self) -> *mut sys::GContext {
+    const fn as_ptr_mut(&mut self) -> *mut sys::GContext {
         self.raw.as_ptr()
     }
 

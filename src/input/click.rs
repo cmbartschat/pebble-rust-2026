@@ -33,7 +33,7 @@ pub struct ClickConfigBuilder<'a> {
 }
 
 impl<'a> ClickConfigBuilder<'a> {
-    pub(crate) unsafe fn new(handlers: &'a mut ClickConfig) -> Self {
+    pub(crate) const unsafe fn new(handlers: &'a mut ClickConfig) -> Self {
         Self { handlers }
     }
 

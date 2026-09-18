@@ -121,6 +121,7 @@ extern "C" fn global_outbox_failed_handler(
     }
 }
 
+#[allow(clippy::missing_const_for_fn)]
 extern "C" fn global_outbox_sent_handler(
     _iterator: *mut sys::DictionaryIterator,
     _context: *mut ::core::ffi::c_void,

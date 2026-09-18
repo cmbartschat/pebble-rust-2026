@@ -67,14 +67,14 @@ impl Default for ActionMenuLevel {
 }
 
 impl ActionMenuLevel {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             items: Vec::new(),
             display_mode: ActionMenuLevelDisplayMode::Wide,
         }
     }
 
-    pub fn set_display_mode(&mut self, mode: ActionMenuLevelDisplayMode) {
+    pub const fn set_display_mode(&mut self, mode: ActionMenuLevelDisplayMode) {
         self.display_mode = mode;
     }
 
@@ -130,17 +130,17 @@ pub struct ActionMenuBuilder {
 }
 
 impl ActionMenuBuilder {
-    pub fn set_foreground_color(mut self, color: GColor) -> Self {
+    pub const fn set_foreground_color(mut self, color: GColor) -> Self {
         self.foreground_color = color;
         self
     }
 
-    pub fn set_background_color(mut self, color: GColor) -> Self {
+    pub const fn set_background_color(mut self, color: GColor) -> Self {
         self.background_color = color;
         self
     }
 
-    pub fn set_align(mut self, align: ActionMenuAlign) -> Self {
+    pub const fn set_align(mut self, align: ActionMenuAlign) -> Self {
         self.align = align;
         self
     }
@@ -159,7 +159,7 @@ pub struct ActionMenu {
 }
 
 impl ActionMenu {
-    pub fn begin(level: ActionMenuLevel) -> ActionMenuBuilder {
+    pub const fn begin(level: ActionMenuLevel) -> ActionMenuBuilder {
         ActionMenuBuilder {
             foreground_color: GCOLOR_BLACK,
             background_color: GCOLOR_DUKE_BLUE,

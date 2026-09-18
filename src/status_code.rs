@@ -28,7 +28,7 @@ pub enum StatusSuccess {
 
 pub type StatusResult = Result<StatusSuccess, StatusError>;
 
-pub fn parse_status_result(value: sys::StatusCode) -> Result<StatusSuccess, StatusError> {
+pub const fn parse_status_result(value: sys::StatusCode) -> Result<StatusSuccess, StatusError> {
     match value {
         sys::StatusCode_S_NO_ACTION_REQUIRED => Ok(StatusSuccess::NoActionRequired),
         sys::StatusCode_S_NO_MORE_ITEMS => Ok(StatusSuccess::NoMoreItems),

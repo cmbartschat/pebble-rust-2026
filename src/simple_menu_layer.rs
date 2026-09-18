@@ -165,7 +165,7 @@ impl SimpleMenuSection {
         }
     }
 
-    pub fn new_untitled() -> Self {
+    pub const fn new_untitled() -> Self {
         Self {
             title: None,
             items: Vec::new(),

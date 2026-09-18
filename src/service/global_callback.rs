@@ -23,7 +23,7 @@ impl<T> GlobalCallbackInner<T> {
         self.configured = true;
     }
 
-    pub fn extract(&mut self) -> Option<T> {
+    pub const fn extract(&mut self) -> Option<T> {
         self.configured = false;
         self.callback.take()
     }

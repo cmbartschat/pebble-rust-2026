@@ -1,3 +1,5 @@
+#![allow(clippy::missing_const_for_fn)]
+
 extern crate alloc;
 
 use core::panic::PanicInfo;

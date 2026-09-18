@@ -1,4 +1,6 @@
-use alloc::ffi::CString;
+use core::ffi::CStr;
+
+use alloc::{ffi::CString, vec};
 
 use crate::{log::log_c_str, sys};
 
@@ -16,11 +18,11 @@ impl Time {
         res
     }
 
-    pub fn from_epoch_seconds(seconds: sys::time_t) -> Self {
+    pub const fn from_epoch_seconds(seconds: sys::time_t) -> Self {
         Self { value: seconds }
     }
 
-    pub fn epoch_seconds(&self) -> sys::time_t {
+    pub const fn epoch_seconds(&self) -> sys::time_t {
         self.value
     }
 
@@ -47,41 +49,39 @@ impl LocalTime {
         Time::now().into()
     }
 
-    pub fn second(&self) -> i32 {
+    pub const fn second(&self) -> i32 {
         self.value.tm_sec
     }
 
-    pub fn minute(&self) -> i32 {
+    pub const fn minute(&self) -> i32 {
         self.value.tm_min
     }
 
-    pub fn hour(&self) -> i32 {
+    pub const fn hour(&self) -> i32 {
         self.value.tm_hour
     }
 
-    pub fn day(&self) -> i32 {
+    pub const fn day(&self) -> i32 {
         self.value.tm_mday
     }
 
-    pub fn month(&self) -> i32 {
+    pub const fn month(&self) -> i32 {
         self.value.tm_mon
     }
 
-    pub fn year(&self) -> i32 {
+    pub const fn year(&self) -> i32 {
         self.value.tm_year
     }
 
-    pub fn format_hh_mm(&self) -> CString {
-        let mut buffer = [0; 10];
+    /// Formats this time. See the [strftime] documentation on the format string syntax.
+    pub fn format(&self, format: &CStr) -> CString {
+        // Triple size is a good estimate, since even a year specifier (%Y) only expands to double size.
+        let mut buffer = vec![0u8; format.count_bytes() * 3];
         let written = unsafe {
             sys::strftime(
                 buffer.as_mut_ptr(),
                 buffer.len(),
-                if sys::clock_is_24h_style() {
-                    c"%H:%M".as_ptr()
-                } else {
-                    c"%I:%M".as_ptr()
-                },
+                format.as_ptr(),
                 &self.value,
             )
         };
@@ -90,6 +90,14 @@ impl LocalTime {
             panic!("Time overflowed buffer");
         }
         CString::new(&buffer[0..written]).unwrap()
+    }
+
+    pub fn format_hh_mm(&self) -> CString {
+        self.format(if unsafe { sys::clock_is_24h_style() } {
+            c"%H:%M"
+        } else {
+            c"%I:%M"
+        })
     }
 }
 

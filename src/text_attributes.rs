@@ -17,7 +17,7 @@ impl Drop for TextAttributes {
 }
 
 impl TextAttributes {
-    pub fn new(font: Font) -> Self {
+    pub const fn new(font: Font) -> Self {
         Self {
             raw: None,
             overflow: TextOverflowMode::WordWrap,
@@ -25,7 +25,7 @@ impl TextAttributes {
         }
     }
 
-    pub(crate) unsafe fn get_raw(&self) -> *mut sys::GTextAttributes {
+    pub(crate) const unsafe fn get_raw(&self) -> *mut sys::GTextAttributes {
         match self.raw {
             Some(e) => e.as_ptr(),
             None => null_mut(),
@@ -43,7 +43,7 @@ impl TextAttributes {
         }
     }
 
-    pub fn set_overflow(mut self, mode: TextOverflowMode) -> Self {
+    pub const fn set_overflow(mut self, mode: TextOverflowMode) -> Self {
         self.overflow = mode;
         self
     }

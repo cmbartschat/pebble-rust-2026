@@ -13,7 +13,7 @@ pub enum DictionaryWriteError {
 
 pub type DictionaryWriteResult = Result<(), DictionaryWriteError>;
 
-fn to_write_result(v: sys::DictionaryResult) -> Result<(), DictionaryWriteError> {
+const fn to_write_result(v: sys::DictionaryResult) -> Result<(), DictionaryWriteError> {
     Err(match v {
         sys::DictionaryResult_DICT_OK => return Ok(()),
         sys::DictionaryResult_DICT_NOT_ENOUGH_STORAGE => DictionaryWriteError::NotEnoughStorage,
@@ -30,7 +30,7 @@ pub enum Value<'a> {
 }
 
 impl Value<'_> {
-    pub fn as_u32(&self) -> Option<u32> {
+    pub const fn as_u32(&self) -> Option<u32> {
         match self {
             Self::Bytes(_) => None,
             Self::CStr(_) => None,
@@ -54,11 +54,11 @@ impl<'a> Tuple<'a> {
         })
     }
 
-    pub fn key(&self) -> u32 {
+    pub const fn key(&self) -> u32 {
         unsafe { self.raw.as_ref() }.key
     }
 
-    unsafe fn extract_bytes(&self) -> &'a [u8] {
+    const unsafe fn extract_bytes(&self) -> &'a [u8] {
         unsafe {
             let raw_tuple: &sys::Tuple = self.raw.as_ref();
             let base_addr = core::ptr::addr_of!(raw_tuple.value) as *const u8;
@@ -153,7 +153,7 @@ impl DictionaryView {
         Tuple::from_raw(next).map(|e| e.value())
     }
 
-    pub fn iter(&mut self) -> Tuples<'_> {
+    pub const fn iter(&mut self) -> Tuples<'_> {
         Tuples {
             raw: self.raw,
             p: PhantomData,
