@@ -35,7 +35,7 @@ impl GSize {
     pub const fn as_point(self) -> GPoint {
         GPoint {
             x: self.w,
-            y: self.w,
+            y: self.h,
         }
     }
 

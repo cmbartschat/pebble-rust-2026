@@ -31,8 +31,8 @@ impl GPoint {
         }
     }
 
-    /// Offsets (adds to) both coordinates of the point by the given offset.
-    pub const fn offset_both(mut self, offset: i16) -> Self {
+    /// Offsets (adds to) both coordinates of the point by the given offset, resulting in diagonal movement of the point.
+    pub const fn offset_diagonal(mut self, offset: i16) -> Self {
         self.x += offset;
         self.y += offset;
         self

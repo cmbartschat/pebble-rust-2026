@@ -62,7 +62,7 @@ pub enum WatchColor {
 impl TryFrom<u8> for WatchColor {
     type Error = ();
 
-    #[allow(non_upper_case_globals)]
+    #[allow(non_upper_case_globals, non_snake_case)]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         Ok(match value {
             WatchInfoColor_WATCH_INFO_COLOR_BLACK => Self::OriginalBlack,
@@ -258,7 +258,7 @@ impl WatchModel {
 impl TryFrom<u8> for WatchModel {
     type Error = ();
 
-    #[allow(non_upper_case_globals)]
+    #[allow(non_upper_case_globals, non_snake_case)]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         Ok(match value {
             WatchInfoModel_WATCH_INFO_MODEL_PEBBLE_ORIGINAL => Self::Original,
