@@ -1,6 +1,6 @@
 use core::{ffi::c_void, marker::PhantomData, ops::RangeInclusive, time::Duration};
 
-use alloc::boxed::Box;
+use std_alloc::boxed::Box;
 
 use crate::{Button, log_c_str, sys};
 

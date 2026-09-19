@@ -1,6 +1,6 @@
 use core::{cell::RefCell, ffi::c_void, ptr::addr_of};
 
-use alloc::boxed::Box;
+use std_alloc::boxed::Box;
 
 use crate::{Mutex, MutexToken};
 

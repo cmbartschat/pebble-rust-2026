@@ -1,6 +1,6 @@
 use core::mem::swap;
 
-use alloc::boxed::Box;
+use std_alloc::boxed::Box;
 
 pub type EffectCallback = Box<dyn FnMut() -> EffectCleanup>;
 pub type EffectCleanup = Box<dyn FnOnce()>;

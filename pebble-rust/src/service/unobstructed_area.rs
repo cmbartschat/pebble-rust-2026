@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-use alloc::boxed::Box;
+use std_alloc::boxed::Box;
 
 use crate::{GRect, log_c_str, service::global_callback::GlobalCallback, sys};
 
