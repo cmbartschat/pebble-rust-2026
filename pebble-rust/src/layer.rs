@@ -195,6 +195,7 @@ impl Layer {
         unsafe { sys::layer_set_hidden(self.as_ptr(), hidden) }
     }
 
+    #[cfg(not(platform = "aplite"))]
     pub fn get_unobstructed_bounds(&self) -> GRect {
         unsafe { sys::layer_get_unobstructed_bounds(self.as_ptr()) }
     }

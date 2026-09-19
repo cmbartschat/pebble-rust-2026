@@ -169,6 +169,7 @@ impl TextLayer {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
 
+    #[cfg(not(platform = "aplite"))]
     pub fn get_unobstructed_bounds(&self) -> GRect {
         self.handle.borrow().base_layer.get_unobstructed_bounds()
     }
