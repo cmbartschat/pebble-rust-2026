@@ -1,5 +1,4 @@
 use std::env;
-use std::io::Write as _;
 use std::path::PathBuf;
 
 fn main() {
@@ -40,25 +39,5 @@ fn main() {
         .open(bindings_path)
         .expect("Failed to open bindings_path");
 
-    bindings_handle
-        .write_all(
-            b"#[allow(clippy::all)]
-#[allow(non_upper_case_globals)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(unused)]
-#[allow(unnecessary_transmutes)]
-#[allow(clippy::useless_transmute)]
-#[allow(unsafe_op_in_unsafe_fn)]
-#[allow(clippy::upper_case_acronyms)]
-#[allow(clippy::transmute_int_to_bool)]
-#[allow(clippy::ptr_offset_with_cast)]
-
-mod bindings {
-",
-        )
-        .unwrap();
-
     bindings.write(Box::new(&mut bindings_handle)).unwrap();
-    bindings_handle.write_all(b"}\n").unwrap();
 }
