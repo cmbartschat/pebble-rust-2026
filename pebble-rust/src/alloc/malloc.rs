@@ -1,0 +1,107 @@
+use core::{
+    alloc::{GlobalAlloc, Layout},
+    ptr::null_mut,
+    slice,
+};
+
+use crate::log::log_c_str;
+use super::c_malloc::*;
+
+/// An allocator that calls into PebbleOS’s `malloc`/`realloc`/`free`.
+/// Available with the "malloc-allocator" feature.
+/// This allocator causes your program to only ever request as much memory from the C heap as the Rust code actually needs,
+/// plus some minor alignment and bookkeeping overhead (at least 4 bytes per allocation).
+/// This allocator is suitable for C interop, since it allows C code to use the heap too.
+/// However, it is expected to be slower and less efficient than using a Rust-side optimized allocator like [`super::EmbeddedAllocator`].
+/// 
+/// # Usage
+/// 
+/// To use this allocator in your program, simply declare it as the global allocator:
+/// ```rust,no_run
+/// # #![no_std]
+/// # #![no_main]
+/// use pebble_rust_2026::alloc::MallocAllocator;
+/// 
+/// #[global_allocator]
+/// static ALLOCATOR: MallocAllocator = MallocAllocator;
+/// ```
+// TODO: Implement the upcoming stable Allocator trait, so this can be used for custom allocation as well.
+pub struct Allocator;
+
+// NOTE(christoph): Tested on real target hardware
+const NATIVE_ALIGN: usize = size_of::<*mut u8>();
+
+impl Allocator {
+    fn alloc_inner(layout: Layout, alloc: fn(usize) -> *mut u8) -> *mut u8 {
+        if layout.align() > NATIVE_ALIGN {
+            let Some(required_size) = layout
+                .size()
+                .checked_add(layout.align())
+                .and_then(|f| f.checked_add(size_of::<*mut u8>()))
+            else {
+                log_c_str(c"Unexpected: Requested memory overflows including padding and metadata");
+                return null_mut();
+            };
+            let base = alloc(required_size);
+            if base.is_null() {
+                return null_mut();
+            }
+            debug_assert!((base as usize).is_multiple_of(NATIVE_ALIGN));
+            let align_offset = match base.align_offset(layout.align()) {
+                usize::MAX => {
+                    log_c_str(c"Unexpected: Unable to locate valid alignment");
+                    unsafe { free(base) };
+                    return null_mut();
+                }
+                e if e < size_of::<*mut u8>() => e + layout.align(),
+                e => e,
+            };
+            let ptr = base.wrapping_add(align_offset);
+            unsafe { *(ptr as *mut *mut u8).sub(1) = base };
+            return ptr;
+        }
+
+        alloc(layout.size())
+    }
+}
+
+unsafe impl GlobalAlloc for Allocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        Allocator::alloc_inner(layout, |c| unsafe { malloc(c) })
+    }
+
+    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+        Allocator::alloc_inner(layout, |c| unsafe { calloc(1, c) })
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        if layout.align() > NATIVE_ALIGN {
+            unsafe {
+                let base = *(ptr as *mut *mut u8).sub(1);
+                free(base);
+            }
+            return;
+        }
+        unsafe { free(ptr) };
+    }
+
+    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        if layout.align() > NATIVE_ALIGN {
+            unsafe {
+                let new_ptr =
+                    self.alloc(Layout::from_size_align_unchecked(new_size, layout.align()));
+                if new_ptr.is_null() {
+                    return null_mut();
+                }
+                let copy_bytes = layout.size().min(new_size);
+                let source = slice::from_raw_parts(ptr, copy_bytes);
+                let dest = slice::from_raw_parts_mut(new_ptr, copy_bytes);
+                dest.copy_from_slice(source);
+                self.dealloc(ptr, layout);
+                return new_ptr;
+            }
+        }
+
+        unsafe { realloc(ptr, new_size) }
+    }
+}

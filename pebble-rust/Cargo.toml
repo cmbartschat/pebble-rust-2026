@@ -1,0 +1,39 @@
+[package]
+name = "pebble_rust_2026"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+test = false
+doctest = true
+bench = false
+
+[features]
+default = ["malloc-allocator"]
+# Allows using an allocator which uses PebbleOS’s `malloc` directly.
+malloc-allocator = []
+# Allows using an embedded-alloc based allocator, which reserves most of the heap initially,
+# and then allocates within this large chunk via embedded-alloc’s efficient allocator.
+embedded-allocator = ["dep:embedded-alloc"]
+
+# Platform features; translated to `platform=xyz` cfg by the build script
+aplite = []
+basalt = []
+chalk = []
+diorite = []
+emery = []
+flint = []
+gabbro = []
+
+[dependencies]
+bitflags = "2.13.1"
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
+critical-section = "1.2.0"
+proc = { path = "../proc" }
+embedded-alloc = { version = "0.7", optional = true }
+
+[build-dependencies]
+bindgen = "0.72.1"
+
+[lints]
+workspace = true
