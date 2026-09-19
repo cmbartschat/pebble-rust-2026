@@ -2,6 +2,7 @@ use core::alloc::{GlobalAlloc, Layout};
 use embedded_alloc::LlffHeap as Heap;
 
 use super::c_malloc::*;
+#[allow(unused)]
 use crate::{heap, log_c_str, log_fmt};
 
 /// An allocator using an [`embedded_alloc::LlffHeap`].
