@@ -1,4 +1,4 @@
-use alloc::boxed::Box;
+use std_alloc::boxed::Box;
 
 use crate::{Angle, service::global_callback::GlobalCallback, sys};
 

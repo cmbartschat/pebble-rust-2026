@@ -1,6 +1,6 @@
 use core::{ffi::c_void, time::Duration};
 
-use alloc::{boxed::Box, rc::Rc};
+use std_alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     handle::{Handle, WeakHandle, new_handle},

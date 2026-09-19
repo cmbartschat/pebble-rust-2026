@@ -1,7 +1,7 @@
 #![doc = include_str!("../../README.md")]
 #![no_std]
 
-extern crate alloc;
+extern crate alloc as std_alloc;
 
 mod action_bar_layer;
 mod action_menu;
@@ -12,7 +12,7 @@ mod bitmap_layer;
 pub mod color;
 mod content_indicator;
 mod context;
-mod custom_alloc;
+pub mod alloc;
 mod dictionary;
 mod effect;
 mod fmt;
@@ -54,7 +54,7 @@ pub use crate::content_indicator::{
     ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
-pub use crate::custom_alloc::Allocator;
+pub use crate::alloc::*;
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::font::{Font, SystemFont};
 pub use crate::input::button::Button;

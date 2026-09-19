@@ -1,6 +1,6 @@
 use core::cell::RefCell;
 
-use alloc::rc::{Rc, Weak};
+use std_alloc::rc::{Rc, Weak};
 
 pub type Handle<T> = Rc<RefCell<T>>;
 pub type WeakHandle<T> = Weak<RefCell<T>>;

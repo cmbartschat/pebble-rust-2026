@@ -1,6 +1,6 @@
 use core::{ffi::CStr, marker::PhantomData, ptr::NonNull};
 
-use alloc::slice;
+use std_alloc::slice;
 
 use crate::{key::MessageKey, sys};
 
