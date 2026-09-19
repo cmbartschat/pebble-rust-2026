@@ -1,6 +1,6 @@
 use core::{cell::RefCell, ptr::NonNull};
 
-use alloc::rc::Rc;
+use std_alloc::rc::Rc;
 
 use crate::{
     CompOp, GAlign, GColor, GPoint, GRect, Layer,

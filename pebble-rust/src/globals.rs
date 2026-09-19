@@ -4,7 +4,7 @@ extern crate alloc;
 
 use core::panic::PanicInfo;
 
-use alloc::{ffi::CString, vec::Vec};
+use std_alloc::{ffi::CString, vec::Vec};
 
 use crate::log::log_c_str;
 

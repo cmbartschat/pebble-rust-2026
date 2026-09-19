@@ -1,6 +1,6 @@
 use core::ffi::CStr;
 
-use alloc::{ffi::CString, vec};
+use std_alloc::{ffi::CString, vec};
 
 use crate::{log::log_c_str, sys};
 

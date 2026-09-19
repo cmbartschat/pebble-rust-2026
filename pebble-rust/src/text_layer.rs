@@ -1,6 +1,6 @@
 use core::{ffi::CStr, ptr::NonNull};
 
-use alloc::{rc::Rc, vec::Vec};
+use std_alloc::{rc::Rc, vec::Vec};
 
 use crate::{
     GColor, GPoint, GRect, Layer, TextAlignment,
