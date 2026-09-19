@@ -158,7 +158,7 @@ fn parse_hex_digit(b1: u8, b2: u8) -> Option<u8> {
     u8::from_str_radix(str, 16).ok()
 }
 
-fn get_2bit_value(value: u8) -> Option<u8> {
+const fn get_2bit_value(value: u8) -> Option<u8> {
     Some(match value {
         0xff => 0b11,
         0xaa => 0b10,
@@ -184,36 +184,36 @@ fn parse_hex_literal(mut literal: &str) -> Option<ParsedColor> {
         .trim_end_matches('"');
 
     let digits: Vec<u8> = literal.as_bytes().iter().map(ToOwned::to_owned).collect();
-    let value;
-    match digits.len() {
+
+    let value = match digits.len() {
         3 => {
             let r = parse_hex_digit(digits[0], digits[0])?;
             let g = parse_hex_digit(digits[1], digits[1])?;
             let b = parse_hex_digit(digits[2], digits[2])?;
-            value = make_argb(0xff, r, g, b);
+            make_argb(0xff, r, g, b)
         }
         4 => {
             let r = parse_hex_digit(digits[0], digits[0])?;
             let g = parse_hex_digit(digits[1], digits[1])?;
             let b = parse_hex_digit(digits[2], digits[2])?;
             let a = parse_hex_digit(digits[3], digits[3])?;
-            value = make_argb(a, r, g, b);
+            make_argb(a, r, g, b)
         }
         6 => {
             let r = parse_hex_digit(digits[0], digits[1])?;
             let g = parse_hex_digit(digits[2], digits[3])?;
             let b = parse_hex_digit(digits[4], digits[5])?;
-            value = make_argb(0xff, r, g, b);
+            make_argb(0xff, r, g, b)
         }
         8 => {
             let r = parse_hex_digit(digits[0], digits[1])?;
             let g = parse_hex_digit(digits[2], digits[3])?;
             let b = parse_hex_digit(digits[4], digits[5])?;
             let a = parse_hex_digit(digits[6], digits[7])?;
-            value = make_argb(a, r, g, b);
+            make_argb(a, r, g, b)
         }
         _ => return None,
-    }
+    };
 
     let value = value.expect("Hex codes can only include ff, aa, 55, or 00 digits.");
     Some(ParsedColor { value })

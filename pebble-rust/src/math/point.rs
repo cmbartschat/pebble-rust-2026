@@ -1,8 +1,6 @@
 use core::ops::{Add, Sub};
 
-use crate::{Angle, GPoint, GRect};
-
-use crate::sys;
+use crate::*;
 
 impl GPoint {
     pub const ORIGIN: Self = Self::new(0, 0);
@@ -11,7 +9,7 @@ impl GPoint {
         Self { x, y }
     }
 
-    pub fn new_on_circle(bounds: GRect, angle: Angle) -> Self {
+    pub fn new_on_circle(bounds: GRect, angle: Angle) -> GPoint {
         unsafe {
             sys::gpoint_from_polar(
                 bounds,
@@ -21,7 +19,7 @@ impl GPoint {
         }
     }
 
-    pub fn new_on_oval(bounds: GRect, angle: Angle) -> Self {
+    pub fn new_on_oval(bounds: GRect, angle: Angle) -> GPoint {
         unsafe {
             sys::gpoint_from_polar(
                 bounds,
