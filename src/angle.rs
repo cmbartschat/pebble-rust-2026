@@ -79,9 +79,22 @@ impl Angle {
         }
     }
 
+    /// Move self towards target by a specified angle
     pub const fn towards(self, target: Self, by: Self) -> Self {
-        // TODO: Do not wrap.
-        Self::from_absolute(self.to_absolute().towards(target.to_absolute(), by))
+        if by.value < 0 {
+            return self;
+        }
+        let by = by.value;
+        let offset = target.value - self.value;
+        if offset.abs() <= by {
+            return target;
+        }
+        let by = Self { value: by };
+        if offset < 0 {
+            self.subtract(by)
+        } else {
+            self.add(by)
+        }
     }
 
     pub const fn towards_wrap(self, target: Self, by: Self) -> Self {
@@ -246,11 +259,20 @@ impl From<Random> for u32 {
     }
 }
 
-struct AbsoluteAngle {
+const _: () = assert!(u16::MAX as u32 == sys::TRIG_MAX_ANGLE - 1);
+
+#[derive(Copy, Clone, PartialEq)]
+#[repr(transparent)] // ensure optimal ABI
+pub struct AbsoluteAngle {
     value: u16,
 }
 
 impl AbsoluteAngle {
+    /// Creates an angle from a whole number of degrees, modulo 360, so from_degrees(361) == from_degrees(1)
+    pub const fn from_degrees(deg: i32) -> Self {
+        Angle::from_degrees(deg).to_absolute()
+    }
+
     pub const fn towards(self, target: Self, by: Angle) -> Self {
         if by.value < 0 {
             return self;
@@ -284,5 +306,51 @@ impl AbsoluteAngle {
     pub const fn add(mut self, rhs: Self) -> Self {
         self.value = self.value.wrapping_add(rhs.value);
         self
+    }
+}
+
+impl Sub for AbsoluteAngle {
+    type Output = Self;
+
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        self -= rhs;
+        self
+    }
+}
+
+impl Add for AbsoluteAngle {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self::Output {
+        self += rhs;
+        self
+    }
+}
+
+impl AddAssign for AbsoluteAngle {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = self.add(rhs)
+    }
+}
+
+impl SubAssign for AbsoluteAngle {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = self.sub(rhs)
+    }
+}
+
+impl From<Angle> for AbsoluteAngle {
+    fn from(value: Angle) -> Self {
+        Self {
+            value: value.value.rem_euclid(sys::TRIG_MAX_ANGLE as i32) as u16,
+        }
+    }
+}
+
+impl From<AbsoluteAngle> for Angle {
+    fn from(value: AbsoluteAngle) -> Self {
+        Self {
+            value: value.value as i32,
+        }
     }
 }
