@@ -65,7 +65,7 @@ impl WindowInner {
         Some(res)
     }
 
-    pub(crate) unsafe fn as_ptr_mut(&mut self) -> *mut sys::Window {
+    pub(crate) const unsafe fn as_ptr_mut(&mut self) -> *mut sys::Window {
         self.raw.as_ptr_mut()
     }
 
