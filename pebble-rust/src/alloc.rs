@@ -19,6 +19,7 @@ pub use malloc::Allocator as MallocAllocator;
 pub use embedded::Allocator as EmbeddedAllocator;
 
 mod c_malloc {
+    #[allow(unused)]
     unsafe extern "C" {
         pub unsafe fn malloc(size: usize) -> *mut u8;
         pub unsafe fn realloc(ptr: *mut u8, size: usize) -> *mut u8;
