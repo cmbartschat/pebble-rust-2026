@@ -16,6 +16,15 @@ malloc-allocator = []
 # and then allocates within this large chunk via embedded-alloc’s efficient allocator.
 embedded-allocator = ["dep:embedded-alloc"]
 
+# Platform features; translated to `platform=xyz` cfg by the build script
+aplite = []
+basalt = []
+chalk = []
+diorite = []
+emery = []
+flint = []
+gabbro = []
+
 [dependencies]
 bitflags = "2.13.1"
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }

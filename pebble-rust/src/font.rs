@@ -69,7 +69,9 @@ pub enum SystemFont {
     Leco36BoldNumbers,
     Leco38BoldNumbers,
     Leco42Numbers,
+    /// Not available on Aplite.
     Leco60BoldNumbersAmPm,
+    /// Not available on Aplite.
     Leco60NumbersAmPm,
     RobotoBoldSubset49,
     RobotoCondensed21,
@@ -99,10 +101,29 @@ impl SystemFont {
             Self::Leco36BoldNumbers => sys::FONT_KEY_LECO_36_BOLD_NUMBERS.as_ptr(),
             Self::Leco38BoldNumbers => sys::FONT_KEY_LECO_38_BOLD_NUMBERS.as_ptr(),
             Self::Leco42Numbers => sys::FONT_KEY_LECO_42_NUMBERS.as_ptr(),
+            #[cfg(not(any(
+                platform = "aplite",
+                platform = "basalt",
+                platform = "chalk",
+                platform = "diorite"
+            )))]
             Self::Leco60BoldNumbersAmPm => sys::FONT_KEY_LECO_60_BOLD_NUMBERS_AM_PM.as_ptr(),
+            #[cfg(not(any(
+                platform = "aplite",
+                platform = "basalt",
+                platform = "chalk",
+                platform = "diorite"
+            )))]
             Self::Leco60NumbersAmPm => sys::FONT_KEY_LECO_60_NUMBERS_AM_PM.as_ptr(),
             Self::RobotoBoldSubset49 => sys::FONT_KEY_ROBOTO_BOLD_SUBSET_49.as_ptr(),
             Self::RobotoCondensed21 => sys::FONT_KEY_ROBOTO_CONDENSED_21.as_ptr(),
+            #[cfg(any(
+                platform = "aplite",
+                platform = "basalt",
+                platform = "chalk",
+                platform = "diorite"
+            ))]
+            _ => return None,
         };
 
         let font = unsafe { sys::fonts_get_system_font(ptr) };

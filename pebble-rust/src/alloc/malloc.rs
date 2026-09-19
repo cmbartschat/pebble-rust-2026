@@ -4,8 +4,8 @@ use core::{
     slice,
 };
 
-use crate::log::log_c_str;
 use super::c_malloc::*;
+use crate::log::log_c_str;
 
 /// An allocator that calls into PebbleOS’s `malloc`/`realloc`/`free`.
 /// Available with the "malloc-allocator" feature.
@@ -13,15 +13,15 @@ use super::c_malloc::*;
 /// plus some minor alignment and bookkeeping overhead (at least 4 bytes per allocation).
 /// This allocator is suitable for C interop, since it allows C code to use the heap too.
 /// However, it is expected to be slower and less efficient than using a Rust-side optimized allocator like [`super::EmbeddedAllocator`].
-/// 
+///
 /// # Usage
-/// 
+///
 /// To use this allocator in your program, simply declare it as the global allocator:
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
 /// use pebble_rust_2026::alloc::MallocAllocator;
-/// 
+///
 /// #[global_allocator]
 /// static ALLOCATOR: MallocAllocator = MallocAllocator;
 /// ```

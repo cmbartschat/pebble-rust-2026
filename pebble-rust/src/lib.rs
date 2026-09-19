@@ -5,6 +5,7 @@ extern crate alloc as std_alloc;
 
 mod action_bar_layer;
 mod action_menu;
+pub mod alloc;
 mod app;
 mod app_message_result;
 mod bitmap;
@@ -12,7 +13,6 @@ mod bitmap_layer;
 pub mod color;
 mod content_indicator;
 mod context;
-pub mod alloc;
 mod dictionary;
 mod effect;
 mod fmt;
@@ -45,6 +45,7 @@ pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
+pub use crate::alloc::*;
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
@@ -54,7 +55,6 @@ pub use crate::content_indicator::{
     ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
-pub use crate::alloc::*;
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::font::{Font, SystemFont};
 pub use crate::input::button::Button;
@@ -77,6 +77,20 @@ pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode
 pub use crate::text_layer::TextLayer;
 pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
-pub use crate::watch::{SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
+pub use crate::watch::{Platform, SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
 pub use crate::window::Window;
 pub use proc::*;
+
+// sanity check the existence of the appropriate config
+#[cfg(not(any(
+    platform = "aplite",
+    platform = "basalt",
+    platform = "chalk",
+    platform = "diorite",
+    platform = "emery",
+    platform = "flint",
+    platform = "gabbro"
+)))]
+compile_error!(
+    "Platforms have not been configured correctly. This usually means that the build script did not run."
+);

@@ -4,9 +4,69 @@ use crate::sys::*;
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub struct WatchInfo {
+    pub platform: Platform,
     pub model: Option<WatchModel>,
     pub color: Option<WatchColor>,
     pub firmware_version: WatchInfoVersion,
+}
+
+/// Pebble SDK platform.
+///
+/// Most of the functionality of this type is available at compile time, since the platform is fixed at that point.
+/// Use [`Platform::current`] to retrieve the platform in const context.
+/// This type also has some overlapping functionality with [`WatchModel`] for obvious reasons.
+#[derive(Clone, Copy, Debug)]
+#[repr(u8)]
+pub enum Platform {
+    /// Classic, Steel
+    Aplite = PlatformType_PlatformTypeAplite,
+    /// Time, Time Steel
+    Basalt = PlatformType_PlatformTypeBasalt,
+    /// Time Round
+    Chalk = PlatformType_PlatformTypeChalk,
+    /// Pebble 2
+    Diorite = PlatformType_PlatformTypeDiorite,
+    /// 2 Duo
+    Emery = PlatformType_PlatformTypeEmery,
+    /// Time 2
+    Flint = PlatformType_PlatformTypeFlint,
+    /// Round 2
+    Gabbro = PlatformType_PlatformTypeGabbro,
+}
+
+impl Platform {
+    /// Returns the current platform.
+    /// This is a compile-time constant.
+    #[inline]
+    #[allow(clippy::needless_return)] // syntax error otherwise due to cfgs
+    pub const fn current() -> Self {
+        #[cfg(platform = "aplite")]
+        return Self::Aplite;
+        #[cfg(platform = "basalt")]
+        return Self::Basalt;
+        #[cfg(platform = "chalk")]
+        return Self::Chalk;
+        #[cfg(platform = "diorite")]
+        return Self::Diorite;
+        #[cfg(platform = "emery")]
+        return Self::Emery;
+        #[cfg(platform = "flint")]
+        return Self::Flint;
+        #[cfg(platform = "gabbro")]
+        return Self::Gabbro;
+    }
+
+    /// Returns whether this is a platform for a Core Devices watch.
+    #[inline]
+    pub const fn is_core_devices(&self) -> bool {
+        matches!(self, Self::Flint | Self::Gabbro | Self::Emery)
+    }
+
+    /// Returns whether this is a platform for a round watch.
+    #[inline]
+    pub const fn is_round(&self) -> bool {
+        matches!(self, Self::Chalk | Self::Gabbro)
+    }
 }
 
 /// Pebble watch color.
@@ -231,12 +291,13 @@ pub enum WatchModel {
 impl WatchModel {
     /// Returns true if this is any model with a circular screen.
     pub const fn is_round(&self) -> bool {
-        matches!(self, Self::TimeRound | Self::Round2)
+        Platform::current().is_round()
     }
 
     /// Returns true if this is any model manufactured by Core Devices (new company / repebble.com)
     pub const fn is_core_devices(&self) -> bool {
-        matches!(self, Self::Duo2 | Self::Time2CoreDevices | Self::Round2)
+        // Bypass C API for accuracy
+        Platform::current().is_core_devices()
     }
 
     /// Returns true if this model supports colors.
@@ -279,6 +340,7 @@ impl WatchInfo {
         let firmware_version = unsafe { watch_info_get_firmware_version() };
         Self {
             firmware_version,
+            platform: Platform::current(),
             color: WatchColor::try_from(color).ok(),
             model: WatchModel::try_from(model).ok(),
         }

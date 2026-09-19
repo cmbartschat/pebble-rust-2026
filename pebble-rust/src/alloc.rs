@@ -1,7 +1,7 @@
 //! The Pebble Rust 2026 SDK supplies two ready-to-use global allocators, both of which have different tradeoffs.
 //! Each allocator is enabled with a feature flag, but neither is added as a global allocator by default.
 //! See the allocator documentation on how to set them as a global allocator.
-//! 
+//!
 //! - Pebble C `malloc` allocator: "malloc-allocator" feature, [`MallocAllocator`].
 //!   Simpler to use, good for C interop, probably less efficient.
 //! - [`embedded_alloc`] allocator: "embedded-allocator" feature, [`EmbeddedAllocator`].
