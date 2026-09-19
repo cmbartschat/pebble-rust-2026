@@ -7,6 +7,7 @@ mod global_callback;
 mod touch;
 mod unobstructed_area;
 mod wakeup;
+
 pub use accel::Accel;
 pub use accel::{AccelAxis, AccelData, AccelRawData, AccelSamplingRate};
 pub use app_focus::AppFocus;

@@ -1,11 +1,10 @@
+#![doc = include_str!("../../README.md")]
 #![no_std]
 
 extern crate alloc;
 
 mod action_bar_layer;
 mod action_menu;
-mod align;
-mod angle;
 mod app;
 mod app_message_result;
 mod bitmap;
@@ -25,15 +24,13 @@ mod input;
 mod key;
 mod layer;
 mod log;
+mod math;
 mod mutex;
 mod persist;
-mod point;
 mod raw_timer;
-mod rect;
 mod scroll_layer;
 mod service;
 mod simple_menu_layer;
-mod size;
 mod status_bar_layer;
 mod status_code;
 pub mod sys;
@@ -48,8 +45,6 @@ pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
-pub use crate::align::GAlign;
-pub use crate::angle::{Angle, Random, Ratio};
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
@@ -66,6 +61,7 @@ pub use crate::input::button::Button;
 pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
 pub use crate::layer::Layer;
 pub use crate::log::{log_c_str, log_str};
+pub use crate::math::*;
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::scroll_layer::ScrollLayer;
 pub use crate::service::BatteryChargeState;

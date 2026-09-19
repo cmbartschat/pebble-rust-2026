@@ -1,11 +1,7 @@
 use core::ops::Div;
 use core::ops::Mul;
 
-use crate::GPoint;
-use crate::GSize;
-
-use crate::Ratio;
-use crate::sys;
+use crate::*;
 
 impl GSize {
     pub const fn new(w: i16, h: i16) -> Self {

@@ -1,6 +1,4 @@
-use crate::{Angle, GAlign, GEdgeInsets, GPoint, GRect, GSize};
-
-use crate::sys;
+use crate::*;
 
 impl GRect {
     /// Creates a new rectangle from the origin point (top left) and the size.
