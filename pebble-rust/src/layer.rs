@@ -106,13 +106,21 @@ impl Layer {
     pub fn new(frame: GRect) -> Option<Self> {
         unsafe {
             // Same as sys::layer_create
+            // SAFETY(?): There do not seem to be any requirements on the arguments to this function.
             let layer = sys::layer_create_with_data(frame, size_of::<Option<LayerContext>>());
+            // SAFETY: This function returns None if the pointer was null.
             let handle = LayerInner::from_ptr(layer, true)?;
             let handle = new_handle(handle);
+            // SAFETY: LayerInner::from_ptr ensured that the layer pointer is not null.
             let context = (sys::layer_get_data(layer) as *mut Option<LayerContext>).as_mut()?;
-            *context = Some(LayerContext {
-                back_to_self: Rc::downgrade(&handle),
-            });
+            // SAFETY: The context pointer is valid, since `layer` is valid.
+            // NOTE: Since the C API does not guarantee alignment of the context pointer, we are required to use write_unaligned here.
+            core::ptr::write_unaligned(
+                context,
+                Some(LayerContext {
+                    back_to_self: Rc::downgrade(&handle),
+                }),
+            );
             Some(Self { handle })
         }
     }
