@@ -1,6 +1,6 @@
 use core::{ffi::c_void, ptr::NonNull};
 
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{
     GColor, GRect,

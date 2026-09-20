@@ -5,7 +5,7 @@ use core::{
     str::FromStr,
 };
 
-use std_alloc::{boxed::Box, ffi::CString, vec::Vec};
+use alloc::{boxed::Box, ffi::CString, vec::Vec};
 
 use crate::{
     GColor,

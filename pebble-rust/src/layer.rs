@@ -1,6 +1,6 @@
 use core::{mem::swap, ptr::NonNull};
 
-use std_alloc::{boxed::Box, rc::Rc, vec::Vec};
+use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
 use crate::{
     GContext, GPoint, GRect,

@@ -5,7 +5,7 @@ use core::{
     str::FromStr,
 };
 
-use std_alloc::{boxed::Box, ffi::CString, rc::Rc, vec::Vec};
+use alloc::{boxed::Box, ffi::CString, rc::Rc, vec::Vec};
 
 use crate::{
     Bitmap, GRect, Layer, Window,

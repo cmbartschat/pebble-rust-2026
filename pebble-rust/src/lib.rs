@@ -1,11 +1,10 @@
 #![doc = include_str!("../../README.md")]
 #![no_std]
 
-extern crate alloc as std_alloc;
+extern crate alloc;
 
 mod action_bar_layer;
 mod action_menu;
-pub mod alloc;
 mod app;
 mod app_message_result;
 mod bitmap;
@@ -13,6 +12,7 @@ mod bitmap_layer;
 pub mod color;
 mod content_indicator;
 mod context;
+pub mod custom_alloc;
 mod dictionary;
 mod effect;
 mod fmt;
@@ -45,7 +45,6 @@ pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
-pub use crate::alloc::*;
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
@@ -55,6 +54,7 @@ pub use crate::content_indicator::{
     ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
+pub use crate::custom_alloc::*;
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::font::{Font, SystemFont};
 pub use crate::input::button::Button;

@@ -4,7 +4,7 @@ use core::{
     ptr::null_mut,
 };
 
-use std_alloc::{boxed::Box, vec::Vec};
+use alloc::{boxed::Box, vec::Vec};
 
 use crate::{
     TimeUnits, Window,

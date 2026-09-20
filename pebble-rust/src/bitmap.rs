@@ -1,6 +1,6 @@
 use core::{cell::RefCell, ptr::NonNull};
 
-use std_alloc::rc::Rc;
+use alloc::rc::Rc;
 
 use crate::{GRect, GSize, key::ResourceId, sys};
 

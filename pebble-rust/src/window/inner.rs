@@ -1,6 +1,6 @@
 use core::{cell::RefCell, ffi::c_void, pin::Pin};
 
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{
     ClickConfigBuilder, GColor, GRect, Layer,

@@ -1,6 +1,6 @@
 use core::cell::RefCell;
 
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{effect::Effect, service::GlobalCallbackInner};
 
