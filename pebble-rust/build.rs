@@ -51,12 +51,79 @@ impl Display for Platform {
 }
 
 impl Platform {
-    pub fn clang_target(&self) -> &'static str {
+    pub const fn clang_target(&self) -> &'static str {
         match self {
             Self::Aplite => "thumbv7m-none-eabi",
             Self::Basalt | Self::Chalk | Self::Diorite | Self::Flint => "thumbv7m-none-eabi",
             Self::Gabbro | Self::Emery => "thumbv8m.main-none-eabi",
         }
+    }
+
+    /// From custom PEBBLE_PLATFORM env var (used by cargo-pebble)
+    fn resolve_from_env() -> Result<Option<Self>, ()> {
+        let platform = match env::var("PEBBLE_PLATFORM") {
+            Ok(e) => e,
+            Err(env::VarError::NotPresent) => {
+                return Ok(None);
+            }
+            Err(env::VarError::NotUnicode(_)) => {
+                return Err(());
+            }
+        };
+        Self::from_str(&platform).map(Some)
+    }
+
+    /// From existing --cfg flags (unusual, but possible)
+    fn resolve_from_cfg() -> Result<Option<Self>, ()> {
+        let platform = match env::var("CARGO_CFG_PLATFORM") {
+            Ok(e) => e,
+            Err(env::VarError::NotPresent) => {
+                return Ok(None);
+            }
+            Err(env::VarError::NotUnicode(_)) => {
+                return Err(());
+            }
+        };
+        Self::from_str(&platform).map(Some)
+    }
+
+    /// From regular Cargo features
+    fn resolve_from_features() -> Result<Option<Self>, ()> {
+        let features = match env::var("CARGO_CFG_FEATURE") {
+            Ok(e) => e,
+            Err(env::VarError::NotPresent) => {
+                return Ok(None);
+            }
+            Err(env::VarError::NotUnicode(_)) => {
+                return Err(());
+            }
+        };
+        for feature in features.split(',') {
+            if let Ok(r) = Self::from_str(feature) {
+                return Ok(Some(r));
+            }
+        }
+        Ok(None)
+    }
+
+    pub fn resolve() -> Result<Self, ()> {
+        if let Some(r) = Self::resolve_from_env()? {
+            return Ok(r);
+        }
+
+        if let Some(r) = Self::resolve_from_cfg()? {
+            return Ok(r);
+        }
+
+        if let Some(r) = Self::resolve_from_features()? {
+            return Ok(r);
+        }
+
+        println!(
+            "cargo::warning=Platform was not specified, please enable a crate feature or set the `PEBBLE_PLATFORM` environment variable."
+        );
+
+        Ok(Self::Emery)
     }
 }
 
@@ -71,23 +138,7 @@ fn main() {
     }
 
     // Check which Pebble platform we’re being compiled for, which is set either by crate features or PEBBLE_PLATFORM env var.
-    let pebble_platform_env = env::var("PEBBLE_PLATFORM");
-    let platform_cfg = env::var("CARGO_CFG_PLATFORM");
-    let features = env::var("CARGO_CFG_FEATURE").unwrap();
-    let mut features = features.split(",");
-    // println!("cargo::warning={features:?} {pebble_platform_env:?}");
-    let actual_platform: Option<Platform> = pebble_platform_env
-        .ok()
-        .and_then(|env| env.parse().ok())
-        .or_else(|| features.find_map(|f| f.parse().ok()))
-        .or_else(|| platform_cfg.ok().and_then(|c| c.parse().ok()));
-    let Some(platform) = actual_platform else {
-        println!(
-            "cargo::error=Did not receive a valid Pebble platform to compile for. \
-            Either set the PEBBLE_PLATFORM environment variable, or specify one of the crate features."
-        );
-        panic!();
-    };
+    let platform = Platform::resolve().unwrap();
     println!("cargo::rustc-cfg=platform=\"{platform}\"");
 
     let include_path = String::from_utf8(

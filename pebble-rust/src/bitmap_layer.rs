@@ -1,6 +1,6 @@
 use core::{cell::RefCell, ptr::NonNull};
 
-use std_alloc::rc::Rc;
+use alloc::rc::Rc;
 
 use crate::{
     CompOp, GAlign, GColor, GPoint, GRect, Layer,
@@ -98,7 +98,6 @@ impl BitmapLayer {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
 
-    #[cfg(not(platform = "aplite"))]
     pub fn get_unobstructed_bounds(&self) -> GRect {
         self.handle.borrow().base_layer.get_unobstructed_bounds()
     }

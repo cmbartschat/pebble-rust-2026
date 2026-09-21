@@ -2,7 +2,7 @@
 macro_rules! fmt {
     ($format: literal, $($arg:tt)*) => {
         {
-            use std_alloc::{string::String, vec::Vec};
+            use alloc::{string::String, vec::Vec};
             const LEN: u32 = 300;
             let mut target = [0u8; LEN as usize];
             let written = $crate::sys::snprintf(
@@ -30,7 +30,7 @@ macro_rules! fmt {
 macro_rules! fmt_c_str {
     ($format: literal, $($arg:tt)*) => {
         {
-            use std_alloc::{ffi::CString, vec::Vec};
+            use alloc::{ffi::CString, vec::Vec};
 
             const LEN: u32 = 300;
             let mut target = [0u8; LEN as usize];

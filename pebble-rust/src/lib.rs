@@ -1,11 +1,10 @@
 #![doc = include_str!("../../README.md")]
 #![no_std]
 
-extern crate alloc as std_alloc;
+extern crate alloc;
 
 mod action_bar_layer;
 mod action_menu;
-pub mod alloc;
 mod app;
 mod app_message_result;
 mod bitmap;
@@ -25,6 +24,7 @@ mod key;
 mod layer;
 mod log;
 mod math;
+mod mem;
 mod mutex;
 mod persist;
 mod raw_timer;
@@ -45,7 +45,6 @@ pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
     ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
-pub use crate::alloc::*;
 pub use crate::app::APP;
 pub use crate::app::InboxSize;
 pub use crate::app_message_result::AppMessageError;
@@ -62,6 +61,7 @@ pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
 pub use crate::layer::Layer;
 pub use crate::log::{log_c_str, log_str};
 pub use crate::math::*;
+pub use crate::mem::*;
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::scroll_layer::ScrollLayer;
 pub use crate::service::BatteryChargeState;
@@ -77,7 +77,7 @@ pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode
 pub use crate::text_layer::TextLayer;
 pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
-pub use crate::watch::{SimpleWatchColor, WatchColor, WatchInfo, WatchModel, Platform};
+pub use crate::watch::{Platform, SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
 pub use crate::window::Window;
 pub use proc::*;
 
@@ -91,4 +91,6 @@ pub use proc::*;
     platform = "flint",
     platform = "gabbro"
 )))]
-compile_error!("Platforms have not been configured correctly. This usually means that the build script did not run.");
+compile_error!(
+    "Platforms have not been configured correctly. This usually means that the build script did not run."
+);

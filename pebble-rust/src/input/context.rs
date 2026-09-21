@@ -1,4 +1,4 @@
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{ClickConfig, ClickConfigBuilder};
 

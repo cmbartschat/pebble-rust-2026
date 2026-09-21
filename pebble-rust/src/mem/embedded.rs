@@ -20,7 +20,7 @@ use crate::{heap, log_c_str, log_fmt};
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
-/// use pebble_rust_2026::alloc::EmbeddedAllocator;
+/// use pebble_rust_2026::EmbeddedAllocator;
 ///
 /// #[global_allocator]
 /// static ALLOCATOR: EmbeddedAllocator = EmbeddedAllocator::new();
@@ -36,7 +36,7 @@ use crate::{heap, log_c_str, log_fmt};
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
-/// # use pebble_rust_2026::alloc::EmbeddedAllocator;
+/// # use pebble_rust_2026::EmbeddedAllocator;
 /// // 64 KiB heap maximum.
 /// #[global_allocator]
 /// static ALLOCATOR: EmbeddedAllocator<{ 1024 * 64 }> = EmbeddedAllocator::new();

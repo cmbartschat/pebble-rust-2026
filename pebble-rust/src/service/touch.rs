@@ -1,6 +1,6 @@
 use core::ffi::c_void;
 
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{GPoint, log_c_str, service::global_callback::GlobalCallback, sys};
 
@@ -15,8 +15,14 @@ impl Touch {
         }
     }
 
+    #[allow(clippy::missing_const_for_fn)] // only possible on non-touch platforms
     pub fn is_enabled(&self) -> bool {
-        #[cfg(not(any(platform = "aplite", platform = "basalt", platform = "chalk", platform = "diorite")))]
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
         return unsafe { sys::touch_service_is_enabled() };
 
         #[allow(unreachable_code)]
@@ -26,7 +32,12 @@ impl Touch {
     pub fn subscribe(&self, handler: Box<dyn FnMut(TouchEvent)>) {
         self.callback.set(handler);
         // No touch on these platforms, therefore subscribing to touch events is a noop.
-        #[cfg(not(any(platform = "aplite", platform = "basalt", platform = "chalk", platform = "diorite")))]
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
         {
             unsafe {
                 sys::touch_service_subscribe(Some(global_touch_handler), self.callback.as_void());
@@ -35,7 +46,12 @@ impl Touch {
     }
 
     pub fn unsubscribe(&self) {
-        #[cfg(not(any(platform = "aplite", platform = "basalt", platform = "chalk", platform = "diorite")))]
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
         {
             unsafe { sys::touch_service_unsubscribe() }
         }

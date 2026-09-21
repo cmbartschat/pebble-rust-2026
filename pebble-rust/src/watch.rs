@@ -12,9 +12,8 @@ pub struct WatchInfo {
 
 /// Pebble SDK platform.
 ///
-/// Most of the functionality of this type is available at compile time, since the platform is fixed at that point.
+/// All of the functionality of this type is available at compile time, since the platform is fixed at that point.
 /// Use [`Platform::current`] to retrieve the platform in const context.
-/// This type also has some overlapping functionality with [`WatchModel`] for obvious reasons.
 #[derive(Clone, Copy, Debug)]
 #[repr(u8)]
 pub enum Platform {
@@ -66,6 +65,12 @@ impl Platform {
     #[inline]
     pub const fn is_round(&self) -> bool {
         matches!(self, Self::Chalk | Self::Gabbro)
+    }
+
+    /// Returns whether this platform’s watch supports colors.
+    #[inline]
+    pub const fn has_color(&self) -> bool {
+        !matches!(self, Self::Aplite | Self::Diorite | Self::Flint)
     }
 }
 
@@ -258,6 +263,7 @@ pub enum SimpleWatchColor {
 }
 
 /// Pebble watch model.
+/// For generic properties like whether this is a round watch, or whether it has colors, see [`Platform`], where that data is represented more accurately.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 #[repr(u8)]
@@ -286,27 +292,6 @@ pub enum WatchModel {
     Time2CoreDevices = WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_PT2,
     /// Pebble Round 2
     Round2 = WatchInfoModel_WATCH_INFO_MODEL_COREDEVICES_PR2,
-}
-
-impl WatchModel {
-    /// Returns true if this is any model with a circular screen.
-    pub const fn is_round(&self) -> bool {
-        Platform::current().is_round()
-    }
-
-    /// Returns true if this is any model manufactured by Core Devices (new company / repebble.com)
-    pub const fn is_core_devices(&self) -> bool {
-        // Bypass C API for accuracy
-        Platform::current().is_core_devices()
-    }
-
-    /// Returns true if this model supports colors.
-    pub const fn supports_color(&self) -> bool {
-        !matches!(
-            self,
-            Self::Original | Self::Steel | Self::Hr2 | Self::Se2 | Self::Duo2
-        )
-    }
 }
 
 impl TryFrom<u8> for WatchModel {

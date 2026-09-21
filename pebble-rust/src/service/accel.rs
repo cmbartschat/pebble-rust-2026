@@ -1,6 +1,6 @@
 use core::slice;
 
-use std_alloc::boxed::Box;
+use alloc::boxed::Box;
 
 use crate::{log_c_str, log_fmt, service::global_callback::GlobalCallback, sys};
 

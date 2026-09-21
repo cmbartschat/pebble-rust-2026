@@ -1,6 +1,6 @@
 use core::{ffi::CStr, ptr::NonNull};
 
-use std_alloc::{rc::Rc, vec::Vec};
+use alloc::{rc::Rc, vec::Vec};
 
 use crate::{
     GColor, GPoint, GRect, Layer, TextAlignment,
@@ -169,7 +169,6 @@ impl TextLayer {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
 
-    #[cfg(not(platform = "aplite"))]
     pub fn get_unobstructed_bounds(&self) -> GRect {
         self.handle.borrow().base_layer.get_unobstructed_bounds()
     }

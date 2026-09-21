@@ -1,4 +1,4 @@
-use std_alloc::{boxed::Box, rc::Rc};
+use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     ClickConfigBuilder, GColor, GRect,

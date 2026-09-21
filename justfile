@@ -7,6 +7,15 @@ check-all:
 	cargo check --features flint --target thumbv7em-none-eabi --target-dir target/flint
 	cargo check --features gabbro --target thumbv8m.main-none-eabi --target-dir target/gabbro
 
+clippy-all:
+	cargo clippy --features aplite --target thumbv7m-none-eabi
+	cargo clippy --features basalt --target thumbv7em-none-eabi
+	cargo clippy --features chalk --target thumbv7em-none-eabi
+	cargo clippy --features diorite --target thumbv7em-none-eabi 
+	cargo clippy --features emery --target thumbv8m.main-none-eabi
+	cargo clippy --features flint --target thumbv7em-none-eabi
+	cargo clippy --features gabbro --target thumbv8m.main-none-eabi
+
 test-all:
 	cargo test --features aplite,embedded-allocator,malloc-allocator --target thumbv7m-none-eabi --target-dir target/aplite
 	cargo test --features basalt,embedded-allocator,malloc-allocator --target thumbv7em-none-eabi --target-dir target/basalt
