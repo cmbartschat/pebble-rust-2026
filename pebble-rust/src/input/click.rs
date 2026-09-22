@@ -4,7 +4,7 @@ use alloc::boxed::Box;
 
 use crate::{Button, log_c_str, sys};
 
-pub type ClickCallback = Box<dyn FnMut(&ClickRecognizer) + 'static>;
+pub(crate) type ClickCallback = Box<dyn FnMut(&ClickRecognizer) + 'static>;
 
 #[derive(Default)]
 pub struct ButtonClickConfig {
@@ -16,6 +16,7 @@ pub struct ButtonClickConfig {
 
 use super::handlers::*;
 
+/// A click configuration, created by [`ClickConfigBuilder`].
 #[derive(Default)]
 pub struct ClickConfig {
     pub(crate) up: ButtonClickConfig,
@@ -28,6 +29,11 @@ fn duration_to_millis(duration: Duration) -> u16 {
     duration.as_millis().min(u16::MAX as u128) as u16
 }
 
+/// A builder for button (click) handlers on layers and windows.
+///
+/// Layers and windows usually have a `set_click_provider` function that you give a callback to.
+/// That callback receives a mutable reference to this builder.
+/// Using various methods on this builder, you can setup many handlers for various button interactions.
 pub struct ClickConfigBuilder<'a> {
     handlers: &'a mut ClickConfig,
 }
@@ -37,6 +43,8 @@ impl<'a> ClickConfigBuilder<'a> {
         Self { handlers }
     }
 
+    /// Set the handler for clicking the given button exactly once.
+    /// If there is no long click handler, and `repeat_after` has been set, this handler is repeatedly called after `repeat_after` has elapsed.
     pub fn single(
         &mut self,
         button: Button,
@@ -70,6 +78,10 @@ impl<'a> ClickConfigBuilder<'a> {
         }
     }
 
+    /// Set the handler for long-clicking the given button.
+    /// The `start` handler is called after the button has been held down for `delay`; set delay to zero to use the system default.
+    /// The `release` handler is called when the button is released.
+    /// This disables dispatching long—clicks to the [`Self::single`] handler for this button.
     pub fn long(
         &mut self,
         button: Button,
@@ -116,6 +128,9 @@ impl<'a> ClickConfigBuilder<'a> {
         }
     }
 
+    /// Set the handler for clicking the given button multiple times.
+    /// The `range` determines how many times the button has to be clicked at minimum and maximum for the handler to be called.
+    /// The `delay` determines when the multi-click sequence is reset, after the last button click has been registered, use 0 for the system default.
     pub fn multi(
         &mut self,
         button: Button,
@@ -138,6 +153,7 @@ impl<'a> ClickConfigBuilder<'a> {
         unsafe {
             sys::window_multi_click_subscribe(
                 button as u8,
+                // TODO: verify this value
                 *range.start(),
                 *range.end(),
                 duration_to_millis(delay),
@@ -148,19 +164,23 @@ impl<'a> ClickConfigBuilder<'a> {
     }
 }
 
+/// A recognizer for certain click patterns.
+/// This is passed to click callbacks.
 pub struct ClickRecognizer<'a> {
     pub(crate) raw: sys::ClickRecognizerRef,
     pub(crate) phantom: PhantomData<&'a c_void>,
 }
 
 impl<'a> ClickRecognizer<'a> {
+    /// The number of clicks recognized.
     pub fn click_count(&self) -> u8 {
         unsafe { sys::click_number_of_clicks_counted(self.raw) }
     }
-
+    /// The button that was clicked.
     pub fn button(&self) -> Button {
         unsafe { sys::click_recognizer_get_button_id(self.raw) }.into()
     }
+    /// Whether the button was repeated.
     pub fn repeating(&self) -> bool {
         unsafe { sys::click_recognizer_is_repeating(self.raw) }
     }

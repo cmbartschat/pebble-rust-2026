@@ -4,6 +4,7 @@ use core::ops::Mul;
 use crate::*;
 
 impl GSize {
+    /// Returns a new size from the given width and height.
     pub const fn new(w: i16, h: i16) -> Self {
         Self { w, h }
     }

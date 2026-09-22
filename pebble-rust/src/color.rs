@@ -1,3 +1,7 @@
+//! Color constants.
+//! The constant names match the ones from the [color picker tool](https://developer.repebble.com/guides/tools-and-resources/color-picker/).
+#![allow(missing_docs)]
+
 use crate::GColor;
 use crate::sys;
 
@@ -74,6 +78,7 @@ impl PartialEq for GColor {
 }
 
 impl GColor {
+    /// Returns a color that is maximally legible over the given background color.
     pub fn legible_over(other: Self) -> GColor {
         unsafe { sys::gcolor_legible_over(other) }
     }

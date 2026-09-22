@@ -22,3 +22,4 @@ missing-const-for-fn = "warn"
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(platform, values("aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"))',
 ] }
+missing-docs = "deny"

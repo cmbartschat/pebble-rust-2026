@@ -8,13 +8,13 @@ mod touch;
 mod unobstructed_area;
 mod wakeup;
 
-pub use accel::Accel;
-pub use accel::{AccelAxis, AccelData, AccelRawData, AccelSamplingRate};
+pub use accel::Acceleration;
+pub use accel::{AccelAxis, AccelSamplingRate, AccelerationData, TimedAccelerationData};
 pub use app_focus::AppFocus;
 pub use battery::{BatteryChargeState, BatteryState};
 pub use bluetooth::BluetoothConnection;
 pub use compass::{Compass, CompassHeading};
-pub use global_callback::GlobalCallbackInner;
+pub(crate) use global_callback::GlobalCallbackInner;
 pub use touch::{Touch, TouchEvent};
 pub use unobstructed_area::UnobstructedArea;
 pub use wakeup::{PendingWakeup, Wakeup, WakeupEvent};

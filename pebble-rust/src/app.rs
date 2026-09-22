@@ -16,24 +16,37 @@ use crate::{
 
 type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static>>;
 
-pub struct AppState {
+pub(crate) struct AppState {
     timer_callback: Option<Box<dyn FnMut() + 'static>>,
     inbox_received_callback: InboxReceivedCallback,
     visible_windows: Vec<Window>,
 }
 
+/// The Pebble app, see [`APP`].
+#[non_exhaustive]
 pub struct App {
+    /// See [`Persist`](crate::persist::Persist).
     pub persist: crate::persist::Persist,
+    /// See [`Touch`](service::Touch).
     pub touch: service::Touch,
+    /// See [`UnobstructedArea`](service::UnobstructedArea).
     pub unobstructed_area: service::UnobstructedArea,
+    /// See [`BatteryState`](service::BatteryState).
     pub battery_state: service::BatteryState,
+    /// See [`Compass`](service::Compass).
     pub compass: service::Compass,
+    /// See [`BluetoothConnection`](service::BluetoothConnection).
     pub bluetooth_connection: service::BluetoothConnection,
-    pub accel: service::Accel,
+    /// See [`Acceleration`](service::Acceleration).
+    pub accel: service::Acceleration,
+    /// See [`AppFocus`](service::AppFocus).
     pub focus: service::AppFocus,
+    /// See [`Wakeup`](service::Wakeup).
     pub wakeup: service::Wakeup,
 }
 
+/// The Pebble app.
+/// This singleton contains most global application functionality.
 pub static APP: App = App {
     persist: crate::persist::Persist,
     touch: service::Touch::new(),
@@ -41,7 +54,7 @@ pub static APP: App = App {
     battery_state: service::BatteryState::new(),
     compass: service::Compass::new(),
     bluetooth_connection: service::BluetoothConnection::new(),
-    accel: service::Accel::new(),
+    accel: service::Acceleration::new(),
     focus: service::AppFocus::new(),
     wakeup: service::Wakeup::new(),
 };
@@ -130,9 +143,13 @@ extern "C" fn global_outbox_sent_handler(
 }
 
 impl App {
+    /// Run the app event loop.
+    /// Not calling this function may lead your application to crash, or to fail to link.
     pub fn event_loop(&self) {
         unsafe { sys::app_event_loop() };
     }
+    /// Set or override the global tick handler.
+    /// The handler is called every specified time unit, see [`TimeUnits`].
     pub fn set_tick_handler(&self, unit: TimeUnits, callback: impl FnMut() + 'static) {
         unsafe {
             with_state(|state| {
@@ -141,6 +158,7 @@ impl App {
             });
         };
     }
+    /// Clear the current tick handler.
     pub fn clear_tick_handler(&self) {
         unsafe {
             with_state(|state| {
@@ -150,6 +168,8 @@ impl App {
         }
     }
 
+    /// Set or override the app message handler.
+    /// It receives a [`DictionaryView`].
     pub fn set_message_handler(&self, callback: impl FnMut(&mut DictionaryView) + 'static) {
         unsafe {
             with_state(|state| {
@@ -159,6 +179,7 @@ impl App {
         }
     }
 
+    /// Clear the app message handler.
     pub fn clear_message_handler(&self) {
         unsafe {
             with_state(|state| {
@@ -168,15 +189,11 @@ impl App {
         }
     }
 
-    pub fn open_message(&self) {
-        unsafe {
-            with_state(|state| {
-                sys::tick_timer_service_unsubscribe();
-                state.timer_callback = None;
-            });
-        }
-    }
-
+    /// Open the app message inbox.
+    /// This causes the app message handler to be invoked for received messages.
+    /// The size specifies the required inbox memory sizes, see [`InboxSize`].
+    // TODO: Manual specification of the inbox size is awkward.
+    //       Maybe we should always request the maximum.
     pub fn open_inbox(&self, size: InboxSize) -> AppMessageResult<()> {
         let (inbox_size, outbox_size) = match size {
             InboxSize::Exact { inbox, outbox } => (inbox, outbox),
@@ -211,6 +228,9 @@ impl App {
         Ok(())
     }
 
+    /// Send an app message.
+    /// The given callback will be invoked with a mutable reference to a [`DictionaryBuilder`] that can then be modified to set up the message.
+    /// Afterwards, the message is sent.
     pub fn send_message(
         &self,
         builder_callback: impl FnOnce(&mut DictionaryBuilder) -> AppMessageResult<()>,
@@ -238,10 +258,12 @@ impl App {
         }
     }
 
+    /// Show the specified window.
     pub fn show(&self, window: Window) {
         self.show_inner(window, true);
     }
 
+    /// Show the specified window without playing animations.
     pub fn show_immediate(&self, window: Window) {
         self.show_inner(window, false);
     }
@@ -253,10 +275,12 @@ impl App {
         };
     }
 
+    /// Hide the specified window.
     pub fn hide(&self, window: &mut Window) {
         self.hide_inner(window, true);
     }
 
+    /// Hide the specified window without playing animations.
     pub fn hide_immediate(&self, window: &mut Window) {
         self.hide_inner(window, false);
     }
@@ -264,16 +288,28 @@ impl App {
     pub(crate) fn notify_unload(&self, window: *const sys::Window) {
         unsafe {
             with_state(|state| {
-                state.visible_windows.retain(|f| !f.is_equal(window));
+                state.visible_windows.retain(|f| f != window);
             })
         }
     }
 }
 
+/// The requested data size of the inbox.
+/// This is used for [`App::open_inbox`].
 #[derive(Copy, Clone)]
 pub enum InboxSize {
-    Exact { inbox: u32, outbox: u32 },
+    /// Request exactly these data sizes from the C API.
+    /// Using this variant is not recommended.
+    Exact {
+        /// Size of the inbox buffer in bytes.
+        inbox: u32,
+        /// Size of the outbox buffer in bytes.
+        outbox: u32,
+    },
+    /// Request the maximum possible size.
     Max,
+    /// Request half of the maximum possible size.
     Half,
+    /// Request a quarter of the maximum possible size.
     Quarter,
 }

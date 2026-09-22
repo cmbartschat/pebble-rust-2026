@@ -2,15 +2,18 @@ use alloc::boxed::Box;
 
 use crate::{service::global_callback::GlobalCallback, sys};
 
+/// Allows you to detect when the app gains or loses focus.
 pub struct AppFocus;
 
 static HANDLER: GlobalCallback<bool, ()> = GlobalCallback::new();
 
 impl AppFocus {
-    pub const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self
     }
 
+    /// Set the focus event handler.
+    /// The callback function receives a boolean specifying whether the app has focus or not.
     pub fn subscribe(&self, handler: Box<dyn FnMut(bool)>) {
         HANDLER.set(handler);
         unsafe {
@@ -22,6 +25,7 @@ impl AppFocus {
         }
     }
 
+    /// Remove the focus event handler.
     pub fn unsubscribe(&self) {
         unsafe { sys::app_focus_service_unsubscribe() }
         HANDLER.clear()

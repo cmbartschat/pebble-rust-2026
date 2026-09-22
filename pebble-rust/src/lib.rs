@@ -43,35 +43,38 @@ mod window;
 
 pub use crate::action_bar_layer::{ActionBarLayer, ActionButton};
 pub use crate::action_menu::{
-    ActionMenu, ActionMenuAlign, ActionMenuLevel, ActionMenuLevelDisplayMode,
+    ActionMenu, ActionMenuAlign, ActionMenuBuilder, ActionMenuLevel, ActionMenuLevelDisplayMode,
 };
-pub use crate::app::APP;
 pub use crate::app::InboxSize;
+pub use crate::app::{APP, App};
 pub use crate::app_message_result::AppMessageError;
 pub use crate::bitmap::{Bitmap, BitmapFormat};
 pub use crate::bitmap_layer::BitmapLayer;
 pub use crate::content_indicator::{
-    ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
+    ConfigConflict, ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
+pub use crate::effect::{EffectCallback, EffectCleanup};
 pub use crate::font::{Font, SystemFont};
+pub use crate::handle::WeakObject;
 pub use crate::input::button::Button;
 pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
-pub use crate::layer::Layer;
+pub use crate::layer::{ChildLayer, Layer};
 pub use crate::log::{log_c_str, log_str};
 pub use crate::math::*;
 pub use crate::mem::*;
 pub use crate::mutex::{Mutex, MutexToken};
+pub use crate::persist::Persist;
 pub use crate::scroll_layer::ScrollLayer;
-pub use crate::service::BatteryChargeState;
-pub use crate::service::CompassHeading;
-pub use crate::service::TouchEvent;
-pub use crate::service::{AccelAxis, AccelData, AccelRawData, AccelSamplingRate};
-pub use crate::service::{PendingWakeup, WakeupEvent};
+pub use crate::service::{
+    AccelAxis, AccelSamplingRate, Acceleration, AccelerationData, AppFocus, BatteryChargeState,
+    BatteryState, BluetoothConnection, Compass, CompassHeading, PendingWakeup,
+    TimedAccelerationData, Touch, TouchEvent, UnobstructedArea, Wakeup, WakeupEvent,
+};
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
-pub use crate::status_code::{StatusError, StatusResult, StatusSuccess};
+pub use crate::status_code::{StatusError, StatusSuccess};
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};
 pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;

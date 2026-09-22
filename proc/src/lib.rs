@@ -1,3 +1,5 @@
+//! Procedural macros for pebble_rust_2026.
+
 use proc_macro2::Span;
 use quote::{format_ident, quote};
 use std::{collections::HashSet, io::ErrorKind, path::PathBuf};
@@ -45,6 +47,16 @@ fn load_package() -> Package {
     panic!("Unable to find package.json for resource_ids/message_keys");
 }
 
+/// Generates Pebble Resource IDs for use with any API that uses the IDs to load resources on-demand.
+/// The syntax of this macro is as follows:
+///
+/// ```rust,ignore
+/// resource_ids!(my_resources);
+/// ```
+///
+/// For this to work, there must be a `package.json` for your Pebble application next to your Cargo.toml.
+/// Now, `my_resources` is a module that contains all resource IDs, named exactly as they are in the package.json definition.
+/// The resource IDs are `u32`s as in C.
 #[proc_macro]
 pub fn resource_ids(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut token_iter = token_stream.into_iter();
@@ -99,6 +111,16 @@ pub fn resource_ids(token_stream: proc_macro::TokenStream) -> proc_macro::TokenS
     .into()
 }
 
+/// Generates Pebble Message IDs for use with any API related to app-to-watch messaging.
+/// The syntax of this macro is as follows:
+///
+/// ```rust,ignore
+/// message_keys!(my_messages);
+/// ```
+///
+/// For this to work, there must be a `package.json` for your Pebble application next to your Cargo.toml.
+/// Now, `my_messages` is a module that contains all message keys, named exactly as they are in the package.json definition.
+/// The message keys are `u32`s as in C.
 #[proc_macro]
 pub fn message_keys(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut token_iter = token_stream.into_iter();
@@ -219,6 +241,16 @@ fn parse_hex_literal(mut literal: &str) -> Option<ParsedColor> {
     Some(ParsedColor { value })
 }
 
+/// Generates a hexadecimal color in the Pebble color format, using standard hex literals.
+/// All common lengths of hex literals are accepted: `fff` (RGB), `ffff` (RGBA), `ffffff` (RGB), `ffffffff` (RGBA).
+/// Examples:
+/// ```rust,ignore
+/// const BLACK: GColor = hex_color!("#000");
+/// const GREEN: GColor = hex_color!("#0f0");
+/// const BLUE: GColor = hex_color!("#00ff");
+/// const DARK_RED: GColor = hex_color!("#aa0000");
+/// const TRANSPARENT: GColor = hex_color!("#00000000");
+/// ```
 #[proc_macro]
 pub fn hex_color(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut token_iter = token_stream.into_iter();
@@ -243,7 +275,7 @@ pub fn hex_color(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStre
     let argb_token = proc_macro2::Literal::u8_suffixed(parsed.value);
 
     quote! {
-        pebble_rust_2026::GColor{
+        pebble_rust_2026::GColor {
             argb: #argb_token,
         }
     }

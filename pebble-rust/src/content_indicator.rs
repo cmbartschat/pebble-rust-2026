@@ -2,6 +2,8 @@ use core::ptr::{NonNull, null};
 
 use crate::{GAlign, GColor, Layer, color, sys};
 
+/// Indicator for the content of a [`crate::ScrollLayer`].
+/// This type is usually obtained in the callback passed to [`crate::ScrollLayer::with_content_indicator`].
 pub struct ContentIndicator {
     raw: NonNull<sys::ContentIndicator>,
     owned: bool,
@@ -27,15 +29,20 @@ impl ContentIndicator {
         })
     }
 
+    /// Creates a new indicator.
+    /// This is not usually necessary, for a scroll layer you should use [`crate::ScrollLayer::with_content_indicator`]
+    /// which gives you a prefabricated content indicator.
     pub fn new() -> Option<Self> {
         let ptr = unsafe { sys::content_indicator_create() };
         Self::from_ptr(ptr, true)
     }
 
+    /// Returns whether there is content available in the specified direction.
     pub fn get_content_available(&self, direction: ContentIndicatorDirection) -> bool {
         unsafe { sys::content_indicator_get_content_available(self.raw.as_ptr(), direction as u8) }
     }
 
+    /// Set whether the content indicator should indicate if there is content available in the specified direction.
     pub fn set_content_available(&mut self, direction: ContentIndicatorDirection, available: bool) {
         unsafe {
             sys::content_indicator_set_content_available(
@@ -55,6 +62,9 @@ impl ContentIndicator {
         *saved_layer = layer;
     }
 
+    /// Configures this indicator for the specified direction.
+    /// All options are available in [`ContentIndicatorConfig`].
+    /// If the config conflicts with another previous config, this returns [`ConfigConflict`].
     pub fn configure_direction(
         &mut self,
         direction: ContentIndicatorDirection,
@@ -76,7 +86,7 @@ impl ContentIndicator {
                 &sys_config,
             );
             if !succeeded {
-                return Err(ConfigConflict);
+                return Err(ConfigConflict(()));
             }
         }
 
@@ -85,6 +95,7 @@ impl ContentIndicator {
         Ok(())
     }
 
+    /// Configure this content indicator for the specified direction, with all settings reset.
     pub fn reset_direction(&mut self, direction: ContentIndicatorDirection) {
         unsafe {
             sys::content_indicator_configure_direction(self.raw.as_ptr(), direction as u8, null());
@@ -93,25 +104,36 @@ impl ContentIndicator {
     }
 }
 
+/// Error for [`ContentIndicator::configure_direction`].
 #[derive(Debug)]
-pub struct ConfigConflict;
+pub struct ConfigConflict(());
 
+/// Which direction a content indicator applies to.
 #[derive(Copy, Clone, PartialEq, Hash, Eq)]
 #[repr(u8)]
 pub enum ContentIndicatorDirection {
+    /// The up direction.
     Up = sys::ContentIndicatorDirection_ContentIndicatorDirectionUp,
+    /// The down direction.
     Down = sys::ContentIndicatorDirection_ContentIndicatorDirectionDown,
 }
 
+/// Configuration for [`ContentIndicator::configure_direction`].
 pub struct ContentIndicatorConfig {
+    /// Which layer the content indicator should appear on.
     pub layer: Layer,
+    /// Whether displaying the indicator should time out.
     pub times_out: bool,
+    /// Alignment of the indicator within the layer.
     pub alignment: GAlign,
+    /// Foreground color of the indicator.
     pub foreground: GColor,
+    /// Background color of the indicator.
     pub background: GColor,
 }
 
 impl ContentIndicatorConfig {
+    /// Returns a basic content indicator for the given layer.
     pub const fn basic(layer: Layer) -> Self {
         Self {
             layer,

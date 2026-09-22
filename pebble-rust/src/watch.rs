@@ -4,9 +4,13 @@ use crate::sys::*;
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub struct WatchInfo {
+    /// The watch platform.
     pub platform: Platform,
+    /// The watch model.
     pub model: Option<WatchModel>,
+    /// The watch color.
     pub color: Option<WatchColor>,
+    /// The firmware version.
     pub firmware_version: WatchInfoVersion,
 }
 
@@ -81,46 +85,87 @@ impl Platform {
 #[non_exhaustive]
 #[repr(u8)]
 pub enum WatchColor {
+    /// Original Pebble, black.
     OriginalBlack = WatchInfoColor_WATCH_INFO_COLOR_BLACK,
+    /// Original Pebble, white.
     OriginalWhite = WatchInfoColor_WATCH_INFO_COLOR_WHITE,
+    /// Original Pebble, red.
     OriginalRed = WatchInfoColor_WATCH_INFO_COLOR_RED,
+    /// Original Pebble, orange.
     OriginalOrange = WatchInfoColor_WATCH_INFO_COLOR_ORANGE,
+    /// Original Pebble, gray.
     OriginalGray = WatchInfoColor_WATCH_INFO_COLOR_GRAY,
+    /// Original Pebble, stainless steel.
     OriginalStainlessSteel = WatchInfoColor_WATCH_INFO_COLOR_STAINLESS_STEEL,
+    /// Original Pebble, matte black.
     OriginalMatteBlack = WatchInfoColor_WATCH_INFO_COLOR_MATTE_BLACK,
+    /// Original Pebble, blue.
     OriginalBlue = WatchInfoColor_WATCH_INFO_COLOR_BLUE,
+    /// Original Pebble, green.
     OriginalGreen = WatchInfoColor_WATCH_INFO_COLOR_GREEN,
+    /// Original Pebble, pink.
     OriginalPink = WatchInfoColor_WATCH_INFO_COLOR_PINK,
+    /// Time, white.
     TimeWhite = WatchInfoColor_WATCH_INFO_COLOR_TIME_WHITE,
+    /// Time, black.
     TimeBlack = WatchInfoColor_WATCH_INFO_COLOR_TIME_BLACK,
+    /// Time, red.
     TimeRed = WatchInfoColor_WATCH_INFO_COLOR_TIME_RED,
+    /// Time Steel, silver.
     SteelSilver = WatchInfoColor_WATCH_INFO_COLOR_TIME_STEEL_SILVER,
+    /// Time Steel, black.
     SteelBlack = WatchInfoColor_WATCH_INFO_COLOR_TIME_STEEL_BLACK,
+    /// Time Steel, gold.
     SteelGold = WatchInfoColor_WATCH_INFO_COLOR_TIME_STEEL_GOLD,
+    /// Time Round, 14mm lug size, silver.
     TimeRound14Silver = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_SILVER_14,
+    /// Time Round, 14mm lug size, black.
     TimeRound14Black = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_BLACK_14,
+    /// Time Round, 20mm lug size, silver.
     TimeRound20Silver = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_SILVER_20,
+    /// Time Round, 20mm lug size, silver.
     TimeRound20Black = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_BLACK_20,
+    /// Time Round, 14mm lug size, rose gold.
     TimeRound14RoseGold = WatchInfoColor_WATCH_INFO_COLOR_TIME_ROUND_ROSE_GOLD_14,
+    /// Pebble 2 HR, black.
     Hr2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_BLACK,
+    /// Pebble 2 HR, lime (green).
     Hr2Lime = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_LIME,
+    /// Pebble 2 HR, flame (red).
     Hr2Flame = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_FLAME,
+    /// Pebble 2 HR, white.
     Hr2White = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_WHITE,
+    /// Pebble 2 HR, aqua (blue).
     Hr2Aqua = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_HR_AQUA,
+    /// Pebble 2 SE, black.
     Se2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_BLACK,
+    /// Pebble 2 SE, white.
     Se2White = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_2_SE_WHITE,
+    /// Pebble Time 2, black.
     Time2Black = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_BLACK,
+    /// Pebble Time 2, silver.
     Time2Silver = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_SILVER,
+    /// Pebble Time 2, gold.
     Time2Gold = WatchInfoColor_WATCH_INFO_COLOR_PEBBLE_TIME_2_GOLD,
+    /// Pebble 2 Duo, black.
     Duo2Black = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
+    /// Pebble 2 Duo, white.
     Duo2White = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
+    /// Pebble Time 2 (Core Devices), gray.
     Time2CoreDevicesGray = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
+    /// Pebble Time 2 (Core Devices), red.
     Time2CoreDevicesRed = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED,
+    /// Pebble Time 2 (Core Devices), silver and blue.
     Time2CoreDevicesSilverBlue = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE,
+    /// Pebble Time 2 (Core Devices), silver and gray.
     Time2CoreDevicesSilverGray = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY,
+    /// Pebble Round 2, 20mm lug size, black.
     Round2_20Black = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
+    /// Pebble Round 2, 20mm lug size, silver.
     Round2_20Silver = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20,
+    /// Pebble Round 2, 14mm lug size, gold.
     Round2_14Gold = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14,
+    /// Pebble Round 2, 14mm lug size, silver.
     Round2_14Silver = WatchInfoColor_WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14,
 }
 

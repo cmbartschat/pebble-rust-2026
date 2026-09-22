@@ -55,6 +55,7 @@ impl From<ActionMenuChildLevel> for ActionMenuItem {
     }
 }
 
+/// A level of an [`ActionMenu`].
 pub struct ActionMenuLevel {
     items: Vec<ActionMenuItem>,
     display_mode: ActionMenuLevelDisplayMode,
@@ -67,6 +68,7 @@ impl Default for ActionMenuLevel {
 }
 
 impl ActionMenuLevel {
+    /// Create a new action menu level.
     pub const fn new() -> Self {
         Self {
             items: Vec::new(),
@@ -74,10 +76,12 @@ impl ActionMenuLevel {
         }
     }
 
+    /// Set the action menu’s display mode.
     pub const fn set_display_mode(&mut self, mode: ActionMenuLevelDisplayMode) {
         self.display_mode = mode;
     }
 
+    /// Add another level as a child.
     pub fn add_child(&mut self, label: &str, child: Self) {
         let label = CString::from_str(label).ok().unwrap_or_default();
         let label = Pin::new(label.into_boxed_c_str());
@@ -90,6 +94,8 @@ impl ActionMenuLevel {
         );
     }
 
+    /// Add a specific action as a child.
+    /// The callback will be called if the action is selected.
     pub fn add_action(&mut self, label: &str, callback: impl FnOnce() + 'static) {
         self.items.push(ActionData::new(label, callback).into());
     }
@@ -122,6 +128,7 @@ impl ActionMenuLevel {
     }
 }
 
+/// The builder for an [`ActionMenu`].
 pub struct ActionMenuBuilder {
     foreground_color: GColor,
     background_color: GColor,
@@ -130,21 +137,25 @@ pub struct ActionMenuBuilder {
 }
 
 impl ActionMenuBuilder {
+    /// Sets the foreground color of the action menu.
     pub const fn set_foreground_color(mut self, color: GColor) -> Self {
         self.foreground_color = color;
         self
     }
 
+    /// Sets the background color of the action menu.
     pub const fn set_background_color(mut self, color: GColor) -> Self {
         self.background_color = color;
         self
     }
 
+    /// Sets the alignment of the action menu.
     pub const fn set_align(mut self, align: ActionMenuAlign) -> Self {
         self.align = align;
         self
     }
 
+    /// Opens the action menu.
     pub fn open(self) -> Option<ActionMenu> {
         ActionMenu::open(self)
     }
@@ -154,11 +165,16 @@ struct ActionMenuContext {
     levels: Pin<Box<ActionMenuLevel>>,
 }
 
+/// An action menu, i.e. a standardized tree of actions (lists that can contain sublists) that the user can navigate through.
+/// This allows you to quickly create a list-like menu experience which works as well as any builtin OS functionality.
+/// See [the action menu design guide](https://developer.repebble.com/guides/design-and-interaction/recommended/#allow-extended-options-with-an-action-menu).
 pub struct ActionMenu {
     handle: Handle<ActionMenuInner>,
 }
 
 impl ActionMenu {
+    /// Initialize an action menu with the root level.
+    /// This returns an [`ActionMenuBuilder`] which is used to build out the menu.
     pub const fn begin(level: ActionMenuLevel) -> ActionMenuBuilder {
         ActionMenuBuilder {
             foreground_color: GCOLOR_BLACK,
@@ -198,26 +214,34 @@ impl ActionMenu {
         }
     }
 
+    /// Close this action menu.
     pub fn close(&mut self) {
         self.close_inner(true);
     }
 
+    /// Close this action menu, skipping the animation.
     pub fn close_immediate(&mut self) {
         self.close_inner(false);
     }
 }
 
+/// Alignment of the list elements in the action menu.
 #[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum ActionMenuAlign {
+    /// Align to the top of the screen.
     Top = sys::ActionMenuAlign_ActionMenuAlignTop,
+    /// Align to the center of the screen.
     Center = sys::ActionMenuAlign_ActionMenuAlignCenter,
 }
 
+/// How to display the action menu level.
 #[repr(u8)]
 #[derive(Clone, Copy)]
 pub enum ActionMenuLevelDisplayMode {
+    /// Fill the entire screen.
     Wide = sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeWide,
+    /// As thinly as possible.
     Thin = sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeThin,
 }
 

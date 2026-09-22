@@ -14,10 +14,18 @@ pub struct LayerContext {
     back_to_self: WeakHandle<LayerInner>,
 }
 
+/// Common functionality of child layers.
+// This trait is partially public, so we hide our implementation details with #[doc(hidden)]
 pub trait ChildLayer {
+    /// Returns the layer ID.
     fn id(&self) -> usize;
+    /// Returns the layer pointer.
+    #[doc(hidden)]
     fn ptr_to_child_with(&mut self) -> *mut sys::Layer;
+    /// Changes the parent for the layer.
+    #[doc(hidden)]
     fn record_new_parent(&self, parent: &Layer);
+    /// Removes this layer from the parent.
     fn remove_from_parent(&self);
 }
 
@@ -70,6 +78,9 @@ impl LayerInner {
     }
 }
 
+/// A graphics layer within a window.
+/// This is the most generic layer, suitable for manual drawing with [`GContext`].
+/// There are several more specialized layer types, like [`crate::BitmapLayer`] and [`crate::TextLayer`].
 #[derive(Clone)]
 pub struct Layer {
     pub(crate) handle: Handle<LayerInner>,
@@ -103,6 +114,7 @@ impl ChildLayer for Layer {
 }
 
 impl Layer {
+    /// Create a new layer with the given bounds.
     pub fn new(frame: GRect) -> Option<Self> {
         unsafe {
             // Same as sys::layer_create
@@ -125,6 +137,7 @@ impl Layer {
         }
     }
 
+    /// Add a child layer.
     pub fn add_child<T>(&mut self, child: &mut T)
     where
         T: Clone + ChildLayer + 'static,
@@ -137,15 +150,18 @@ impl Layer {
         }
     }
 
+    /// Mark the layer as dirty, forcing a redraw.
+    /// This is the preferred way to manually update a layer.
     pub fn mark_dirty(&mut self) {
         unsafe { sys::layer_mark_dirty(self.as_ptr()) };
     }
 
+    /// Set the boundaries of the layer (in parent coordinates).
     pub fn set_bounds(&mut self, bounds: GRect) {
         unsafe { sys::layer_set_bounds(self.as_ptr(), bounds) };
     }
 
-    fn _set_update_proc(
+    fn _set_update_handler(
         &mut self,
         proc: Option<unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext)>,
         callback: Option<Box<dyn FnMut(Layer, GContext)>>,
@@ -156,53 +172,67 @@ impl Layer {
         inner.render.set(callback);
     }
 
-    pub fn set_raw_update_proc(
+    /// Set a raw update handler.
+    /// In most cases you should use [`Self::set_update_handler`] instead.
+    pub fn set_raw_update_handler(
         &mut self,
         proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),
     ) {
-        self._set_update_proc(Some(proc), None);
+        self._set_update_handler(Some(proc), None);
     }
 
-    pub fn set_update_proc(&mut self, callback: Box<dyn FnMut(Layer, GContext)>) {
-        self._set_update_proc(Some(global_layer_update_handler), Some(callback));
+    /// Set the handler for layer updates.
+    /// The callback receives this layer, as well as a graphics context that can be drawn to to set the visual contents of the layer.
+    pub fn set_update_handler(&mut self, callback: Box<dyn FnMut(Layer, GContext)>) {
+        self._set_update_handler(Some(global_layer_update_handler), Some(callback));
     }
 
-    pub fn clear_update_proc(&mut self) {
-        self._set_update_proc(None, None);
+    /// Remove the layer update handler.
+    pub fn clear_update_handler(&mut self) {
+        self._set_update_handler(None, None);
     }
 
     unsafe fn as_ptr(&self) -> *mut sys::Layer {
         self.handle.borrow_mut().raw.as_ptr()
     }
 
+    /// Returns the boundaries of the layer.
     pub fn get_bounds(&self) -> GRect {
         unsafe { sys::layer_get_bounds(self.as_ptr()) }
     }
 
+    /// Returns the frame (bounding box within parent) of the layer.
     pub fn get_frame(&self) -> GRect {
         unsafe { sys::layer_get_frame(self.as_ptr()) }
     }
 
+    /// Sets the frame (bounding box within parent) of the layer.
     pub fn set_frame(&mut self, frame: GRect) {
         unsafe { sys::layer_set_frame(self.as_ptr(), frame) }
     }
 
-    pub fn get_clips(&self) -> bool {
+    /// Returns whether clipping is enabled for this layer.
+    pub fn is_clipping_enabled(&self) -> bool {
         unsafe { sys::layer_get_clips(self.as_ptr()) }
     }
 
-    pub fn set_clips(&mut self, clips: bool) {
+    /// Enables/disables clipping.
+    pub fn set_clipping_enabled(&mut self, clips: bool) {
         unsafe { sys::layer_set_clips(self.as_ptr(), clips) }
     }
 
-    pub fn get_hidden(&self) -> bool {
+    /// Returns whether the layer is hidden or not.
+    pub fn is_hidden(&self) -> bool {
         unsafe { sys::layer_get_hidden(self.as_ptr()) }
     }
 
+    /// Hides/shows the layer.
     pub fn set_hidden(&mut self, hidden: bool) {
         unsafe { sys::layer_set_hidden(self.as_ptr(), hidden) }
     }
 
+    /// Returns the bounds within the layer that are not obstructed by system UI.
+    /// The associated overlay functionality is not available on Aplite, where this always returns the full bounds.
     pub fn get_unobstructed_bounds(&self) -> GRect {
         #[cfg(not(platform = "aplite"))]
         unsafe {
@@ -212,18 +242,17 @@ impl Layer {
         self.get_bounds()
     }
 
+    /// Convert a point in layer coordinates to screen coordinates.
     pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {
         unsafe { sys::layer_convert_point_to_screen(self.as_ptr(), point) }
     }
 
+    /// Convert a rectangle in layer coordinates to screen coordinates.
     pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
         unsafe { sys::layer_convert_rect_to_screen(self.as_ptr(), rect) }
     }
 
-    pub fn remove(&mut self) {
-        ChildLayer::remove_from_parent(self);
-    }
-
+    /// Remove all children of this layer.
     pub fn remove_child_layers(&mut self) {
         let children = {
             let mut inner = self.handle.borrow_mut();

@@ -17,7 +17,9 @@
     clippy::upper_case_acronyms,
     clippy::transmute_int_to_bool,
     clippy::ptr_offset_with_cast,
-    clippy::missing_const_for_fn
+    clippy::missing_const_for_fn,
+    missing_docs,
+    rustdoc::broken_intra_doc_links,
 )]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
