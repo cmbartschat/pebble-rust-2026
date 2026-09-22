@@ -17,3 +17,8 @@ panic = "abort"
 
 [workspace.lints.clippy]
 missing-const-for-fn = "warn"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(platform, values("aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"))',
+] }

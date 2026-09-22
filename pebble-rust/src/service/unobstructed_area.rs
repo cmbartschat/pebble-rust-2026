@@ -2,6 +2,7 @@ use core::ffi::c_void;
 
 use alloc::boxed::Box;
 
+#[allow(unused)]
 use crate::{GRect, log_c_str, service::global_callback::GlobalCallback, sys};
 
 pub struct UnobstructedArea {
@@ -17,6 +18,7 @@ impl UnobstructedArea {
 
     pub fn subscribe(&self, handler: Box<dyn FnMut(GRect)>) {
         self.callback.set(handler);
+        #[cfg(not(platform = "aplite"))]
         unsafe {
             sys::unobstructed_area_service_subscribe(
                 sys::UnobstructedAreaHandlers {
@@ -30,11 +32,15 @@ impl UnobstructedArea {
     }
 
     pub fn unsubscribe(&self) {
-        unsafe { sys::unobstructed_area_service_unsubscribe() }
+        #[cfg(not(platform = "aplite"))]
+        unsafe {
+            sys::unobstructed_area_service_unsubscribe()
+        }
         self.callback.clear()
     }
 }
 
+#[allow(unused)] // platforms which don’t have unobstructed area logic
 unsafe extern "C" fn global_unobstructed_area_handler(rect: GRect, context: *mut c_void) {
     log_c_str(c"unobstructed_area received");
     unsafe {

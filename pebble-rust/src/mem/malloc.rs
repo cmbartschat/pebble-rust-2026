@@ -4,22 +4,32 @@ use core::{
     slice,
 };
 
+use super::c_malloc::*;
 use crate::log::log_c_str;
 
+/// An allocator that calls into PebbleOS’s `malloc`/`realloc`/`free`.
+/// Available with the "malloc-allocator" feature.
+/// This allocator causes your program to only ever request as much memory from the C heap as the Rust code actually needs,
+/// plus some alignment and bookkeeping overhead for allocations with alignment of at least 8 bytes (e.g. u64).
+/// This allocator is suitable for C interop, since it allows C code to use the heap too.
+/// However, it is expected to be slower and less efficient than using a Rust-side optimized allocator like [`super::EmbeddedAllocator`].
+///
+/// # Usage
+///
+/// To use this allocator in your program, simply declare it as the global allocator:
+/// ```rust,no_run
+/// # #![no_std]
+/// # #![no_main]
+/// use pebble_rust_2026::MallocAllocator;
+///
+/// #[global_allocator]
+/// static ALLOCATOR: MallocAllocator = MallocAllocator;
+/// ```
+// TODO: Implement the upcoming stable Allocator trait, so this can be used for custom allocation as well.
 pub struct Allocator;
-
-#[global_allocator]
-static ALLOC: Allocator = Allocator;
 
 // NOTE(christoph): Tested on real target hardware
 const NATIVE_ALIGN: usize = size_of::<*mut u8>();
-
-unsafe extern "C" {
-    pub unsafe fn malloc(size: usize) -> *mut u8;
-    pub unsafe fn realloc(ptr: *mut u8, size: usize) -> *mut u8;
-    pub unsafe fn free(ptr: *mut u8);
-    pub unsafe fn calloc(count: usize, size: usize) -> *mut u8;
-}
 
 impl Allocator {
     fn alloc_inner(layout: Layout, alloc: fn(usize) -> *mut u8) -> *mut u8 {

@@ -12,7 +12,6 @@ mod bitmap_layer;
 pub mod color;
 mod content_indicator;
 mod context;
-mod custom_alloc;
 mod dictionary;
 mod effect;
 mod fmt;
@@ -25,6 +24,7 @@ mod key;
 mod layer;
 mod log;
 mod math;
+mod mem;
 mod mutex;
 mod persist;
 mod raw_timer;
@@ -54,7 +54,6 @@ pub use crate::content_indicator::{
     ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
-pub use crate::custom_alloc::Allocator;
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::font::{Font, SystemFont};
 pub use crate::input::button::Button;
@@ -62,6 +61,7 @@ pub use crate::input::click::{ClickConfig, ClickConfigBuilder, ClickRecognizer};
 pub use crate::layer::Layer;
 pub use crate::log::{log_c_str, log_str};
 pub use crate::math::*;
+pub use crate::mem::*;
 pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::scroll_layer::ScrollLayer;
 pub use crate::service::BatteryChargeState;
@@ -77,6 +77,20 @@ pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode
 pub use crate::text_layer::TextLayer;
 pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
-pub use crate::watch::{SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
+pub use crate::watch::{Platform, SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
 pub use crate::window::Window;
 pub use proc::*;
+
+// sanity check the existence of the appropriate config
+#[cfg(not(any(
+    platform = "aplite",
+    platform = "basalt",
+    platform = "chalk",
+    platform = "diorite",
+    platform = "emery",
+    platform = "flint",
+    platform = "gabbro"
+)))]
+compile_error!(
+    "Platforms have not been configured correctly. This usually means that the build script did not run."
+);

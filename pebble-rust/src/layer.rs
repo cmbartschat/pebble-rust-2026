@@ -204,7 +204,12 @@ impl Layer {
     }
 
     pub fn get_unobstructed_bounds(&self) -> GRect {
-        unsafe { sys::layer_get_unobstructed_bounds(self.as_ptr()) }
+        #[cfg(not(platform = "aplite"))]
+        unsafe {
+            sys::layer_get_unobstructed_bounds(self.as_ptr())
+        }
+        #[cfg(platform = "aplite")]
+        self.get_bounds()
     }
 
     pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {

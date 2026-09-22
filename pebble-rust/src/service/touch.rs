@@ -15,23 +15,51 @@ impl Touch {
         }
     }
 
+    #[allow(clippy::missing_const_for_fn)] // only possible on non-touch platforms
     pub fn is_enabled(&self) -> bool {
-        unsafe { sys::touch_service_is_enabled() }
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
+        return unsafe { sys::touch_service_is_enabled() };
+
+        #[allow(unreachable_code)]
+        false
     }
 
     pub fn subscribe(&self, handler: Box<dyn FnMut(TouchEvent)>) {
         self.callback.set(handler);
-        unsafe {
-            sys::touch_service_subscribe(Some(global_touch_handler), self.callback.as_void());
+        // No touch on these platforms, therefore subscribing to touch events is a noop.
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
+        {
+            unsafe {
+                sys::touch_service_subscribe(Some(global_touch_handler), self.callback.as_void());
+            }
         }
     }
 
     pub fn unsubscribe(&self) {
-        unsafe { sys::touch_service_unsubscribe() }
+        #[cfg(not(any(
+            platform = "aplite",
+            platform = "basalt",
+            platform = "chalk",
+            platform = "diorite"
+        )))]
+        {
+            unsafe { sys::touch_service_unsubscribe() }
+        }
         self.callback.clear()
     }
 }
 
+#[allow(unused)] // platforms which don’t have touch
 extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut c_void) {
     log_c_str(c"touch received");
     unsafe {

@@ -60,6 +60,7 @@ impl<P, T> GlobalCallback<P, T> {
         });
     }
 
+    #[allow(unused)]
     pub unsafe fn as_void(&self) -> *mut c_void {
         addr_of!(self.inner) as *const c_void as *mut c_void
     }
