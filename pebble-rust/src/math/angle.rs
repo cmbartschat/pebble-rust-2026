@@ -6,7 +6,7 @@ use core::{
 use crate::{GSize, sys};
 
 /// A fixed-point angle.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, PartialOrd)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct Angle {
     pub(crate) value: i32,
