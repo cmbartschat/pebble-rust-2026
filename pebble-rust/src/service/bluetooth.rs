@@ -5,7 +5,6 @@ use crate::{service::global_callback::GlobalCallback, sys};
 /// Allows you to detect when the app gains or loses its Bluetooth connection.
 pub struct BluetoothConnection;
 
-// TODO: Should be a property on BluetoothConnection.
 static HANDLER: GlobalCallback<bool, ()> = GlobalCallback::new();
 
 impl BluetoothConnection {
