@@ -271,7 +271,8 @@ extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys:
         log_c_str(c"Unexpected: Layer data is null");
         return;
     };
-    let Some(ctx) = GContext::from_raw(ctx) else {
+    let ctx = unsafe { GContext::from_raw(ctx) };
+    let Some(ctx) = ctx else {
         log_c_str(c"Unexpected: Layer context is null");
         return;
     };

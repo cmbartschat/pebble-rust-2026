@@ -11,7 +11,12 @@ pub struct GContext {
 }
 
 impl GContext {
-    pub(crate) fn from_raw(inner: *mut sys::GContext) -> Option<Self> {
+    /// Initialize a GContext.
+    ///
+    /// # Safety
+    ///
+    /// It should only be used within a render handler, and not outlive the pointer.
+    pub unsafe fn from_raw(inner: *mut sys::GContext) -> Option<Self> {
         Some(Self {
             raw: NonNull::new(inner)?,
         })
