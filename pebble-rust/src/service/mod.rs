@@ -19,4 +19,4 @@ pub use compass::{Compass, CompassHeading};
 pub(crate) use global_callback::GlobalCallbackInner;
 pub use touch::{Touch, TouchEvent};
 pub use unobstructed_area::UnobstructedArea;
-pub use wakeup::{PendingWakeup, Wakeup, WakeupEvent};
+pub use wakeup::{PendingWakeup, Wakeup, WakeupEvent, WakeupSchedulingError};

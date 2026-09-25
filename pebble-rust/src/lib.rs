@@ -71,11 +71,11 @@ pub use crate::service::{
     Accelerometer, AccelerometerAxis, AccelerometerData, AccelerometerRawData,
     AccelerometerSamplingRate, AppFocus, BatteryChargeState, BatteryState, BluetoothConnection,
     Compass, CompassHeading, PendingWakeup, Touch, TouchEvent, UnobstructedArea, Wakeup,
-    WakeupEvent,
+    WakeupEvent, WakeupSchedulingError,
 };
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
-pub use crate::status_code::{StatusError, StatusSuccess};
+pub use crate::status_code::StatusError;
 pub use crate::sys::{GColor, GEdgeInsets, GPoint, GRect, GSize};
 pub use crate::text_attributes::{TextAlignment, TextAttributes, TextOverflowMode};
 pub use crate::text_layer::TextLayer;
