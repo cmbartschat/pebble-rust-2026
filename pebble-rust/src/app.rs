@@ -37,8 +37,8 @@ pub struct App {
     pub compass: service::Compass,
     /// See [`BluetoothConnection`](service::BluetoothConnection).
     pub bluetooth_connection: service::BluetoothConnection,
-    /// See [`Acceleration`](service::Acceleration).
-    pub accel: service::Acceleration,
+    /// See [`Accelerometer`](service::Accelerometer).
+    pub accelerometer: service::Accelerometer,
     /// See [`AppFocus`](service::AppFocus).
     pub focus: service::AppFocus,
     /// See [`Wakeup`](service::Wakeup).
@@ -54,7 +54,7 @@ pub static APP: App = App {
     battery_state: service::BatteryState::new(),
     compass: service::Compass::new(),
     bluetooth_connection: service::BluetoothConnection::new(),
-    accel: service::Acceleration::new(),
+    accelerometer: service::Accelerometer::new(),
     focus: service::AppFocus::new(),
     wakeup: service::Wakeup::new(),
 };

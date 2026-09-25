@@ -1,4 +1,4 @@
-mod accel;
+mod accelerometer;
 mod app_focus;
 mod battery;
 mod bluetooth;
@@ -8,8 +8,10 @@ mod touch;
 mod unobstructed_area;
 mod wakeup;
 
-pub use accel::Acceleration;
-pub use accel::{AccelAxis, AccelSamplingRate, AccelerationData, TimedAccelerationData};
+pub use accelerometer::{
+    Accelerometer, AccelerometerAxis, AccelerometerData, AccelerometerRawData,
+    AccelerometerSamplingRate,
+};
 pub use app_focus::AppFocus;
 pub use battery::{BatteryChargeState, BatteryState};
 pub use bluetooth::BluetoothConnection;

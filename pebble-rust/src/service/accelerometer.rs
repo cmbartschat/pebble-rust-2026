@@ -5,19 +5,19 @@ use critical_section::Mutex;
 
 use crate::{log_c_str, service::global_callback::GlobalCallback, sys};
 
-/// Accessor for the acceleration data.
+/// Accessor for the accelerometer data.
 /// See the member functions for details.
-pub struct Acceleration {
+pub struct Accelerometer {
     samples_per_update: Mutex<RefCell<u32>>,
 }
 
-/// Specifies one of the three possible acceleration axes, both in positive and negative directions.
-/// As specified in the [Pebble documentation](https://developer.repebble.com/docs/c/Foundation/Event_Service/AccelerometerService/#AccelRawData):
+/// Specifies one of the three possible accelerometer axes, both in positive and negative directions.
+/// As specified in the [Pebble documentation](https://developer.repebble.com/docs/c/Foundation/Event_Service/AccelerometerService/#AccelerometerRawData):
 /// - X is towards the right of the watch.
 /// - Y is towards the top of the watch.
 /// - Z is vertically out of the watch screen.
 #[derive(Copy, Clone, PartialEq, Hash)]
-pub enum AccelAxis {
+pub enum AccelerometerAxis {
     /// Positive X, towards the right of the watch.
     PosX,
     /// Positive Y, vertically out of the watch screen.
@@ -33,16 +33,16 @@ pub enum AccelAxis {
 }
 
 /// An accelerometer sample, including timestamp and vibration rumble status.
-pub type TimedAccelerationData = sys::AccelData;
-/// Simple acceleration data, only including values for the three acceleration axes.
-pub type AccelerationData = sys::AccelRawData;
+pub type AccelerometerData = sys::AccelData;
+/// Simple accelerometer data, only including values for the three accelerometer axes.
+pub type AccelerometerRawData = sys::AccelRawData;
 
-/// The possible acceleration data sampling rates.
+/// The possible accelerometer data sampling rates.
 /// All sampling rates are in Hz, or samples per second.
 #[derive(Clone, Copy, PartialEq, Hash)]
 #[repr(u8)]
 #[non_exhaustive]
-pub enum AccelSamplingRate {
+pub enum AccelerometerSamplingRate {
     /// 10 Hz.
     Hz10 = sys::AccelSamplingRate_ACCEL_SAMPLING_10HZ,
     /// 25 Hz.
@@ -53,27 +53,27 @@ pub enum AccelSamplingRate {
     Hz100 = sys::AccelSamplingRate_ACCEL_SAMPLING_100HZ,
 }
 
-static TAP_HANDLER: GlobalCallback<AccelAxis, ()> = GlobalCallback::new();
-static DATA_HANDLER: GlobalCallback<&[sys::AccelData], ()> = GlobalCallback::new();
-static RAW_HANDLER: GlobalCallback<&sys::AccelRawData, ()> = GlobalCallback::new();
+static TAP_HANDLER: GlobalCallback<AccelerometerAxis, ()> = GlobalCallback::new();
+static DATA_HANDLER: GlobalCallback<&[AccelerometerData], ()> = GlobalCallback::new();
+static RAW_HANDLER: GlobalCallback<&AccelerometerRawData, ()> = GlobalCallback::new();
 
-/// The handler for acceleration events.
-/// This is a function that takes in a slice of [`TimedAccelerationData`].
-pub type AccelerationHandler = Box<dyn FnMut(&[TimedAccelerationData])>;
+/// The handler for accelerometer events.
+/// This is a function that takes in a slice of [`AccelerometerData`].
+pub type AccelerometerHandler = Box<dyn FnMut(&[AccelerometerData])>;
 
-impl Acceleration {
+impl Accelerometer {
     pub(crate) const fn new() -> Self {
         Self {
             samples_per_update: Mutex::new(RefCell::new(1)),
         }
     }
 
-    /// Retrieve the current acceleration data.
+    /// Retrieve the current accelerometer data.
     /// Returns None if the current data cannot be retrieved,
-    /// either when the accelerometer is not running, or when you are subscribed to acceleration events.
+    /// either when the accelerometer is not running, or when you are subscribed to accelerometer events.
     /// Since you cannot unsubscribe from raw events, this function becomes unavailable once
-    pub fn peek(&self) -> Option<TimedAccelerationData> {
-        let mut data = sys::AccelData {
+    pub fn peek(&self) -> Option<AccelerometerData> {
+        let mut data = AccelerometerData {
             x: 0,
             y: 0,
             z: 0,
@@ -85,7 +85,7 @@ impl Acceleration {
     }
 
     /// Set the accelerometer sampling rate.
-    pub fn set_sampling_rate(&self, rate: AccelSamplingRate) {
+    pub fn set_sampling_rate(&self, rate: AccelerometerSamplingRate) {
         unsafe { sys::accel_service_set_sampling_rate(rate as u8) };
     }
 
@@ -108,10 +108,10 @@ impl Acceleration {
         critical_section::with(|cs| *self.samples_per_update.borrow_ref(cs))
     }
 
-    /// Subscribe to acceleration events.
+    /// Subscribe to accelerometer events.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
-    pub fn subscribe(&self, handler: AccelerationHandler) {
+    pub fn subscribe(&self, handler: AccelerometerHandler) {
         DATA_HANDLER.set(handler);
         unsafe {
             sys::accel_data_service_subscribe(
@@ -121,7 +121,7 @@ impl Acceleration {
         }
     }
 
-    /// Unsubscribe from acceleration events.
+    /// Unsubscribe from accelerometer events.
     pub fn unsubscribe(&self) {
         unsafe { sys::accel_data_service_unsubscribe() };
         DATA_HANDLER.clear()
@@ -129,9 +129,9 @@ impl Acceleration {
 
     /// Subscribe to tap events.
     /// These are emitted whenever the watch is tapped or shaken along an axis.
-    /// The handler is a function that receives the acceleration axis as its only argument.
+    /// The handler is a function that receives the accelerometer axis as its only argument.
     /// This overrides any previous handler that is subscribed to these events.
-    pub fn subscribe_to_tap(&self, handler: Box<dyn FnMut(AccelAxis)>) {
+    pub fn subscribe_to_tap(&self, handler: Box<dyn FnMut(AccelerometerAxis)>) {
         TAP_HANDLER.set(handler);
         unsafe {
             sys::accel_tap_service_subscribe(Some(global_accel_tap_handler));
@@ -144,13 +144,13 @@ impl Acceleration {
         TAP_HANDLER.clear()
     }
 
-    /// Subscribe to raw acceleration events.
+    /// Subscribe to raw accelerometer events.
     /// These events omit the timestamp and the vibration information.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
     ///
     /// Note: You cannot unsubscribe from raw events, since this functionality is unfortunately not available from the C API.
-    pub fn subscribe_to_raw(&self, handler: Box<dyn FnMut(&AccelerationData)>) {
+    pub fn subscribe_to_raw(&self, handler: Box<dyn FnMut(&AccelerometerRawData)>) {
         RAW_HANDLER.set(handler);
         unsafe {
             sys::accel_raw_data_service_subscribe(
@@ -161,19 +161,19 @@ impl Acceleration {
     }
 }
 
-extern "C" fn global_accel_data_handler(data: *mut sys::AccelData, num_samples: u32) {
+extern "C" fn global_accel_data_handler(data: *mut AccelerometerData, num_samples: u32) {
     let slice = unsafe { slice::from_raw_parts(data, num_samples as usize) };
     DATA_HANDLER.dispatch(slice);
 }
 
 extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32) {
     let axis = match (axis, direction) {
-        (sys::AccelAxisType_ACCEL_AXIS_X, -1) => AccelAxis::NegX,
-        (sys::AccelAxisType_ACCEL_AXIS_X, 1) => AccelAxis::PosX,
-        (sys::AccelAxisType_ACCEL_AXIS_Y, -1) => AccelAxis::NegY,
-        (sys::AccelAxisType_ACCEL_AXIS_Y, 1) => AccelAxis::PosY,
-        (sys::AccelAxisType_ACCEL_AXIS_Z, -1) => AccelAxis::NegZ,
-        (sys::AccelAxisType_ACCEL_AXIS_Z, 1) => AccelAxis::PosZ,
+        (sys::AccelAxisType_ACCEL_AXIS_X, -1) => AccelerometerAxis::NegX,
+        (sys::AccelAxisType_ACCEL_AXIS_X, 1) => AccelerometerAxis::PosX,
+        (sys::AccelAxisType_ACCEL_AXIS_Y, -1) => AccelerometerAxis::NegY,
+        (sys::AccelAxisType_ACCEL_AXIS_Y, 1) => AccelerometerAxis::PosY,
+        (sys::AccelAxisType_ACCEL_AXIS_Z, -1) => AccelerometerAxis::NegZ,
+        (sys::AccelAxisType_ACCEL_AXIS_Z, 1) => AccelerometerAxis::PosZ,
         _ => {
             return;
         }
@@ -184,7 +184,7 @@ extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32)
 }
 
 extern "C" fn global_accel_raw_data_handler(
-    data: *mut sys::AccelRawData,
+    data: *mut AccelerometerRawData,
     _something: u32,
     _timestamp_ms: u64,
 ) {

@@ -68,9 +68,10 @@ pub use crate::mutex::{Mutex, MutexToken};
 pub use crate::persist::Persist;
 pub use crate::scroll_layer::ScrollLayer;
 pub use crate::service::{
-    AccelAxis, AccelSamplingRate, Acceleration, AccelerationData, AppFocus, BatteryChargeState,
-    BatteryState, BluetoothConnection, Compass, CompassHeading, PendingWakeup,
-    TimedAccelerationData, Touch, TouchEvent, UnobstructedArea, Wakeup, WakeupEvent,
+    Accelerometer, AccelerometerAxis, AccelerometerData, AccelerometerRawData,
+    AccelerometerSamplingRate, AppFocus, BatteryChargeState, BatteryState, BluetoothConnection,
+    Compass, CompassHeading, PendingWakeup, Touch, TouchEvent, UnobstructedArea, Wakeup,
+    WakeupEvent,
 };
 pub use crate::simple_menu_layer::{SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection};
 pub use crate::status_bar_layer::{StatusBarLayer, StatusBarSeparatorMode};
