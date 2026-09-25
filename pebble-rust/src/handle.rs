@@ -12,7 +12,6 @@ pub(crate) fn new_handle<T>(s: T) -> Handle<T> {
 }
 
 /// Generic weak pointer.
-#[derive(Clone)]
 pub struct WeakObject<Inner, Handled> {
     handle: WeakHandle<Inner>,
     _outer: PhantomData<Handled>,
@@ -33,6 +32,15 @@ impl<Handled, Inner> From<WeakHandle<Inner>> for WeakObject<Inner, Handled> {
     fn from(handle: WeakHandle<Inner>) -> Self {
         Self {
             handle,
+            _outer: PhantomData,
+        }
+    }
+}
+
+impl<Handled, Inner> Clone for WeakObject<Inner, Handled> {
+    fn clone(&self) -> Self {
+        Self {
+            handle: self.handle.clone(),
             _outer: PhantomData,
         }
     }

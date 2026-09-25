@@ -40,7 +40,7 @@ impl Drop for ScrollLayerRaw {
     }
 }
 
-struct ScrollLayerInner {
+pub struct ScrollLayerInner {
     content_indicator: Option<ContentIndicator>,
     shadow_hidden: bool,
     base_layer: Layer,
