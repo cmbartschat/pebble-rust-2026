@@ -115,21 +115,25 @@ extern "C" fn global_outbox_failed_handler(
     log_c_str(c"outbox failed");
     if let Err(err) = app_message_result_from_raw(reason) {
         match err {
-            crate::AppMessageError::AlreadyReleased => todo!(),
+            crate::AppMessageError::AlreadyReleased => log_c_str(c"  reason: already released"),
             crate::AppMessageError::AppNotRunning => log_c_str(c"  reason: not running"),
-            crate::AppMessageError::BufferOverflow => todo!(),
+            crate::AppMessageError::BufferOverflow => log_c_str(c"  reason: buffer overflow"),
             crate::AppMessageError::Busy => log_c_str(c"  reason: busy"),
-            crate::AppMessageError::CallbackAlreadyRegistered => todo!(),
-            crate::AppMessageError::CallbackNotRegistered => todo!(),
+            crate::AppMessageError::CallbackAlreadyRegistered => {
+                log_c_str(c"  reason: callback already registered")
+            }
+            crate::AppMessageError::CallbackNotRegistered => {
+                log_c_str(c"  reason: no callback registered")
+            }
             crate::AppMessageError::Closed => log_c_str(c"  reason: closed"),
-            crate::AppMessageError::InternalError => todo!(),
-            crate::AppMessageError::InvalidArgs => todo!(),
-            crate::AppMessageError::InvalidState => todo!(),
+            crate::AppMessageError::InternalError => log_c_str(c"  reason: internal error"),
+            crate::AppMessageError::InvalidArgs => log_c_str(c"  reason: invalid arguments (?)"),
+            crate::AppMessageError::InvalidState => log_c_str(c"  reason: invalid state"),
             crate::AppMessageError::NotConnected => log_c_str(c"  reason: not connected"),
-            crate::AppMessageError::OutOfMemory => todo!(),
-            crate::AppMessageError::SendRejected => todo!(),
+            crate::AppMessageError::OutOfMemory => log_c_str(c"  reason: out of memory"),
+            crate::AppMessageError::SendRejected => log_c_str(c"  reason: send rejected"),
             crate::AppMessageError::SendTimeout => log_c_str(c"  reason: timeout"),
-            crate::AppMessageError::Unknown => todo!(),
+            crate::AppMessageError::Unknown => log_c_str(c"  reason: unknown"),
         };
     }
 }
