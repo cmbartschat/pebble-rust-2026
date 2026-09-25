@@ -33,12 +33,14 @@ impl Drop for FontInner {
     }
 }
 
+/// A font for writing text.
 #[derive(Clone)]
 pub struct Font {
     pub(crate) handle: Handle<FontInner>,
 }
 
 impl Font {
+    /// Load a custom font from the given resource ID.
     pub fn load_custom(resource: ResourceId) -> Option<Self> {
         Some(Self {
             handle: new_handle(FontInner::load_custom(*resource)?),
@@ -46,28 +48,52 @@ impl Font {
     }
 }
 
+/// The selection of system fonts.
+/// Note that some fonts are not available on all platforms.
+/// See the [system fonts list](https://developer.repebble.com/guides/app-resources/system-fonts/) for details on each font.
 #[derive(Copy, Clone)]
 pub enum SystemFont {
+    /// Bitham, 30px, Black.
     Bitham30Black,
+    /// Bitham, 34px, Medium, numbers and symbols only.
     Bitham34MediumNumbers,
+    /// Bitham, 42px, Bold.
     Bitham42Bold,
+    /// Bitham, 42px, Light.
     Bitham42Light,
+    /// Bitham, 42px, Medium, numbers and symbols only.
     Bitham42MediumNumbers,
+    /// Droid Serif, 28px, Bold.
     DroidSerif28Bold,
+    /// Gothic, 14px.
     Gothic14,
+    /// Gothic, 14px, Bold.
     Gothic14Bold,
+    /// Gothic, 18px.
     Gothic18,
+    /// Gothic, 18px, Bold.
     Gothic18Bold,
+    /// Gothic, 24px.
     Gothic24,
+    /// Gothic, 24px, Bold.
     Gothic24Bold,
+    /// Gothic, 28px.
     Gothic28,
+    /// Gothic, 28px, Bold.
     Gothic28Bold,
+    /// LECO, 20px, Bold, numbers and symbols only.
     Leco20BoldNumbers,
+    /// LECO, 26px, Bold, numbers and symbols and AM/PM only.
     Leco26BoldNumbersAmPm,
+    /// LECO, 28px, Light, numbers and symbols only.
     Leco28LightNumbers,
+    /// LECO, 32px, Bold, numbers and symbols only.
     Leco32BoldNumbers,
+    /// LECO, 36px, Bold, numbers and symbols only.
     Leco36BoldNumbers,
+    /// LECO, 38px, Bold, numbers and symbols only.
     Leco38BoldNumbers,
+    /// LECO, 42px, numbers and symbols only.
     Leco42Numbers,
     #[cfg(not(any(
         platform = "aplite",
@@ -75,6 +101,7 @@ pub enum SystemFont {
         platform = "chalk",
         platform = "diorite"
     )))]
+    /// LECO, 60px, Bold, numbers and symbols and AM/PM only.
     Leco60BoldNumbersAmPm,
     #[cfg(not(any(
         platform = "aplite",
@@ -82,12 +109,16 @@ pub enum SystemFont {
         platform = "chalk",
         platform = "diorite"
     )))]
+    /// LECO, 60px, numbers and symbols and AM/PM only.
     Leco60NumbersAmPm,
+    /// Roboto, 49px, Bold, "subset" (unspecified).
     RobotoBoldSubset49,
+    /// Roboto Condensed, 21px.
     RobotoCondensed21,
 }
 
 impl SystemFont {
+    /// Load the system font into memory.
     pub fn load(self) -> Option<Font> {
         let ptr: *const u8 = match self {
             Self::Bitham30Black => sys::FONT_KEY_BITHAM_30_BLACK.as_ptr(),

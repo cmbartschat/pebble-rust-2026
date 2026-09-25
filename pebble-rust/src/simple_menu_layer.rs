@@ -9,7 +9,7 @@ use alloc::{boxed::Box, ffi::CString, rc::Rc, vec::Vec};
 
 use crate::{
     Bitmap, GRect, Layer, Window,
-    handle::{Handle, WeakHandle, new_handle},
+    handle::{Handle, WeakObject, new_handle},
     input::context::InputReceiver,
     layer::{ChildLayer, LayerInner},
     log_c_str, sys,
@@ -66,6 +66,8 @@ struct SimpleMenuLayerInner {
     window: WeakWindow,
 }
 
+/// A static list menu.
+/// See [the Pebble documentation](https://developer.repebble.com/docs/c/User_Interface/Layers/SimpleMenuLayer/) for examples.
 #[derive(Clone)]
 pub struct SimpleMenuLayer {
     handle: Handle<SimpleMenuLayerInner>,
@@ -96,6 +98,7 @@ impl ChildLayer for SimpleMenuLayer {
     }
 }
 
+/// An entry in a [`SimpleMenuLayer`].
 pub struct SimpleMenuItem {
     title: CString,
     subtitle: Option<CString>,
@@ -119,6 +122,8 @@ extern "C" fn global_simple_menu_select_handler(index: i32, context: *mut c_void
 }
 
 impl SimpleMenuItem {
+    /// Create a new entry in a [`SimpleMenuLayer`].
+    /// The callback is called when the element is selected by the user.
     pub fn new(
         title: &str,
         subtitle: Option<&str>,
@@ -150,12 +155,14 @@ impl SimpleMenuItem {
     }
 }
 
+/// Section of a [`SimpleMenuLayer`].
 pub struct SimpleMenuSection {
     title: Option<CString>,
     items: Vec<SimpleMenuItem>,
 }
 
 impl SimpleMenuSection {
+    /// Create a new section with a name.
     pub fn new(title: &str) -> Self {
         Self {
             title: Some(
@@ -165,6 +172,7 @@ impl SimpleMenuSection {
         }
     }
 
+    /// Create an untitled section.
     pub const fn new_untitled() -> Self {
         Self {
             title: None,
@@ -172,11 +180,12 @@ impl SimpleMenuSection {
         }
     }
 
+    /// Add a new item to this menu.
     pub fn push(&mut self, item: SimpleMenuItem) {
         self.items.push(item);
     }
 
-    pub fn as_sys(
+    pub(crate) fn as_sys(
         &self,
         context: &mut Vec<Pin<Box<[sys::SimpleMenuItem]>>>,
     ) -> sys::SimpleMenuSection {
@@ -196,6 +205,16 @@ impl SimpleMenuSection {
     }
 }
 
+impl FromIterator<SimpleMenuItem> for SimpleMenuSection {
+    fn from_iter<T: IntoIterator<Item = SimpleMenuItem>>(iter: T) -> Self {
+        let mut this = Self::new_untitled();
+        for item in iter {
+            this.push(item)
+        }
+        this
+    }
+}
+
 struct SimpleMenuContext {
     sections: Pin<Box<[SimpleMenuSection]>>,
     #[allow(dead_code)]
@@ -203,6 +222,8 @@ struct SimpleMenuContext {
 }
 
 impl SimpleMenuLayer {
+    /// Create a new simple menu layer.
+    /// To create the option list, you may use [`Vec::into_boxed_slice`].
     pub fn new(
         frame: GRect,
         window: &mut Window,
@@ -245,12 +266,10 @@ impl SimpleMenuLayer {
         }
     }
 
-    pub fn remove(&mut self) {
-        ChildLayer::remove_from_parent(self);
-    }
-
+    /// Downgrade to a weak handle.
+    #[allow(private_interfaces)]
     pub fn downgrade(&self) -> WeakSimpleMenuLayer {
-        WeakSimpleMenuLayer::from(self)
+        WeakSimpleMenuLayer::from(Rc::downgrade(&self.handle))
     }
 }
 
@@ -260,20 +279,12 @@ impl InputReceiver for SimpleMenuLayer {
     }
 }
 
-#[derive(Clone)]
-pub struct WeakSimpleMenuLayer {
-    handle: WeakHandle<SimpleMenuLayerInner>,
+impl From<Handle<SimpleMenuLayerInner>> for SimpleMenuLayer {
+    fn from(handle: Handle<SimpleMenuLayerInner>) -> Self {
+        Self { handle }
+    }
 }
 
-impl WeakSimpleMenuLayer {
-    pub fn from(layer: &SimpleMenuLayer) -> Self {
-        Self {
-            handle: Rc::downgrade(&layer.handle),
-        }
-    }
-    pub fn upgrade(&self) -> Option<SimpleMenuLayer> {
-        Some(SimpleMenuLayer {
-            handle: self.handle.upgrade()?,
-        })
-    }
-}
+/// A weak handle to a [`SimpleMenuLayer`].
+#[allow(private_interfaces)]
+pub type WeakSimpleMenuLayer = WeakObject<SimpleMenuLayerInner, SimpleMenuLayer>;

@@ -1,11 +1,16 @@
 use crate::sys;
 
+/// The watch buttons.
 #[repr(u8)]
 #[derive(PartialEq, Clone, Copy)]
 pub enum Button {
+    /// The back button, which exits the current menu or app.
     Back = sys::ButtonId_BUTTON_ID_BACK,
+    /// The up button.
     Up = sys::ButtonId_BUTTON_ID_UP,
+    /// The select (center) button.
     Select = sys::ButtonId_BUTTON_ID_SELECT,
+    /// The down button.
     Down = sys::ButtonId_BUTTON_ID_DOWN,
 }
 

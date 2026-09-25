@@ -72,12 +72,16 @@ impl RepeatContext {
     }
 }
 
+/// Allows configuring repeated ([`Timer::repeat`]) and delayed ([`Timer::once`]) callbacks.
+/// Note that only one "once" and one "repeat" timer can operate at once.
 #[derive(Clone)]
 pub struct Timer {
     handle: Handle<Option<RawTimer>>,
 }
 
 impl Timer {
+    /// Configure a single delayed callback.
+    /// The provided callback function is called once after a specified delay.
     pub fn once(delay: Duration, callback: impl FnOnce() + 'static) -> Option<Self> {
         let handle = new_handle(None);
         let context = Box::new(OnceContext {
@@ -96,6 +100,8 @@ impl Timer {
         Some(Self { handle })
     }
 
+    /// Configure a repeatedly called callback.
+    /// The callback function is called repeatedly at the specified interval.
     pub fn repeat<F>(frequency: Duration, callback: F) -> Option<Self>
     where
         F: FnMut() -> bool + 'static,
@@ -118,6 +124,7 @@ impl Timer {
         Some(Self { handle })
     }
 
+    /// Cancel this timer.
     pub fn cancel(self) {
         if let Some(inner) = self.handle.borrow_mut().take() {
             inner.cancel();

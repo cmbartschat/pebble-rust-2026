@@ -5,6 +5,7 @@ use alloc::rc::Rc;
 use crate::{
     CompOp, GAlign, GColor, GPoint, GRect, Layer,
     bitmap::Bitmap,
+    handle::Handle,
     layer::{ChildLayer, LayerInner},
     sys,
 };
@@ -21,9 +22,10 @@ impl Drop for BitmapLayerInner {
     }
 }
 
+/// A layer that draws a single given bitmap.
 #[derive(Clone)]
 pub struct BitmapLayer {
-    handle: Rc<RefCell<BitmapLayerInner>>,
+    handle: Handle<BitmapLayerInner>,
 }
 
 impl ChildLayer for BitmapLayer {
@@ -48,6 +50,7 @@ impl ChildLayer for BitmapLayer {
 }
 
 impl BitmapLayer {
+    /// Create a new bitmap layer with the given bounds.
     pub fn new(r: GRect) -> Option<Self> {
         unsafe {
             let raw = NonNull::new(sys::bitmap_layer_create(r))?;
@@ -74,6 +77,7 @@ impl BitmapLayer {
         f(&mut inner);
     }
 
+    /// Set the bitmap that this layer draws.
     pub fn set_bitmap(&mut self, bitmap: &Bitmap) {
         self.inner_mut(|inner| {
             unsafe {
@@ -86,22 +90,22 @@ impl BitmapLayer {
         });
     }
 
-    pub fn remove(&mut self) {
-        ChildLayer::remove_from_parent(self);
-    }
-
+    /// Returns whether this layer is hidden.
     pub fn get_hidden(&self) -> bool {
-        self.handle.borrow().base_layer.get_hidden()
+        self.handle.borrow().base_layer.is_hidden()
     }
 
+    /// Sets this layer as hidden/visible.
     pub fn set_hidden(&mut self, hidden: bool) {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
 
+    /// Returns the bounds of this layer that are not obstructed by system UI elements.
     pub fn get_unobstructed_bounds(&self) -> GRect {
         self.handle.borrow().base_layer.get_unobstructed_bounds()
     }
 
+    /// Convert a given point from the layer’s local coordinate system to screen coordinates.
     pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {
         self.handle
             .borrow_mut()
@@ -109,10 +113,12 @@ impl BitmapLayer {
             .convert_point_to_screen(point)
     }
 
+    /// Convert a given rectangle from the layer’s local coordinate system to screen coordinates.
     pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
         self.handle.borrow().base_layer.convert_rect_to_screen(rect)
     }
 
+    /// Change the compositing mode of this bitmap layer.
     pub fn set_compositing_mode(&mut self, mode: CompOp) {
         unsafe {
             sys::bitmap_layer_set_compositing_mode(
@@ -122,12 +128,14 @@ impl BitmapLayer {
         };
     }
 
+    /// Set the alignment of the bitmap within this layer.
     pub fn set_alignment(&mut self, align: GAlign) {
         unsafe {
             sys::bitmap_layer_set_alignment(self.handle.borrow_mut().raw.as_ptr(), align as u8)
         };
     }
 
+    /// Set the background color of the layer.
     pub fn set_background_color(&mut self, color: GColor) {
         unsafe {
             sys::bitmap_layer_set_background_color(self.handle.borrow_mut().raw.as_ptr(), color)

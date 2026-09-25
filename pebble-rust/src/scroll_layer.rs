@@ -4,7 +4,7 @@ use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     ClickConfigBuilder, ClickRecognizer, ContentIndicator, GPoint, GRect, GSize, Layer, Window,
-    handle::{Handle, WeakHandle, new_handle},
+    handle::{Handle, WeakObject, new_handle},
     input::{
         context::{InputContext, InputReceiver},
         handlers::global_click_config_handler,
@@ -69,6 +69,7 @@ impl ScrollLayerInner {
     }
 }
 
+/// A layer that extends beyond the screen, and can be scrolled up and down by the user.
 #[derive(Clone)]
 pub struct ScrollLayer {
     handle: Handle<ScrollLayerInner>,
@@ -100,6 +101,7 @@ impl ChildLayer for ScrollLayer {
 }
 
 impl ScrollLayer {
+    /// Creates a new layer with the given bounds.
     pub fn new(r: GRect) -> Option<Self> {
         unsafe {
             let raw = NonNull::new(sys::scroll_layer_create(r))?;
@@ -144,10 +146,12 @@ impl ScrollLayer {
         f(&mut inner)
     }
 
+    /// Returns the frame (bounding box within parent) of the layer.
     pub fn get_frame(&self) -> GRect {
         self.handle.borrow().base_layer.get_frame()
     }
 
+    /// Sets the frame (bounding box within parent) of the layer.
     pub fn set_frame(&mut self, frame: GRect) {
         unsafe { sys::scroll_layer_set_frame(self.as_ptr_mut(), frame) };
     }
@@ -160,6 +164,7 @@ impl ScrollLayer {
         self.handle.borrow_mut().as_ptr_mut()
     }
 
+    /// Adds a child layer to this scroll layer.
     pub fn add_child<T>(&mut self, child: &mut T)
     where
         T: Clone + ChildLayer + 'static,
@@ -173,14 +178,18 @@ impl ScrollLayer {
         });
     }
 
+    /// Returns the content size of this scroll layer, which is intended to be larger than the screen size.
     pub fn get_content_size(&self) -> GSize {
         unsafe { sys::scroll_layer_get_content_size(self.as_ptr()) }
     }
 
+    /// Sets the content size of this scroll layer, which is intended to be larger than the screen size.
     pub fn set_content_size(&mut self, size: GSize) {
         unsafe { sys::scroll_layer_set_content_size(self.as_ptr_mut(), size) };
     }
 
+    /// Modifies the click configuration of the window such that the up and down buttons correctly scroll this layer.
+    /// You need to call this function before using the layer in order to get the expected interactive behavior.
     pub fn set_click_config_onto_window(&mut self, window: &mut Window) {
         let extra = self.clone();
         self.inner_mut(|f| {
@@ -191,10 +200,12 @@ impl ScrollLayer {
         })
     }
 
-    pub fn get_shadow_hidden(&mut self) -> bool {
+    /// Returns the visibility of the scroll layer shadow.
+    pub fn is_shadow_hidden(&mut self) -> bool {
         unsafe { sys::scroll_layer_get_shadow_hidden(self.handle.borrow().raw.as_ptr()) }
     }
 
+    /// Hides/shows the scroll layer shadow.
     pub fn set_shadow_hidden(&mut self, hidden: bool) {
         self.inner_mut(|inner| {
             unsafe { sys::scroll_layer_set_shadow_hidden(inner.as_ptr_mut(), hidden) };
@@ -202,11 +213,15 @@ impl ScrollLayer {
         })
     }
 
-    pub fn get_paging(&self) -> bool {
+    /// Returns whether paging is enabled, i.e. a single scroll action (pressing a button) scrolls the layer by an entire screen.
+    /// Disabled by default.
+    pub fn get_paging_enabled(&self) -> bool {
         unsafe { sys::scroll_layer_get_paging(self.as_ptr_mut()) }
     }
 
-    pub fn set_paging(&mut self, enabled: bool) {
+    /// Sets whether paging is enabled, i.e. a single scroll action (pressing a button) scrolls the layer by an entire screen.
+    /// Disabled by default.
+    pub fn set_paging_enabled(&mut self, enabled: bool) {
         self.inner_mut(|inner| {
             unsafe { sys::scroll_layer_set_paging(inner.as_ptr_mut(), enabled) };
             if !enabled {
@@ -217,34 +232,43 @@ impl ScrollLayer {
         })
     }
 
+    /// Returns the delta by which the content is currently offset due to scrolling.
     pub fn get_content_offset(&self) -> GPoint {
         unsafe { sys::scroll_layer_get_content_offset(self.as_ptr_mut()) }
     }
 
-    pub fn _set_content_offset(&mut self, point: GPoint, animated: bool) {
+    pub(crate) fn _set_content_offset(&mut self, point: GPoint, animated: bool) {
         unsafe { sys::scroll_layer_set_content_offset(self.as_ptr_mut(), point, animated) };
     }
 
+    /// Sets the content offset, and plays the scrolling animation to visually move the contents to this position.
     pub fn set_content_offset(&mut self, point: GPoint) {
         self._set_content_offset(point, true);
     }
 
+    /// Sets the content offset and bypasses the scrolling animation.
     pub fn set_content_offset_immediate(&mut self, point: GPoint) {
         self._set_content_offset(point, false);
     }
 
+    /// Sets the click configuration callback for this layer.
+    /// See [`ClickConfigBuilder`] for details.
     pub fn set_click_provider(&mut self, builder: impl Fn(&mut ClickConfigBuilder) + 'static) {
         self.inner_mut(|inner| {
             inner.input_context.configure_click = Some(Box::new(builder));
         });
     }
 
+    /// Calls the default up click handler.
+    /// This can be used from custom up click handlers to also trigger the default behavior.
     pub fn up_click_handler(&mut self, click: &ClickRecognizer) {
         unsafe {
             sys::scroll_layer_scroll_up_click_handler(click.raw, self.as_ptr_mut() as *mut c_void)
         };
     }
 
+    /// Calls the default down click handler.
+    /// This can be used from custom down click handlers to also trigger the default behavior.
     pub fn down_click_handler(&mut self, click: &ClickRecognizer) {
         unsafe {
             sys::scroll_layer_scroll_down_click_handler(
@@ -254,14 +278,13 @@ impl ScrollLayer {
         }
     }
 
-    pub fn remove(&mut self) {
-        ChildLayer::remove_from_parent(self);
-    }
-
+    /// Remove all child layers of the scroll layer.
     pub fn remove_child_layers(&mut self) {
         self.handle.borrow_mut().base_layer.remove_child_layers();
     }
 
+    /// Modify the [`ContentIndicator`] for this layer.
+    /// This takes a function which is called with a mutable reference to the content indicator.
     pub fn with_content_indicator(&mut self, f: impl FnOnce(&mut ContentIndicator)) {
         self.inner_mut(|inner| {
             if let Some(indicator) = inner.get_or_create_content_indicator() {
@@ -270,14 +293,18 @@ impl ScrollLayer {
         })
     }
 
+    /// Downgrade to a weak handle.
+    #[allow(private_interfaces)]
     pub fn downgrade(&self) -> WeakScrollLayer {
-        WeakScrollLayer::from(self)
+        WeakScrollLayer::from(Rc::downgrade(&self.handle))
     }
 
-    pub fn get_hidden(&self) -> bool {
-        self.handle.borrow().base_layer.get_hidden()
+    /// Returns whether this layer is hidden.
+    pub fn is_hidden(&self) -> bool {
+        self.handle.borrow().base_layer.is_hidden()
     }
 
+    /// Hides/unhides the layer.
     pub fn set_hidden(&mut self, hidden: bool) {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
@@ -289,20 +316,12 @@ impl InputReceiver for ScrollLayer {
     }
 }
 
-#[derive(Clone)]
-pub struct WeakScrollLayer {
-    handle: WeakHandle<ScrollLayerInner>,
+impl From<Handle<ScrollLayerInner>> for ScrollLayer {
+    fn from(handle: Handle<ScrollLayerInner>) -> Self {
+        Self { handle }
+    }
 }
 
-impl WeakScrollLayer {
-    pub fn from(layer: &ScrollLayer) -> Self {
-        Self {
-            handle: Rc::downgrade(&layer.handle),
-        }
-    }
-    pub fn upgrade(&self) -> Option<ScrollLayer> {
-        Some(ScrollLayer {
-            handle: self.handle.upgrade()?,
-        })
-    }
-}
+/// Weak handle to a [`ScrollLayer`].
+#[allow(private_interfaces)]
+pub type WeakScrollLayer = WeakObject<ScrollLayerInner, ScrollLayer>;

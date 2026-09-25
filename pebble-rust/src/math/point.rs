@@ -3,12 +3,17 @@ use core::ops::{Add, Sub};
 use crate::*;
 
 impl GPoint {
+    /// The origin, (0, 0).
     pub const ORIGIN: Self = Self::new(0, 0);
 
+    /// Create a new point with the specified coordinates.
     pub const fn new(x: i16, y: i16) -> Self {
         Self { x, y }
     }
 
+    /// Create a point that lies on a circle.
+    /// The circle is identified by its outer square; the smaller size of the given rectangle is used.
+    /// The position on the circle is identified by the angle.
     pub fn new_on_circle(bounds: GRect, angle: Angle) -> GPoint {
         unsafe {
             sys::gpoint_from_polar(
@@ -19,6 +24,9 @@ impl GPoint {
         }
     }
 
+    /// Create a point that lies on an oval.
+    /// The oval is identified by its outer rectangle.
+    /// The position on the oval is identified by the angle.
     pub fn new_on_oval(bounds: GRect, angle: Angle) -> GPoint {
         unsafe {
             sys::gpoint_from_polar(

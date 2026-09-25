@@ -1,3 +1,5 @@
+#![allow(missing_docs)] // status of this module is unclear
+
 use core::cell::{Cell, Ref, RefCell, RefMut};
 
 use cortex_m as _;

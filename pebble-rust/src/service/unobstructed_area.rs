@@ -5,17 +5,21 @@ use alloc::boxed::Box;
 #[allow(unused)]
 use crate::{GRect, log_c_str, service::global_callback::GlobalCallback, sys};
 
+/// Allows you to subscribe to changes to the unobstructed area.
 pub struct UnobstructedArea {
     callback: GlobalCallback<GRect, ()>,
 }
 
 impl UnobstructedArea {
-    pub const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self {
             callback: GlobalCallback::new(),
         }
     }
 
+    /// Sets or overwrites the handler for unobstructed area events.
+    /// The handler function receives the new unobstructed area.
+    /// This function is a noop on platforms without unobstructed area functionality.
     pub fn subscribe(&self, handler: Box<dyn FnMut(GRect)>) {
         self.callback.set(handler);
         #[cfg(not(platform = "aplite"))]
@@ -31,6 +35,7 @@ impl UnobstructedArea {
         }
     }
 
+    /// Removes the unobstructed area change handler.
     pub fn unsubscribe(&self) {
         #[cfg(not(platform = "aplite"))]
         unsafe {

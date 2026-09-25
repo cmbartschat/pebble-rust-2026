@@ -6,7 +6,7 @@ use core::{
 use crate::{GSize, sys};
 
 /// A fixed-point angle.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, PartialOrd)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct Angle {
     pub(crate) value: i32,
@@ -79,7 +79,7 @@ impl Angle {
         }
     }
 
-    /// Move self towards target by a specified angle
+    /// Move self towards target by a specified angle.
     pub const fn towards(self, target: Self, by: Self) -> Self {
         if by.value < 0 {
             return self;
@@ -97,6 +97,8 @@ impl Angle {
         }
     }
 
+    /// Move self towards target by a specified angle, wrapping around 360 degrees.
+    /// Otherwise identical to [`Self::towards`].
     pub const fn towards_wrap(self, target: Self, by: Self) -> Self {
         Self::from_absolute(self.to_absolute().towards(target.to_absolute(), by))
     }
@@ -233,21 +235,27 @@ mod sys_math {
     }
 }
 
+/// A pseudorandom value.
+// TODO: This should implement the RNG source trait for `rand`, so that the ecosystem can make use of it.
+//       Then we could also drop the `uniform` function.
 pub struct Random {
     value: u32,
 }
 
 impl Random {
+    /// Generate a new random value.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let value = unsafe { sys_math::rand() };
         Self { value }
     }
 
+    /// Set the seed for the random number generator.
     pub fn seed(seed: u32) {
         unsafe { sys_math::srand(seed) }
     }
 
+    /// Generate a random value from the given range.
     pub const fn uniform(&self, range: u32) -> u32 {
         self.value % range
     }
@@ -261,6 +269,7 @@ impl From<Random> for u32 {
 
 const _: () = assert!(u16::MAX as u32 == sys::TRIG_MAX_ANGLE - 1);
 
+/// An absolute angle that always wraps at 360 degrees.
 #[derive(Copy, Clone, PartialEq)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct AbsoluteAngle {
@@ -273,6 +282,7 @@ impl AbsoluteAngle {
         Angle::from_degrees(deg).to_absolute()
     }
 
+    /// Move self towards target by a specified angle, wrapping around 360 degrees.
     pub const fn towards(self, target: Self, by: Angle) -> Self {
         if by.value < 0 {
             return self;

@@ -1,6 +1,6 @@
 use core::{ffi::CStr, ptr::NonNull};
 
-use alloc::{rc::Rc, vec::Vec};
+use alloc::vec::Vec;
 
 use crate::{
     GColor, GPoint, GRect, Layer, TextAlignment,
@@ -13,7 +13,7 @@ use crate::{
 struct TextLayerInner {
     raw: NonNull<sys::TextLayer>,
     base_layer: Layer,
-    font: Option<Rc<Font>>,
+    font: Option<Font>,
     text_vec: Vec<u8>,
 }
 
@@ -23,6 +23,7 @@ impl Drop for TextLayerInner {
     }
 }
 
+/// A layer that displays text.
 #[derive(Clone)]
 pub struct TextLayer {
     handle: Handle<TextLayerInner>,
@@ -50,6 +51,7 @@ impl ChildLayer for TextLayer {
 }
 
 impl TextLayer {
+    /// Create a new text layer with the given bounds.
     pub fn new(r: GRect) -> Option<Self> {
         unsafe {
             let raw = NonNull::new(sys::text_layer_create(r))?;
@@ -73,7 +75,8 @@ impl TextLayer {
         }
     }
 
-    pub fn set_font(&mut self, font: &Rc<Font>) {
+    /// Set the font for this layer.
+    pub fn set_font(&mut self, font: &Font) {
         self.inner_mut(|inner| {
             inner.font = Some(font.clone());
             unsafe {
@@ -87,6 +90,7 @@ impl TextLayer {
         f(&mut inner);
     }
 
+    /// Set the text for this layer.
     pub fn set_text(&mut self, text: &str) {
         self.inner_mut(|inner| {
             inner.text_vec.clear();
@@ -97,6 +101,7 @@ impl TextLayer {
         });
     }
 
+    /// Set the raw text bytes (except the null terminator) for this layer.
     pub fn set_text_bytes(&mut self, text: &[u8]) {
         self.inner_mut(|inner| {
             inner.text_vec.clear();
@@ -107,25 +112,30 @@ impl TextLayer {
         });
     }
 
-    pub fn set_text_c_str(&mut self, text: &'static CStr) {
+    /// Set the text for this layer via a C string.
+    // Text lifetime must outlive this lifetime, since the C API does not copy the string.
+    pub fn set_text_c_str<'s, 't: 's>(&'s mut self, text: &'t CStr) {
         self.inner_mut(|inner| {
             unsafe { sys::text_layer_set_text(inner.raw.as_ptr(), text.as_ptr()) };
             inner.text_vec.clear();
         });
     }
 
+    /// Set the background color for this layer.
     pub fn set_background_color(&mut self, color: GColor) {
         self.inner_mut(|inner| {
             unsafe { sys::text_layer_set_background_color(inner.raw.as_ptr(), color) };
         });
     }
 
+    /// Set the text color for this layer.
     pub fn set_text_color(&mut self, color: GColor) {
         self.inner_mut(|inner| {
             unsafe { sys::text_layer_set_text_color(inner.raw.as_ptr(), color) };
         });
     }
 
+    /// Set the text’s alignment.
     pub fn set_alignment(&mut self, alignment: TextAlignment) {
         self.inner_mut(|inner| {
             unsafe {
@@ -137,42 +147,50 @@ impl TextLayer {
         });
     }
 
+    /// Set the text bounding box.
     pub fn set_bounds(&mut self, bounds: GRect) {
         self.inner_mut(|inner| {
             inner.base_layer.set_bounds(bounds);
         });
     }
 
+    /// Sets the frame (bounding box within parent) of the layer.
     pub fn set_frame(&mut self, frame: GRect) {
         self.inner_mut(|inner| {
             inner.base_layer.set_frame(frame);
         });
     }
 
-    pub fn remove(&mut self) {
-        ChildLayer::remove_from_parent(self);
+    /// Returns whether clipping is enabled for this layer.
+    pub fn is_clipping_enabled(&self) -> bool {
+        self.handle.borrow().base_layer.is_clipping_enabled()
     }
 
-    pub fn get_clips(&self) -> bool {
-        self.handle.borrow().base_layer.get_clips()
+    /// Enables/disables clipping.
+    pub fn set_clipping_enabled(&mut self, clips: bool) {
+        self.handle
+            .borrow_mut()
+            .base_layer
+            .set_clipping_enabled(clips)
     }
 
-    pub fn set_clips(&mut self, clips: bool) {
-        self.handle.borrow_mut().base_layer.set_clips(clips)
+    /// Returns whether the layer is hidden or not.
+    pub fn is_hidden(&self) -> bool {
+        self.handle.borrow().base_layer.is_hidden()
     }
 
-    pub fn get_hidden(&self) -> bool {
-        self.handle.borrow().base_layer.get_hidden()
-    }
-
+    /// Hides/shows the layer.
     pub fn set_hidden(&mut self, hidden: bool) {
         self.handle.borrow_mut().base_layer.set_hidden(hidden)
     }
 
+    /// Returns the bounds within the layer that are not obstructed by system UI.
+    /// The associated overlay functionality is not available on Aplite, where this always returns the full bounds.
     pub fn get_unobstructed_bounds(&self) -> GRect {
         self.handle.borrow().base_layer.get_unobstructed_bounds()
     }
 
+    /// Convert a point in layer coordinates to screen coordinates.
     pub fn convert_point_to_screen(&self, point: GPoint) -> GPoint {
         self.handle
             .borrow_mut()
@@ -180,6 +198,7 @@ impl TextLayer {
             .convert_point_to_screen(point)
     }
 
+    /// Convert a rectangle in layer coordinates to screen coordinates.
     pub fn convert_rect_to_screen(&self, rect: GRect) -> GRect {
         self.handle.borrow().base_layer.convert_rect_to_screen(rect)
     }

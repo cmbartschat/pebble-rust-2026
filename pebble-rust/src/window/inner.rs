@@ -21,11 +21,11 @@ struct ConnectedInput {
 }
 
 pub struct WindowInner {
-    // incoming references
+    /// incoming references
     root_layer: Layer,
-    // window itself
+    /// window itself
     raw: super::raw::WindowRaw,
-    // referenced by window
+    /// referenced by window
     user_data: Pin<Box<WindowUserData>>,
     input_context: Pin<Box<InputContext>>,
     connected_input: Option<ConnectedInput>,
