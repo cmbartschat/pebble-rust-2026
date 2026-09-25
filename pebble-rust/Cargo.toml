@@ -31,6 +31,7 @@ cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 critical-section = "1.2.0"
 proc = { path = "../proc" }
 embedded-alloc = { version = "0.7", optional = true }
+rand = { version = "0.10", default-features = false }
 
 [build-dependencies]
 bindgen = "0.72.1"
