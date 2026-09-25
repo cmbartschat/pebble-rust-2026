@@ -130,12 +130,13 @@ impl<'a> ClickConfigBuilder<'a> {
 
     /// Set the handler for clicking the given button multiple times.
     /// The `range` determines how many times the button has to be clicked at minimum and maximum for the handler to be called.
-    /// The `delay` determines when the multi-click sequence is reset, after the last button click has been registered, use 0 for the system default.
+    /// The `delay` determines when the multi-click sequence is reset, after the last button click has been registered,
+    /// use None for the system default.
     pub fn multi(
         &mut self,
         button: Button,
         range: RangeInclusive<u8>,
-        delay: Duration,
+        delay: Option<Duration>,
         handler: impl FnMut(&ClickRecognizer) + 'static,
     ) {
         let (global_handler, click_config): (
@@ -148,15 +149,26 @@ impl<'a> ClickConfigBuilder<'a> {
             Button::Down => (global_handle_click_multi_down, &mut self.handlers.down),
         };
 
+        let mut min_clicks = *range.start();
+        let mut max_clicks = *range.end();
+        if min_clicks < 2 {
+            log_c_str(c"At least 2 clicks are required for the multi-click handler");
+            min_clicks = 2;
+        }
+        if max_clicks < min_clicks {
+            log_c_str(c"Maximum clicks must not be smaller than minimum clicks");
+            // As per C API: "A value of 0 means use "min" also as "max"."
+            max_clicks = 0;
+        }
+
         click_config.multi = Some(Box::new(handler));
 
         unsafe {
             sys::window_multi_click_subscribe(
                 button as u8,
-                // TODO: verify this value
-                *range.start(),
-                *range.end(),
-                duration_to_millis(delay),
+                min_clicks,
+                max_clicks,
+                duration_to_millis(delay.unwrap_or(Duration::ZERO)),
                 true,
                 Some(global_handler),
             );
