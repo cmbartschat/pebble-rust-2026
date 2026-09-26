@@ -5,4 +5,4 @@ mod rect;
 mod size;
 
 pub use align::GAlign;
-pub use angle::{AbsoluteAngle, Angle, Random, Ratio};
+pub use angle::{AbsoluteAngle, Angle, Random, Ratio, Rng};

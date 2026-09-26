@@ -1,11 +1,16 @@
 use core::{
+    convert::Infallible,
     hint::cold_path,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
+use rand::distr::uniform::{SampleUniform, UniformInt, UniformSampler};
+
 use crate::{GSize, sys};
 
 /// A fixed-point angle.
+///
+/// To generate random angles, use the uniform sampling support from [`rand`].
 #[derive(Copy, Clone, PartialEq, PartialOrd)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct Angle {
@@ -139,6 +144,39 @@ impl Angle {
     }
 }
 
+#[doc(hidden)]
+pub struct UniformAngle(UniformInt<i32>);
+
+impl UniformSampler for UniformAngle {
+    type X = Angle;
+
+    fn new<B1, B2>(low: B1, high: B2) -> Result<Self, rand::distr::uniform::Error>
+    where
+        B1: rand::distr::uniform::SampleBorrow<Self::X> + Sized,
+        B2: rand::distr::uniform::SampleBorrow<Self::X> + Sized,
+    {
+        UniformInt::<i32>::new(low.borrow().value, high.borrow().value).map(UniformAngle)
+    }
+
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, rand::distr::uniform::Error>
+    where
+        B1: rand::distr::uniform::SampleBorrow<Self::X> + Sized,
+        B2: rand::distr::uniform::SampleBorrow<Self::X> + Sized,
+    {
+        UniformInt::<i32>::new_inclusive(low.borrow().value, high.borrow().value).map(UniformAngle)
+    }
+
+    fn sample<R: rand::prelude::Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        Angle {
+            value: self.0.sample(rng),
+        }
+    }
+}
+
+impl SampleUniform for Angle {
+    type Sampler = UniformAngle;
+}
+
 impl Sub for Angle {
     type Output = Self;
 
@@ -235,9 +273,30 @@ mod sys_math {
     }
 }
 
+/// A pseudorandom random generator.
+/// This implements [`rand::Rng`], so it can be used as an RNG source for anything in the de facto standard `rand` ecosystem.
+/// It does not implement [`rand::SeedableRng`] because there is only one global seed, which is not how this trait expects everything to work.
+/// Use [`Random::seed`] if you want to seed the global RNG.
+pub struct Rng;
+
+impl rand::TryRng for Rng {
+    type Error = Infallible;
+
+    fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+        Ok(unsafe { sys_math::rand() })
+    }
+
+    fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+        Ok((unsafe { sys_math::rand() } as u64) << 32 | unsafe { sys_math::rand() } as u64)
+    }
+
+    #[allow(clippy::cast_possible_truncation)] // expected
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Self::Error> {
+        rand::rand_core::utils::fill_bytes_via_next_word(dst, || Ok(unsafe { sys_math::rand() }))
+    }
+}
+
 /// A pseudorandom value.
-// TODO: This should implement the RNG source trait for `rand`, so that the ecosystem can make use of it.
-//       Then we could also drop the `uniform` function.
 pub struct Random {
     value: u32,
 }
