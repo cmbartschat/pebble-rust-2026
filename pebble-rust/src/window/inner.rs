@@ -8,12 +8,9 @@ use crate::{
     handle::new_handle,
     input::context::{InputContext, InputReceiver},
     layer::{ChildLayer, LayerInner},
-    service::GlobalCallbackInner,
+    service::{Callback, CallbackHandle, GlobalCallbacks},
     sys,
-    window::{
-        raw::{Callback, WindowRaw},
-        user_data::WindowUserData,
-    },
+    window::{raw::WindowRaw, user_data::WindowUserData},
 };
 
 struct ConnectedInput {
@@ -37,10 +34,10 @@ impl WindowInner {
         let layer = unsafe { LayerInner::from_ptr(raw.get_root_layer(), false)? };
 
         let user_data = Box::pin(WindowUserData {
-            load_handler: RefCell::new(GlobalCallbackInner::new()),
-            appear_handler: RefCell::new(GlobalCallbackInner::new()),
-            disappear_handler: RefCell::new(GlobalCallbackInner::new()),
-            unload_handler: RefCell::new(GlobalCallbackInner::new()),
+            load_handler: GlobalCallbacks::new(),
+            appear_handler: GlobalCallbacks::new(),
+            disappear_handler: GlobalCallbacks::new(),
+            unload_handler: GlobalCallbacks::new(),
             appear_effect: RefCell::new(Effect::None),
             load_effect: RefCell::new(Effect::None),
         });
@@ -84,45 +81,39 @@ impl WindowInner {
         self.root_layer.remove_child_layers();
     }
 
-    pub fn set_load_handler(&mut self, callback: Callback) {
-        self.user_data.load_handler.borrow_mut().set(Some(callback));
+    pub fn add_load_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
+        self.user_data.load_handler.add(callback)
     }
 
-    pub fn clear_load_handler(&mut self) {
-        self.user_data.load_handler.borrow_mut().set(None);
+    pub fn remove_load_handler(&mut self, handle: CallbackHandle<()>) {
+        self.user_data.load_handler.remove(handle);
     }
 
-    pub fn set_unload_handler(&mut self, callback: Callback) {
-        self.user_data
-            .unload_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn add_unload_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
+        self.user_data.unload_handler.add(callback)
     }
 
-    pub fn clear_unload_handler(&mut self) {
-        self.user_data.unload_handler.borrow_mut().set(None);
+    pub fn remove_unload_handler(&mut self, handle: CallbackHandle<()>) {
+        self.user_data.unload_handler.remove(handle);
     }
 
-    pub fn set_appear_handler(&mut self, callback: Callback) {
-        self.user_data
-            .appear_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn add_appear_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
+        self.user_data.appear_handler.add(callback)
     }
 
-    pub fn clear_appear_handler(&mut self) {
-        self.user_data.appear_handler.borrow_mut().set(None);
+    pub fn remove_appear_handler(&mut self, handle: CallbackHandle<()>) {
+        self.user_data.appear_handler.remove(handle);
     }
 
-    pub fn set_disappear_handler(&mut self, callback: Callback) {
-        self.user_data
-            .disappear_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn add_disappear_handler(
+        &mut self,
+        callback: impl Into<Callback<(), ()>>,
+    ) -> CallbackHandle<(), ()> {
+        self.user_data.disappear_handler.add(callback)
     }
 
-    pub fn clear_disappear_handler(&mut self) {
-        self.user_data.disappear_handler.borrow_mut().set(None);
+    pub fn remove_disappear_handler(&mut self, handle: CallbackHandle<()>) {
+        self.user_data.disappear_handler.remove(handle);
     }
 
     pub(crate) fn is_equal(&self, other: *const sys::Window) -> bool {

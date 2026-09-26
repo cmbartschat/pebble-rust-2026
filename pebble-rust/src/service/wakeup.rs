@@ -1,8 +1,6 @@
-use alloc::boxed::Box;
-
 use crate::{
     Time,
-    service::global_callback::GlobalCallback,
+    service::global_callback::{Callback, CallbackHandle, GlobalCallbacks},
     status_code::{StatusError, parse_status_result},
     sys::{self, WakeupId},
 };
@@ -10,7 +8,7 @@ use crate::{
 /// Allows you to configure watch wakeup and retrieve information about the last wakeup that occurred.
 pub struct Wakeup;
 
-static HANDLER: GlobalCallback<WakeupEvent, ()> = GlobalCallback::new();
+static HANDLER: GlobalCallbacks<(WakeupEvent,), ()> = GlobalCallbacks::new();
 
 /// Possible errors that can happen when scheduling a wakeup.
 #[derive(Copy, Clone, PartialEq)]
@@ -73,26 +71,30 @@ impl Wakeup {
     }
     /// Sets or overrides a handler for wakeup events.
     /// When the app is woken up, the handler is called with the [`WakeupEvent`].
-    pub fn subscribe(&self, handler: Box<dyn FnMut(WakeupEvent)>) {
-        HANDLER.set(handler);
+    pub fn subscribe(
+        &self,
+        handler: impl Into<Callback<(WakeupEvent,)>>,
+    ) -> CallbackHandle<(WakeupEvent,)> {
+        let handle = HANDLER.add(handler);
         unsafe {
             sys::wakeup_service_subscribe(Some(global_wakeup_handler));
         }
+        handle
     }
 
-    /// Removes the handler for wakeup events.
-    pub fn unsubscribe(&self) {
-        unsafe { sys::wakeup_service_subscribe(None) }
-        HANDLER.clear()
+    /// Removes a handler for wakeup events.
+    pub fn unsubscribe(&self, handle: CallbackHandle<(WakeupEvent,)>) {
+        HANDLER.remove(handle);
     }
 }
 
 extern "C" fn global_wakeup_handler(id: sys::WakeupId, reason: i32) {
     let event = WakeupEvent { reason, id };
-    HANDLER.dispatch(event);
+    HANDLER.dispatch((event,));
 }
 
 /// A wakeup event.
+#[derive(Clone, Copy)]
 pub struct WakeupEvent {
     /// The raw wakeup reason.
     /// This is the value that was specified in the [`Wakeup::schedule`] function.

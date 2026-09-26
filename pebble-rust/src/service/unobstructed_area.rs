@@ -1,27 +1,26 @@
 use core::ffi::c_void;
 
-use alloc::boxed::Box;
-
+use crate::service::global_callback::{Callback, CallbackHandle};
 #[allow(unused)]
-use crate::{GRect, log_c_str, service::global_callback::GlobalCallback, sys};
+use crate::{GRect, log_c_str, service::global_callback::GlobalCallbacks, sys};
 
 /// Allows you to subscribe to changes to the unobstructed area.
 pub struct UnobstructedArea {
-    callback: GlobalCallback<GRect, ()>,
+    callback: GlobalCallbacks<GRect, ()>,
 }
 
 impl UnobstructedArea {
     pub(crate) const fn new() -> Self {
         Self {
-            callback: GlobalCallback::new(),
+            callback: GlobalCallbacks::new(),
         }
     }
 
-    /// Sets or overwrites the handler for unobstructed area events.
+    /// Adds a handler for unobstructed area events.
     /// The handler function receives the new unobstructed area.
     /// This function is a noop on platforms without unobstructed area functionality.
-    pub fn subscribe(&self, handler: Box<dyn FnMut(GRect)>) {
-        self.callback.set(handler);
+    pub fn subscribe(&self, handler: impl Into<Callback<GRect, ()>>) -> CallbackHandle<GRect, ()> {
+        let handle = self.callback.add(handler);
         #[cfg(not(platform = "aplite"))]
         unsafe {
             sys::unobstructed_area_service_subscribe(
@@ -33,15 +32,12 @@ impl UnobstructedArea {
                 self.callback.as_void(),
             );
         }
+        handle
     }
 
     /// Removes the unobstructed area change handler.
-    pub fn unsubscribe(&self) {
-        #[cfg(not(platform = "aplite"))]
-        unsafe {
-            sys::unobstructed_area_service_unsubscribe()
-        }
-        self.callback.clear()
+    pub fn unsubscribe(&self, handle: CallbackHandle<GRect, ()>) {
+        self.callback.remove(handle);
     }
 }
 
@@ -49,6 +45,6 @@ impl UnobstructedArea {
 unsafe extern "C" fn global_unobstructed_area_handler(rect: GRect, context: *mut c_void) {
     log_c_str(c"unobstructed_area received");
     unsafe {
-        GlobalCallback::<GRect, ()>::dispatch_callback(context, rect);
+        GlobalCallbacks::<GRect, ()>::dispatch_callback(context, rect);
     }
 }

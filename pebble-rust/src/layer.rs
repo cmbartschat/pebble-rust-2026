@@ -6,7 +6,7 @@ use crate::{
     GContext, GPoint, GRect,
     handle::{Handle, WeakHandle, new_handle},
     log_c_str,
-    service::GlobalCallbackInner,
+    service::{Callback, CallbackHandle, GlobalCallbacks},
     sys,
 };
 
@@ -33,7 +33,7 @@ pub struct LayerInner {
     pub(crate) raw: NonNull<sys::Layer>,
     parent: Option<WeakHandle<LayerInner>>,
     children: Vec<Box<dyn ChildLayer>>,
-    render: GlobalCallbackInner<Box<dyn FnMut(Layer, GContext)>>,
+    render: GlobalCallbacks<(Layer, GContext), ()>,
     owned: bool,
 }
 
@@ -52,7 +52,7 @@ impl LayerInner {
             raw: NonNull::new(ptr)?,
             parent: None,
             children: Vec::new(),
-            render: GlobalCallbackInner::new(),
+            render: GlobalCallbacks::new(),
             owned,
         })
     }
@@ -161,35 +161,45 @@ impl Layer {
         unsafe { sys::layer_set_bounds(self.as_ptr(), bounds) };
     }
 
-    fn _set_update_handler(
+    fn modify_update_handlers_inner(
         &mut self,
         proc: Option<unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext)>,
-        callback: Option<Box<dyn FnMut(Layer, GContext)>>,
-    ) {
-        let mut inner = self.handle.borrow_mut();
+        callback: Option<Callback<(Layer, GContext)>>,
+    ) -> Option<CallbackHandle<(Layer, GContext)>> {
+        let inner = self.handle.borrow();
         unsafe { sys::layer_set_update_proc(inner.raw.as_ptr(), proc) };
         unsafe { sys::layer_mark_dirty(inner.raw.as_ptr()) };
-        inner.render.set(callback);
+        if let Some(callback) = callback {
+            Some(inner.render.add(callback))
+        } else {
+            None
+        }
     }
 
     /// Set a raw update handler.
     /// In most cases you should use [`Self::set_update_handler`] instead.
+    /// Using this function disables all regular update handlers.
     pub fn set_raw_update_handler(
         &mut self,
         proc: unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext),
     ) {
-        self._set_update_handler(Some(proc), None);
+        self.modify_update_handlers_inner(Some(proc), None);
     }
 
-    /// Set the handler for layer updates.
+    /// Adds a handler for layer updates.
     /// The callback receives this layer, as well as a graphics context that can be drawn to to set the visual contents of the layer.
-    pub fn set_update_handler(&mut self, callback: Box<dyn FnMut(Layer, GContext)>) {
-        self._set_update_handler(Some(global_layer_update_handler), Some(callback));
+    /// This disables the raw update handler set via [`Self::set_raw_update_handler`].
+    pub fn add_update_handler(
+        &mut self,
+        callback: impl Into<Callback<(Layer, GContext)>>,
+    ) -> CallbackHandle<(Layer, GContext)> {
+        self.modify_update_handlers_inner(Some(global_layer_update_handler), Some(callback.into()))
+            .unwrap()
     }
 
-    /// Remove the layer update handler.
-    pub fn clear_update_handler(&mut self) {
-        self._set_update_handler(None, None);
+    /// Remove a layer update handler.
+    pub fn remove_update_handler(&mut self, handle: CallbackHandle<(Layer, GContext)>) {
+        self.handle.borrow_mut().render.remove(handle);
     }
 
     unsafe fn as_ptr(&self) -> *mut sys::Layer {
@@ -281,25 +291,11 @@ extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys:
         return;
     };
 
-    let callback = {
-        let mut layer = inner_ref.borrow_mut();
-        layer.render.extract()
-    };
-
-    match callback {
-        Some(mut callback) => {
-            callback(
-                Layer {
-                    handle: inner_ref.clone(),
-                },
-                ctx,
-            );
-
-            let mut layer = inner_ref.borrow_mut();
-            layer.render.restore(callback);
-        }
-        None => {
-            log_c_str(c"Unexpected: Layer has no render function");
-        }
-    }
+    let layer = inner_ref.borrow();
+    layer.render.dispatch((
+        Layer {
+            handle: inner_ref.clone(),
+        },
+        ctx,
+    ));
 }

@@ -1,11 +1,12 @@
-use alloc::boxed::Box;
-
-use crate::{service::global_callback::GlobalCallback, sys};
+use crate::{
+    service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
+    sys,
+};
 
 /// Accessor for the battery charge state.
 pub struct BatteryState(());
 
-static HANDLER: GlobalCallback<BatteryChargeState, ()> = GlobalCallback::new();
+static HANDLER: GlobalCallbacks<(BatteryChargeState,), ()> = GlobalCallbacks::new();
 
 /// The actual state of the battery charge.
 /// This has fields for the battery percentage, whether the battery is being charged, and whether it is plugged in.
@@ -18,18 +19,20 @@ impl BatteryState {
 
     /// Subscribe to battery state events.
     /// The handler is a function that receives the battery charge state.
-    pub fn subscribe(&self, handler: Box<dyn FnMut(BatteryChargeState)>) {
-        HANDLER.set(handler);
+    pub fn subscribe(
+        &self,
+        handler: impl Into<Callback<(BatteryChargeState,)>>,
+    ) -> CallbackHandle<(BatteryChargeState,)> {
+        let handle = HANDLER.add(handler);
         unsafe {
             sys::battery_state_service_subscribe(Some(global_battery_handler));
         }
+        handle
     }
 
-    /// Unsubscribe from battery state events.
-    /// This overrides any previous handler that is subscribed to these events.
-    pub fn unsubscribe(&self) {
-        unsafe { sys::battery_state_service_unsubscribe() }
-        HANDLER.clear()
+    /// Unsubscribe the handler from battery state events.
+    pub fn unsubscribe(&self, handle: CallbackHandle<(BatteryChargeState,)>) {
+        HANDLER.remove(handle)
     }
 
     /// Retrieve the current battery charge state.
@@ -39,5 +42,5 @@ impl BatteryState {
 }
 
 extern "C" fn global_battery_handler(event: sys::BatteryChargeState) {
-    HANDLER.dispatch(event);
+    HANDLER.dispatch((event,));
 }
