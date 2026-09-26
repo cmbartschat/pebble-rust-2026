@@ -1,6 +1,10 @@
 use core::ffi::c_void;
 
-use crate::{key::MessageKey, sys};
+use crate::{
+    key::MessageKey,
+    status_code::{StatusError, parse_status_result},
+    sys,
+};
 
 /// Persistent (non-volatile) app storage.
 pub struct Persist;
@@ -44,32 +48,26 @@ impl Persist {
     }
 
     /// Write bytes to persistent storage.
-    #[allow(clippy::result_unit_err)]
-    pub fn write_bytes(&self, key: MessageKey, value: &[u8]) -> Result<(), ()> {
+    pub fn write_bytes(&self, key: MessageKey, value: &[u8]) -> Result<(), StatusError> {
         unsafe {
             let result =
                 sys::persist_write_data(*key, value.as_ptr() as *const c_void, value.len());
-            if result < 0 {
-                todo!();
-            }
+            parse_status_result(result.min(0))?;
             Ok(())
         }
     }
     /// Read bytes from persistent storage.
-    #[allow(clippy::result_unit_err)]
     pub fn read_bytes<'a>(
         &self,
         key: MessageKey,
         target: &'a mut [u8],
-    ) -> Result<Option<&'a mut [u8]>, ()> {
+    ) -> Result<Option<&'a mut [u8]>, StatusError> {
         unsafe {
             if !sys::persist_exists(*key) {
                 return Ok(None);
             }
             let result = sys::persist_read_data(*key, target.as_ptr() as *mut c_void, target.len());
-            if result < 0 {
-                todo!();
-            }
+            parse_status_result(result.min(0))?;
 
             Ok(Some(&mut target[0..result as usize]))
         }
