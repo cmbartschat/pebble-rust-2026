@@ -4,9 +4,10 @@ This directory contains various small example apps that demonstrate how to use c
 
 See the [demo app](https://github.com/cmbartschat/pebble-rust-demo) for a larger example app.
 
-| Example            | Topics                  | Platforms |
-| ------------------ | ----------------------- | --------- |
-| [random](./random) | Using RNG functionality | All       |
+| Example                                              | Topics                                                               | Platforms      |
+| ---------------------------------------------------- | -------------------------------------------------------------------- | -------------- |
+| [random](./random)                                   | Using RNG functionality                                              | All            |
+| [multiple-touch-handlers](./multiple-touch-handlers) | Adding multiple handlers to global events, in this case touch events | All with touch |
 
 ## Contributing
 

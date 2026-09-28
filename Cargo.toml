@@ -1,7 +1,7 @@
 [workspace]
 members = ["pebble-rust", "proc"]
 # cargo-pebble does not handle workspaces, so the examples must not be in the workspace
-exclude = ["examples/random"]
+exclude = ["examples/random", "examples/multiple-touch-handlers"]
 resolver = "3"
 
 [workspace.package]

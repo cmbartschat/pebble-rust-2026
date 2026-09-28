@@ -68,6 +68,11 @@ intrusive_adapter!(LinkedCallback<Args, Result> = Box<Callback<Args, Result>>:
 // the handle type should use 'static to reduce borrow checker issues.
 // Thanks to covariance, the conversion `for<'a> 'a: 'static` is always possible.
 #[must_use = "ignoring a callback handle leads to memory leaks"]
+// It is sound to copy the handle, since unsubscribing from a handle that is no longer subscribed is a noop.
+// The only possible issue would arise if the user carefully subscribed and unsubscribed to 2^32 events in a very specific order,
+// and then tried to unsubscribe from this event again, at which point the unsubscription will hit an unrelated handler.
+// This is clearly a degenerate case that should not happen in practice, and it is still sound (just a logic bug).
+#[derive(Clone, Copy)]
 pub struct CallbackHandle<Args, Result = ()> {
     id: usize,
     phantom: PhantomData<(Args, Result)>,
@@ -171,7 +176,7 @@ impl<P, T> GlobalCallbacks<P, T> {
                 let mut callback = cursor.remove().expect("callback must exist");
                 let return_value = callback.call(data.clone());
                 result = Some(return_value);
-                cursor.insert_after(callback);
+                cursor.insert_before(callback);
             }
         });
         result
