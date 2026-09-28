@@ -6,7 +6,7 @@ use crate::{
 /// Allows you to detect when the app gains or loses its Bluetooth connection.
 pub struct BluetoothConnection;
 
-static HANDLER: GlobalCallbacks<(bool,), ()> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(bool,)> = GlobalCallbacks::new();
 
 impl BluetoothConnection {
     pub(crate) const fn new() -> Self {
@@ -16,7 +16,7 @@ impl BluetoothConnection {
     /// Add a Bluetooth connection event handler.
     /// The callback function receives a boolean specifying whether the app has a connection or not.
     pub fn subscribe(&self, handler: impl Into<Callback<(bool,)>>) -> CallbackHandle<(bool,)> {
-        let handle = HANDLER.add(handler);
+        let handle = HANDLER.add(handler.into());
         unsafe {
             sys::bluetooth_connection_service_subscribe(Some(global_bluetooth_connection_handler));
         }

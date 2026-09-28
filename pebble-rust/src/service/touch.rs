@@ -8,7 +8,7 @@ use crate::{
 
 /// Allows you to subscribe to touch events.
 pub struct Touch {
-    callback: GlobalCallbacks<(TouchEvent,), ()>,
+    callback: GlobalCallbacks<(TouchEvent,)>,
 }
 
 impl Touch {
@@ -40,7 +40,7 @@ impl Touch {
         &self,
         handler: impl Into<Callback<(TouchEvent,)>>,
     ) -> CallbackHandle<(TouchEvent,)> {
-        let handle = self.callback.add(handler);
+        let handle = self.callback.add(handler.into());
         // No touch on these platforms, therefore subscribing to touch events is a noop.
         #[cfg(not(any(
             platform = "aplite",
@@ -60,6 +60,12 @@ impl Touch {
     pub fn unsubscribe(&self, handle: CallbackHandle<(TouchEvent,)>) {
         self.callback.remove(handle);
         if self.callback.is_empty() {
+            #[cfg(not(any(
+                platform = "aplite",
+                platform = "basalt",
+                platform = "chalk",
+                platform = "diorite"
+            )))]
             unsafe {
                 sys::touch_service_unsubscribe();
             }
@@ -72,7 +78,7 @@ extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut 
     log_c_str(c"touch received");
     unsafe {
         let event = TouchEvent::try_from(event.as_ref().unwrap()).unwrap();
-        GlobalCallbacks::<TouchEvent, ()>::dispatch_callback(context, event);
+        GlobalCallbacks::<(TouchEvent,)>::dispatch_callback(context, (event,));
     }
 }
 

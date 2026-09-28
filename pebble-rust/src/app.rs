@@ -11,14 +11,13 @@ use crate::{
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
     log::log_c_str,
-    service, sys,
+    service::{self, SingleCallback, SingleCallbackFn},
+    sys,
 };
 
-type InboxReceivedCallback = Option<Box<dyn FnMut(&mut DictionaryView) + 'static>>;
-
 pub(crate) struct AppState {
-    timer_callback: Option<Box<dyn FnMut() + 'static>>,
-    inbox_received_callback: InboxReceivedCallback,
+    timer_callback: SingleCallbackFn<()>,
+    inbox_received_callback: SingleCallback<dyn FnMut(&mut DictionaryView) + 'static>,
     visible_windows: Vec<Window>,
 }
 
@@ -60,8 +59,8 @@ pub static APP: App = App {
 };
 
 static mut APP_STATE: RefCell<AppState> = RefCell::new(AppState {
-    timer_callback: None,
-    inbox_received_callback: None,
+    timer_callback: SingleCallback::new(),
+    inbox_received_callback: SingleCallback::new(),
     visible_windows: Vec::new(),
 });
 
@@ -75,11 +74,7 @@ extern "C" fn global_message_handler(
     };
     unsafe {
         with_state(|state| {
-            if let Some(callback) = state.inbox_received_callback.as_mut() {
-                callback(&mut message);
-            } else {
-                log_c_str(c"global_message_handler has no callback to call");
-            }
+            state.inbox_received_callback.dispatch(&mut message);
         });
     }
 }
@@ -94,11 +89,7 @@ unsafe fn with_state<R>(func: impl FnOnce(&mut AppState) -> R) -> R {
 extern "C" fn tick_handler(_tick_time: *mut sys::tm, _units_changed: sys::TimeUnits) {
     unsafe {
         with_state(|state| {
-            let Some(callback) = state.timer_callback.as_mut() else {
-                log_c_str(c"No tick handler associated");
-                return;
-            };
-            callback();
+            state.timer_callback.dispatch(());
         });
     }
 }
@@ -154,10 +145,10 @@ impl App {
     }
     /// Set or override the global tick handler.
     /// The handler is called every specified time unit, see [`TimeUnits`].
-    pub fn set_tick_handler(&self, unit: TimeUnits, callback: impl FnMut() + 'static) {
+    pub fn set_tick_handler(&self, unit: TimeUnits, mut callback: impl FnMut() + 'static) {
         unsafe {
             with_state(|state| {
-                state.timer_callback = Some(Box::new(callback));
+                state.timer_callback.set(Box::new(move |_| callback()));
                 sys::tick_timer_service_subscribe(unit.bits(), Some(tick_handler));
             });
         };
@@ -167,7 +158,7 @@ impl App {
         unsafe {
             with_state(|state| {
                 sys::tick_timer_service_unsubscribe();
-                state.timer_callback = None;
+                state.timer_callback.clear();
             });
         }
     }
@@ -177,7 +168,9 @@ impl App {
     pub fn set_message_handler(&self, callback: impl FnMut(&mut DictionaryView) + 'static) {
         unsafe {
             with_state(|state| {
-                state.inbox_received_callback = Some(Box::new(callback));
+                state
+                    .inbox_received_callback
+                    .set(Box::new(callback));
                 sys::app_message_register_inbox_received(Some(global_message_handler));
             });
         }
@@ -187,7 +180,7 @@ impl App {
     pub fn clear_message_handler(&self) {
         unsafe {
             with_state(|state| {
-                state.inbox_received_callback = None;
+                state.inbox_received_callback.clear();
                 sys::app_message_register_inbox_received(None);
             });
         }

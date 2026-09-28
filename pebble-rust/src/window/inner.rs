@@ -82,7 +82,7 @@ impl WindowInner {
     }
 
     pub fn add_load_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
-        self.user_data.load_handler.add(callback)
+        self.user_data.load_handler.add(callback.into())
     }
 
     pub fn remove_load_handler(&mut self, handle: CallbackHandle<()>) {
@@ -90,7 +90,7 @@ impl WindowInner {
     }
 
     pub fn add_unload_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
-        self.user_data.unload_handler.add(callback)
+        self.user_data.unload_handler.add(callback.into())
     }
 
     pub fn remove_unload_handler(&mut self, handle: CallbackHandle<()>) {
@@ -98,7 +98,7 @@ impl WindowInner {
     }
 
     pub fn add_appear_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
-        self.user_data.appear_handler.add(callback)
+        self.user_data.appear_handler.add(callback.into())
     }
 
     pub fn remove_appear_handler(&mut self, handle: CallbackHandle<()>) {
@@ -107,9 +107,9 @@ impl WindowInner {
 
     pub fn add_disappear_handler(
         &mut self,
-        callback: impl Into<Callback<(), ()>>,
-    ) -> CallbackHandle<(), ()> {
-        self.user_data.disappear_handler.add(callback)
+        callback: impl Into<Callback<()>>,
+    ) -> CallbackHandle<()> {
+        self.user_data.disappear_handler.add(callback.into())
     }
 
     pub fn remove_disappear_handler(&mut self, handle: CallbackHandle<()>) {

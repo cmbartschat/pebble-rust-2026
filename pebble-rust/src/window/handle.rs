@@ -53,13 +53,13 @@ impl Window {
     /// Adds a handler for when the window is loaded, i.e. pushed to the screen while it is not loaded.
     pub fn add_load_handler(
         &mut self,
-        callback: impl Into<Callback<(), ()>>,
-    ) -> CallbackHandle<(), ()> {
+        callback: impl Into<Callback<()>>,
+    ) -> CallbackHandle<()> {
         self.handle.borrow_mut().add_load_handler(callback)
     }
 
     /// Removes a load handler.
-    pub fn clear_load_handler(&mut self, handle: CallbackHandle<()>) {
+    pub fn remove_load_handler(&mut self, handle: CallbackHandle<()>) {
         self.handle.borrow_mut().remove_load_handler(handle);
     }
 
@@ -69,7 +69,7 @@ impl Window {
     }
 
     /// Removes an unload handler.
-    pub fn clear_unload_handler(&mut self, handle: CallbackHandle<()>) {
+    pub fn remove_unload_handler(&mut self, handle: CallbackHandle<()>) {
         self.handle.borrow_mut().remove_unload_handler(handle);
     }
 
@@ -79,7 +79,7 @@ impl Window {
     }
 
     /// Removes an appear handler.
-    pub fn clear_appear_handler(&mut self, handle: CallbackHandle<()>) {
+    pub fn remove_appear_handler(&mut self, handle: CallbackHandle<()>) {
         self.handle.borrow_mut().remove_appear_handler(handle);
     }
 
@@ -92,7 +92,7 @@ impl Window {
     }
 
     /// Removes a disappear handler.
-    pub fn clear_disappear_handler(&mut self, handle: CallbackHandle<()>) {
+    pub fn remove_dsappear_handler(&mut self, handle: CallbackHandle<()>) {
         self.handle.borrow_mut().remove_disappear_handler(handle);
     }
 

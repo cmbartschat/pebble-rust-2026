@@ -32,7 +32,7 @@ fn main() -> i32 {
     {
         let circle_pos = circle_pos.clone();
         let angle = angle.clone();
-        let _ = custom_layer.add_update_handler(move |_, mut ctx: GContext| {
+        let _ = custom_layer.set_update_handler(move |_, mut ctx: GContext| {
             // Draw a green circle at the current position.
             ctx.set_fill_color(hex_color!("#0a5"));
             ctx.fill_circle(*circle_pos.clone().borrow(), 25);

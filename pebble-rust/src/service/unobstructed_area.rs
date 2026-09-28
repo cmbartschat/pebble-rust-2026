@@ -6,7 +6,7 @@ use crate::{GRect, log_c_str, service::global_callback::GlobalCallbacks, sys};
 
 /// Allows you to subscribe to changes to the unobstructed area.
 pub struct UnobstructedArea {
-    callback: GlobalCallbacks<GRect, ()>,
+    callback: GlobalCallbacks<GRect>,
 }
 
 impl UnobstructedArea {
@@ -19,8 +19,8 @@ impl UnobstructedArea {
     /// Adds a handler for unobstructed area events.
     /// The handler function receives the new unobstructed area.
     /// This function is a noop on platforms without unobstructed area functionality.
-    pub fn subscribe(&self, handler: impl Into<Callback<GRect, ()>>) -> CallbackHandle<GRect, ()> {
-        let handle = self.callback.add(handler);
+    pub fn subscribe(&self, handler: impl Into<Callback<GRect>>) -> CallbackHandle<GRect> {
+        let handle = self.callback.add(handler.into());
         #[cfg(not(platform = "aplite"))]
         unsafe {
             sys::unobstructed_area_service_subscribe(
@@ -36,9 +36,10 @@ impl UnobstructedArea {
     }
 
     /// Removes the unobstructed area change handler.
-    pub fn unsubscribe(&self, handle: CallbackHandle<GRect, ()>) {
+    pub fn unsubscribe(&self, handle: CallbackHandle<GRect>) {
         self.callback.remove(handle);
         if self.callback.is_empty() {
+            #[cfg(not(platform = "aplite"))]
             unsafe {
                 sys::unobstructed_area_service_unsubscribe();
             }
@@ -50,6 +51,6 @@ impl UnobstructedArea {
 unsafe extern "C" fn global_unobstructed_area_handler(rect: GRect, context: *mut c_void) {
     log_c_str(c"unobstructed_area received");
     unsafe {
-        GlobalCallbacks::<GRect, ()>::dispatch_callback(context, rect);
+        GlobalCallbacks::<(GRect,)>::dispatch_callback(context, (rect,));
     }
 }

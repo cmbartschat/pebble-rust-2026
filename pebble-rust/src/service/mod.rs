@@ -16,7 +16,7 @@ pub use app_focus::AppFocus;
 pub use battery::{BatteryChargeState, BatteryState};
 pub use bluetooth::BluetoothConnection;
 pub use compass::{Compass, CompassHeading};
-pub(crate) use global_callback::GlobalCallbacks;
+pub(crate) use global_callback::{GlobalCallbacks, SingleCallback, SingleCallbackFn};
 pub use global_callback::{Callback, CallbackHandle};
 pub use touch::{Touch, TouchEvent};
 pub use unobstructed_area::UnobstructedArea;

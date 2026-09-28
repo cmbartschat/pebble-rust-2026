@@ -8,7 +8,7 @@ use crate::{
 /// Allows you to configure watch wakeup and retrieve information about the last wakeup that occurred.
 pub struct Wakeup;
 
-static HANDLER: GlobalCallbacks<(WakeupEvent,), ()> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(WakeupEvent,)> = GlobalCallbacks::new();
 
 /// Possible errors that can happen when scheduling a wakeup.
 #[derive(Copy, Clone, PartialEq)]
@@ -75,7 +75,7 @@ impl Wakeup {
         &self,
         handler: impl Into<Callback<(WakeupEvent,)>>,
     ) -> CallbackHandle<(WakeupEvent,)> {
-        let handle = HANDLER.add(handler);
+        let handle = HANDLER.add(handler.into());
         unsafe {
             sys::wakeup_service_subscribe(Some(global_wakeup_handler));
         }

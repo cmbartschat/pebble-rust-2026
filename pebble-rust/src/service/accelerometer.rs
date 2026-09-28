@@ -56,12 +56,12 @@ pub enum AccelerometerSamplingRate {
     Hz100 = sys::AccelSamplingRate_ACCEL_SAMPLING_100HZ,
 }
 
-static TAP_HANDLER: GlobalCallbacks<(AccelerometerAxis,), ()> = GlobalCallbacks::new();
-static DATA_HANDLER: GlobalCallbacks<(&[AccelerometerData],), ()> = GlobalCallbacks::new();
+static TAP_HANDLER: GlobalCallbacks<(AccelerometerAxis,)> = GlobalCallbacks::new();
+static DATA_HANDLER: GlobalCallbacks<(&[AccelerometerData],)> = GlobalCallbacks::new();
 // FIXME: Workaround for crashes when we set the global accelerometer handler more than once without unsetting it.
 //        This should be a general feature for GlobalCallbacks that allows them to intelligently only set the handler once.
 static DATA_HANDLER_IS_INITIALIZED: Mutex<RefCell<bool>> = Mutex::new(RefCell::new(false));
-static RAW_HANDLER: GlobalCallbacks<(&AccelerometerRawData,), ()> = GlobalCallbacks::new();
+static RAW_HANDLER: GlobalCallbacks<(&AccelerometerRawData,)> = GlobalCallbacks::new();
 
 impl Accelerometer {
     pub(crate) const fn new() -> Self {
@@ -119,7 +119,7 @@ impl Accelerometer {
     where
         H: for<'a> Into<Callback<(&'a [AccelerometerData],)>>,
     {
-        let handle = DATA_HANDLER.add(handler);
+        let handle = DATA_HANDLER.add(handler.into());
         // Poor man’s compare-exchange :)
         let is_initialized =
             critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, true));
@@ -152,7 +152,7 @@ impl Accelerometer {
         &self,
         handler: impl Into<Callback<(AccelerometerAxis,)>>,
     ) -> CallbackHandle<(AccelerometerAxis,)> {
-        let handle = TAP_HANDLER.add(handler);
+        let handle = TAP_HANDLER.add(handler.into());
         unsafe {
             sys::accel_tap_service_subscribe(Some(global_accel_tap_handler));
         }
@@ -180,7 +180,7 @@ impl Accelerometer {
     where
         H: for<'a> Into<Callback<(&'a AccelerometerRawData,)>>,
     {
-        let handle = RAW_HANDLER.add(handler);
+        let handle = RAW_HANDLER.add(handler.into());
         unsafe {
             sys::accel_raw_data_service_subscribe(
                 self.get_samples_per_update(),

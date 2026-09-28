@@ -6,7 +6,7 @@ use crate::{
 /// Accessor for the battery charge state.
 pub struct BatteryState(());
 
-static HANDLER: GlobalCallbacks<(BatteryChargeState,), ()> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(BatteryChargeState,)> = GlobalCallbacks::new();
 
 /// The actual state of the battery charge.
 /// This has fields for the battery percentage, whether the battery is being charged, and whether it is plugged in.
@@ -23,7 +23,7 @@ impl BatteryState {
         &self,
         handler: impl Into<Callback<(BatteryChargeState,)>>,
     ) -> CallbackHandle<(BatteryChargeState,)> {
-        let handle = HANDLER.add(handler);
+        let handle = HANDLER.add(handler.into());
         unsafe {
             sys::battery_state_service_subscribe(Some(global_battery_handler));
         }

@@ -3,16 +3,16 @@ use core::{cell::RefCell, ffi::c_void, marker::PhantomData, ptr::addr_of};
 use alloc::boxed::Box;
 use intrusive_collections::{XorLinkedList, XorLinkedListLink, intrusive_adapter};
 
-use crate::{Mutex, MutexToken, log_c_str};
+use crate::{Mutex, MutexToken};
 
 /// Internal callback storage.
 /// You don’t need to interact with this type directly; all [`FnMut`] implementors can be converted to it.
-pub struct Callback<Args, Result = ()> {
+pub struct Callback<Args> {
     /// Intrusive linked list connection in the global callback list
     link: XorLinkedListLink,
     /// Actual function.
     /// Unfortunately due to intrusive_collections limitations, we can’t remove the Box here.
-    function: Box<dyn FnMut(Args) -> Result>,
+    function: Box<dyn FnMut(Args) -> ()>,
     /// Symbolic ID, so that handles can refer to it.
     /// Using IDs avoids overhead from Rc, RefCell, Mutex etc.,
     /// since we know that the handles cannot (and are not supposed to) mutate the callback’s inner data.
@@ -24,9 +24,9 @@ pub struct Callback<Args, Result = ()> {
 // - allowed us to be less careful with nonoverlapping trait implementations (aka. specialization)
 
 /// Only for internal use, since this doesn’t set the index.
-impl<Arg, Result, F> From<F> for Callback<(Arg,), Result>
+impl<Arg, F> From<F> for Callback<(Arg,)>
 where
-    F: FnMut(Arg) -> Result + 'static,
+    F: FnMut(Arg) -> () + 'static,
 {
     fn from(mut value: F) -> Self {
         Self {
@@ -36,9 +36,9 @@ where
         }
     }
 }
-impl<Arg1, Arg2, Result, F> From<F> for Callback<(Arg1, Arg2), Result>
+impl<Arg1, Arg2, F> From<F> for Callback<(Arg1, Arg2)>
 where
-    F: FnMut(Arg1, Arg2) -> Result + 'static,
+    F: FnMut(Arg1, Arg2) -> () + 'static,
 {
     fn from(mut value: F) -> Self {
         Self {
@@ -49,14 +49,14 @@ where
     }
 }
 
-impl<Args, Result> Callback<Args, Result> {
-    fn call(&mut self, args: Args) -> Result {
+impl<Args> Callback<Args> {
+    fn call(&mut self, args: Args) {
         (self.function)(args)
     }
 }
 
-intrusive_adapter!(LinkedCallback<Args, Result> = Box<Callback<Args, Result>>:
-    Callback<Args, Result> { link => XorLinkedListLink }
+intrusive_adapter!(LinkedCallback<Args> = Box<Callback<Args>>:
+    Callback<Args> { link => XorLinkedListLink }
 );
 
 /// Handle to a subscribed callback.
@@ -73,27 +73,24 @@ intrusive_adapter!(LinkedCallback<Args, Result> = Box<Callback<Args, Result>>:
 // and then tried to unsubscribe from this event again, at which point the unsubscription will hit an unrelated handler.
 // This is clearly a degenerate case that should not happen in practice, and it is still sound (just a logic bug).
 #[derive(Clone, Copy)]
-pub struct CallbackHandle<Args, Result = ()> {
+pub struct CallbackHandle<Args> {
     id: usize,
-    phantom: PhantomData<(Args, Result)>,
+    phantom: PhantomData<Args>,
 }
 
-pub(crate) struct GlobalCallbacksInner<Args, Result> {
-    callbacks: XorLinkedList<LinkedCallback<Args, Result>>,
+pub(crate) struct GlobalCallbacksInner<Args> {
+    callbacks: XorLinkedList<LinkedCallback<Args>>,
 }
 
-impl<Args, Result> GlobalCallbacksInner<Args, Result> {
+impl<Args> GlobalCallbacksInner<Args> {
     pub const fn new() -> Self {
         Self {
             callbacks: XorLinkedList::new(LinkedCallback::new()),
         }
     }
 
-    pub fn add(
-        &mut self,
-        callback: impl Into<Callback<Args, Result>>,
-    ) -> CallbackHandle<Args, Result> {
-        let mut callback = Box::new(callback.into());
+    pub fn add(&mut self, callback: Callback<Args>) -> CallbackHandle<Args> {
+        let mut callback = Box::new(callback);
         let new_id = self
             .callbacks
             .back()
@@ -108,7 +105,7 @@ impl<Args, Result> GlobalCallbacksInner<Args, Result> {
         }
     }
 
-    pub fn remove(&mut self, handle: CallbackHandle<Args, Result>) {
+    pub fn remove(&mut self, handle: CallbackHandle<Args>) {
         let mut cursor = self.callbacks.cursor_mut();
         cursor.move_next();
         while !cursor.is_null() {
@@ -117,11 +114,10 @@ impl<Args, Result> GlobalCallbacksInner<Args, Result> {
                 .map(|callback| callback.id == handle.id)
                 .unwrap_or(false);
             if matches_id {
-                log_c_str(c"found handler to remove");
                 cursor.remove();
-            } else {
-                cursor.move_next();
+                return;
             }
+            cursor.move_next();
         }
     }
 
@@ -134,22 +130,22 @@ impl<Args, Result> GlobalCallbacksInner<Args, Result> {
     }
 }
 
-pub struct GlobalCallbacks<P, T> {
-    inner: Mutex<RefCell<GlobalCallbacksInner<P, T>>>,
+pub struct GlobalCallbacks<P> {
+    inner: Mutex<RefCell<GlobalCallbacksInner<P>>>,
 }
 
-impl<P, T> GlobalCallbacks<P, T> {
+impl<P> GlobalCallbacks<P> {
     pub const fn new() -> Self {
         Self {
             inner: Mutex::new(RefCell::new(GlobalCallbacksInner::new())),
         }
     }
 
-    pub fn add(&self, callback: impl Into<Callback<P, T>>) -> CallbackHandle<P, T> {
+    pub fn add(&self, callback: Callback<P>) -> CallbackHandle<P> {
         MutexToken::with(|t| self.inner.borrow_mut(t).add(callback))
     }
 
-    pub fn remove(&self, handle: CallbackHandle<P, T>) {
+    pub fn remove(&self, handle: CallbackHandle<P>) {
         MutexToken::with(|t| {
             self.inner.borrow_mut(t).remove(handle);
         });
@@ -171,39 +167,86 @@ impl<P, T> GlobalCallbacks<P, T> {
         addr_of!(self.inner) as *const c_void as *mut c_void
     }
 
-    fn dispatch_on(mutex: &Mutex<RefCell<GlobalCallbacksInner<P, T>>>, data: P) -> Option<T>
+    fn dispatch_on(mutex: &Mutex<RefCell<GlobalCallbacksInner<P>>>, data: P)
     where
         P: Clone,
     {
-        let mut result = None;
         MutexToken::with(|t| {
             let mut callbacks = mutex.borrow_mut(t);
             let mut cursor = callbacks.callbacks.cursor_mut();
             cursor.move_next();
             while !cursor.is_null() {
                 let mut callback = cursor.remove().expect("callback must exist");
-                let return_value = callback.call(data.clone());
-                result = Some(return_value);
+                callback.call(data.clone());
                 cursor.insert_before(callback);
             }
         });
-        result
     }
 
-    pub(crate) unsafe fn dispatch_callback(context: *mut c_void, data: P) -> Option<T>
+    pub(crate) unsafe fn dispatch_callback(context: *mut c_void, data: P) -> Option<()>
     where
         P: Clone,
     {
         let mutex =
-            (unsafe { (context as *mut Mutex<RefCell<GlobalCallbacksInner<P, T>>>).as_ref() })?;
+            (unsafe { (context as *mut Mutex<RefCell<GlobalCallbacksInner<P>>>).as_ref() })?;
 
-        Self::dispatch_on(mutex, data)
+        Self::dispatch_on(mutex, data);
+        Some(())
     }
 
-    pub(crate) fn dispatch(&self, data: P) -> Option<T>
+    pub(crate) fn dispatch(&self, data: P)
     where
         P: Clone,
     {
         Self::dispatch_on(&self.inner, data)
     }
 }
+
+/// Callback storage when there is only one event handler.
+/// F is always `dyn FnMut(Args)`, but we can’t say that here or risk making lifetimes in `Args` invariant.
+/// If you don’t need to worry about higher-ranked trait bounds (HRTBs), aka. `for<'a> FnMut(&'a SomeArgument)`, just use [`SingleCallbackFn`].
+/// (See [here](https://doc.rust-lang.org/stable/nomicon/hrtb.html) for more information.)
+pub struct SingleCallback<F: ?Sized> {
+    /// Actual function.
+    function: Mutex<RefCell<Option<Box<F>>>>,
+}
+
+impl<F: ?Sized> SingleCallback<F> {
+    pub fn set(&self, value: Box<F>) {
+        MutexToken::with(|token| {
+            *self.function.borrow_mut(token) = Some(value);
+        });
+    }
+
+    pub fn clear(&self) {
+        MutexToken::with(|token| {
+            *self.function.borrow_mut(token) = None;
+        });
+    }
+
+    pub const fn new() -> Self {
+        Self {
+            function: Mutex::new(RefCell::new(None)),
+        }
+    }
+
+    // Complex dispatch implementation using HRTB.
+    // In practice F should be a type erased `dyn FnMut` but we can’t tell the compiler about that.
+    pub fn dispatch<Args>(&self, args: Args)
+    where
+        F: for<'a> FnMut(Args),
+    {
+        let function = MutexToken::with(|token| self.function.borrow_mut(token).take());
+        if let Some(mut function) = function {
+            function(args);
+            MutexToken::with(|token| {
+                *self.function.borrow_mut(token) = Some(function);
+            });
+        }
+    }
+}
+
+/// More convenient way to plug a FnMut into [`SingleCallback`].
+/// Note that this type alias almost definitely breaks the HRTB on `dispatch`,
+/// so it cannot be used if your function takes references of any kind.
+pub type SingleCallbackFn<Args> = SingleCallback<dyn FnMut(Args) + 'static>;

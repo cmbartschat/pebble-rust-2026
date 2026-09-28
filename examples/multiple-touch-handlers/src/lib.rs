@@ -24,7 +24,7 @@ fn main() -> i32 {
 
     {
         let last_touch_pos = last_touch_pos.clone();
-        let _ = custom_layer.add_update_handler(move |_, mut ctx: GContext| {
+        let _ = custom_layer.set_update_handler(move |_, mut ctx: GContext| {
             // Draw a green circle at the current position.
             ctx.set_fill_color(hex_color!("#000"));
             ctx.fill_circle(*last_touch_pos.clone().borrow(), 10);

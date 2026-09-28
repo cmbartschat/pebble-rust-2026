@@ -6,7 +6,7 @@ use crate::{
     GContext, GPoint, GRect,
     handle::{Handle, WeakHandle, new_handle},
     log_c_str,
-    service::{Callback, CallbackHandle, GlobalCallbacks},
+    service::{SingleCallback, SingleCallbackFn},
     sys,
 };
 
@@ -33,7 +33,7 @@ pub struct LayerInner {
     pub(crate) raw: NonNull<sys::Layer>,
     parent: Option<WeakHandle<LayerInner>>,
     children: Vec<Box<dyn ChildLayer>>,
-    render: GlobalCallbacks<(Layer, GContext), ()>,
+    render: SingleCallbackFn<(Layer, GContext)>,
     owned: bool,
 }
 
@@ -52,7 +52,7 @@ impl LayerInner {
             raw: NonNull::new(ptr)?,
             parent: None,
             children: Vec::new(),
-            render: GlobalCallbacks::new(),
+            render: SingleCallback::new(),
             owned,
         })
     }
@@ -164,15 +164,13 @@ impl Layer {
     fn modify_update_handlers_inner(
         &mut self,
         proc: Option<unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext)>,
-        callback: Option<Callback<(Layer, GContext)>>,
-    ) -> Option<CallbackHandle<(Layer, GContext)>> {
+        callback: Option<Box<dyn FnMut((Layer, GContext))>>,
+    ) {
         let inner = self.handle.borrow();
         unsafe { sys::layer_set_update_proc(inner.raw.as_ptr(), proc) };
         unsafe { sys::layer_mark_dirty(inner.raw.as_ptr()) };
         if let Some(callback) = callback {
-            Some(inner.render.add(callback))
-        } else {
-            None
+            inner.render.set(callback);
         }
     }
 
@@ -189,17 +187,16 @@ impl Layer {
     /// Adds a handler for layer updates.
     /// The callback receives this layer, as well as a graphics context that can be drawn to to set the visual contents of the layer.
     /// This disables the raw update handler set via [`Self::set_raw_update_handler`].
-    pub fn add_update_handler(
-        &mut self,
-        callback: impl Into<Callback<(Layer, GContext)>>,
-    ) -> CallbackHandle<(Layer, GContext)> {
-        self.modify_update_handlers_inner(Some(global_layer_update_handler), Some(callback.into()))
-            .unwrap()
+    pub fn set_update_handler(&mut self, mut callback: impl FnMut(Layer, GContext) + 'static) {
+        self.modify_update_handlers_inner(
+            Some(global_layer_update_handler),
+            Some(Box::new(move |(a, b)| callback(a, b))),
+        );
     }
 
-    /// Remove a layer update handler.
-    pub fn remove_update_handler(&mut self, handle: CallbackHandle<(Layer, GContext)>) {
-        self.handle.borrow_mut().render.remove(handle);
+    /// Clear the layer update handler.
+    pub fn clear_update_handler(&mut self) {
+        self.handle.borrow_mut().render.clear();
     }
 
     unsafe fn as_ptr(&self) -> *mut sys::Layer {

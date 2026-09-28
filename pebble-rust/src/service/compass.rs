@@ -7,7 +7,7 @@ use crate::{
 /// Accessor for compass data.
 pub struct Compass(());
 
-static HANDLER: GlobalCallbacks<(CompassHeading,), ()> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(CompassHeading,)> = GlobalCallbacks::new();
 
 impl Compass {
     pub(crate) const fn new() -> Self {
@@ -37,7 +37,7 @@ impl Compass {
         &self,
         handler: impl Into<Callback<(CompassHeading,)>>,
     ) -> CallbackHandle<(CompassHeading,)> {
-        let handle = HANDLER.add(handler);
+        let handle = HANDLER.add(handler.into());
         unsafe {
             sys::compass_service_subscribe(Some(global_compass_handler));
         }

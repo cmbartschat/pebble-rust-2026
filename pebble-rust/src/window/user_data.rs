@@ -3,15 +3,15 @@ use core::cell::RefCell;
 use crate::{effect::Effect, service::GlobalCallbacks};
 
 pub(crate) struct WindowUserData {
-    pub(crate) load_handler: GlobalCallbacks<(), ()>,
-    pub(crate) appear_handler: GlobalCallbacks<(), ()>,
-    pub(crate) disappear_handler: GlobalCallbacks<(), ()>,
-    pub(crate) unload_handler: GlobalCallbacks<(), ()>,
+    pub(crate) load_handler: GlobalCallbacks<()>,
+    pub(crate) appear_handler: GlobalCallbacks<()>,
+    pub(crate) disappear_handler: GlobalCallbacks<()>,
+    pub(crate) unload_handler: GlobalCallbacks<()>,
     pub(crate) appear_effect: RefCell<Effect>,
     pub(crate) load_effect: RefCell<Effect>,
 }
 
-fn dispatch_handler(handler: &GlobalCallbacks<(), ()>) {
+fn dispatch_handler(handler: &GlobalCallbacks<()>) {
     handler.dispatch(());
 }
 
