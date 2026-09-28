@@ -32,7 +32,12 @@ impl BatteryState {
 
     /// Unsubscribe the handler from battery state events.
     pub fn unsubscribe(&self, handle: CallbackHandle<(BatteryChargeState,)>) {
-        HANDLER.remove(handle)
+        HANDLER.remove(handle);
+        if HANDLER.is_empty() {
+            unsafe {
+                sys::battery_state_service_unsubscribe();
+            }
+        }
     }
 
     /// Retrieve the current battery charge state.

@@ -38,6 +38,11 @@ impl UnobstructedArea {
     /// Removes the unobstructed area change handler.
     pub fn unsubscribe(&self, handle: CallbackHandle<GRect, ()>) {
         self.callback.remove(handle);
+        if self.callback.is_empty() {
+            unsafe {
+                sys::unobstructed_area_service_unsubscribe();
+            }
+        }
     }
 }
 

@@ -128,6 +128,10 @@ impl<Args, Result> GlobalCallbacksInner<Args, Result> {
     pub fn clear(&mut self) {
         self.callbacks.clear();
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.callbacks.is_empty()
+    }
 }
 
 pub struct GlobalCallbacks<P, T> {
@@ -156,6 +160,10 @@ impl<P, T> GlobalCallbacks<P, T> {
         MutexToken::with(|t| {
             self.inner.borrow_mut(t).clear();
         });
+    }
+
+    pub fn is_empty(&self) -> bool {
+        MutexToken::with(|t| self.inner.borrow(t).is_empty())
     }
 
     #[allow(unused)]

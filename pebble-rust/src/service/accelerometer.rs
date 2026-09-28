@@ -137,6 +137,12 @@ impl Accelerometer {
     /// Unsubscribe from accelerometer events.
     pub fn unsubscribe(&self, handle: CallbackHandle<(&'static [AccelerometerData],)>) {
         DATA_HANDLER.remove(handle);
+        if DATA_HANDLER.is_empty() {
+            critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, false));
+            unsafe {
+                sys::accel_data_service_unsubscribe();
+            }
+        }
     }
 
     /// Subscribe to tap events.
@@ -155,7 +161,12 @@ impl Accelerometer {
 
     /// Unsubscribe from tap events.
     pub fn unsubscribe_from_tap(&self, handle: CallbackHandle<(AccelerometerAxis,)>) {
-        TAP_HANDLER.remove(handle)
+        TAP_HANDLER.remove(handle);
+        if TAP_HANDLER.is_empty() {
+            unsafe {
+                sys::accel_tap_service_unsubscribe();
+            }
+        }
     }
 
     /// Subscribe to raw accelerometer events.

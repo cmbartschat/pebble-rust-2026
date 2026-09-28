@@ -47,6 +47,11 @@ impl Compass {
     /// Unsubscribe from compass events.
     pub fn unsubscribe(&self, handle: CallbackHandle<(CompassHeading,)>) {
         HANDLER.remove(handle);
+        if HANDLER.is_empty() {
+            unsafe {
+                sys::compass_service_unsubscribe();
+            }
+        }
     }
 
     /// Retrieve the current compass heading.

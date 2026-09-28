@@ -30,6 +30,11 @@ impl AppFocus {
     /// Remove the focus event handler.
     pub fn unsubscribe(&self, handle: CallbackHandle<(bool,)>) {
         HANDLER.remove(handle);
+        if HANDLER.is_empty() {
+            unsafe {
+                sys::app_focus_service_unsubscribe();
+            }
+        }
     }
 }
 

@@ -59,6 +59,11 @@ impl Touch {
     /// Removes the touch event handler.
     pub fn unsubscribe(&self, handle: CallbackHandle<(TouchEvent,)>) {
         self.callback.remove(handle);
+        if self.callback.is_empty() {
+            unsafe {
+                sys::touch_service_unsubscribe();
+            }
+        }
     }
 }
 

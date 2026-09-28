@@ -26,6 +26,11 @@ impl BluetoothConnection {
     /// Remove a Bluetooth connection event handler.
     pub fn unsubscribe(&self, handle: CallbackHandle<(bool,)>) {
         HANDLER.remove(handle);
+        if HANDLER.is_empty() {
+            unsafe {
+                sys::bluetooth_connection_service_unsubscribe();
+            }
+        }
     }
 
     /// Returns whether the app currently has a Bluetooth connection.
