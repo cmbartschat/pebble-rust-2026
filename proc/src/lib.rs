@@ -243,6 +243,7 @@ fn parse_hex_literal(mut literal: &str) -> Option<ParsedColor> {
 
 /// Generates a hexadecimal color in the Pebble color format, using standard hex literals.
 /// All common lengths of hex literals are accepted: `fff` (RGB), `ffff` (RGBA), `ffffff` (RGB), `ffffffff` (RGBA).
+/// Only `f`, `a`, `5`, and `0` are allowed as hex digits, since there are 4 bits for each channel.
 /// Examples:
 /// ```rust,ignore
 /// const BLACK: GColor = hex_color!("#000");

@@ -5,7 +5,8 @@ Rust bindings and safe rust wrappers for the Pebble Smartwatch SDK.
 ## Getting Started
 
 - See [this project](https://github.com/cmbartschat/pebble-64cores) for a working watchface.
-- See [this demo app](https://github.com/cmbartschat/pebble-rust-demo) for demonstrations of additional features.
+- See [the examples](./examples) for small example applications.
+- See [this demo app](https://github.com/cmbartschat/pebble-rust-demo) for a larger demonstration.
 
 ### Selecting the target platform (watch model)
 

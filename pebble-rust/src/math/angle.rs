@@ -4,7 +4,10 @@ use core::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
-use rand::distr::uniform::{SampleUniform, UniformInt, UniformSampler};
+use rand::distr::{
+    Distribution, StandardUniform, Uniform,
+    uniform::{SampleUniform, UniformInt, UniformSampler},
+};
 
 use crate::{GSize, sys};
 
@@ -171,6 +174,15 @@ impl SampleUniform for Angle {
     type Sampler = UniformAngle;
 }
 
+impl Distribution<Angle> for StandardUniform {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Angle {
+        use rand::RngExt;
+        Angle {
+            value: rng.sample(Uniform::new(0, sys::TRIG_MAX_ANGLE as i32).unwrap()),
+        }
+    }
+}
+
 impl Sub for Angle {
     type Output = Self;
 
@@ -262,42 +274,95 @@ impl Ratio {
 
 mod sys_math {
     unsafe extern "C" {
+        // Maximum value here is __RAND_MAX, which is 2^31-1.
         pub fn rand() -> u32;
         pub fn srand(_: u32);
     }
 }
 
-/// A pseudorandom value.
+/// A random number generator.
 /// This implements [`rand::Rng`], so it can be used as an RNG source for anything in the de facto standard `rand` ecosystem.
 /// It does not implement [`rand::SeedableRng`] because there is only one global seed, which is not how this trait expects everything to work.
-/// Use [`Random::seed`] if you want to seed the global RNG.
-pub struct Random;
+/// Use [`Rng::seed`] if you want to seed the global RNG.
+///
+/// Some usage examples:
+///
+/// ```rust,ignore
+/// use pebble_rust_2026::Rng;
+/// use rand::{RngExt, seq::IndexedRandom};
+///
+/// Rng.seed(42);
+///
+/// let value_in_range = Rng.random_range(70..=200);
+/// let chosen = [1, 2, 3, 4].choose(&mut Rng);
+/// ```
+///
+/// For a simpler API, you can use [`Random`], but note that its functionality is expected to be less correct than anything available through `rand`.
+pub struct Rng;
 
-impl rand::TryRng for Random {
+impl rand::TryRng for Rng {
     type Error = Infallible;
 
+    // Note for all these implementations:
+    // Because RAND_MAX is not u32::MAX, we need to grab at least two values even for u32.
+    // To guard against further reductions of RAND_MAX, we assume that RAND_MAX >= 2^24.
+
+    #[inline]
     fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
-        Ok(Self::next())
+        Ok((Self::next() << 16) ^ Self::next())
     }
 
+    #[inline]
     fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
-        Ok((Self::next() as u64) << 32 | Self::next() as u64)
+        Ok((Self::next() as u64) << 48 ^ (Self::next() as u64) << 24 ^ Self::next() as u64)
     }
 
+    #[inline]
     #[allow(clippy::cast_possible_truncation)] // expected
     fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Self::Error> {
         rand::rand_core::utils::fill_bytes_via_next_word(dst, || Ok(Self::next()))
     }
 }
 
-impl Random {
+impl Rng {
     /// Set the seed for the random number generator.
     pub fn seed(seed: u32) {
         unsafe { sys_math::srand(seed) }
     }
 
+    #[inline]
     fn next() -> u32 {
         unsafe { sys_math::rand() }
+    }
+}
+
+/// This type offers more basic randomness functionality, which is less correct than [`Rng`],
+/// but also frequently uses less code[^code-size].
+/// It is generally recommended to use [`Rng`] instead, unless you know what you are doing.
+///
+/// [^code-size]: In one test, [`RandomValue::uniform`] used 170 fewer code bytes than `Rng.random_range`.
+#[repr(transparent)]
+pub struct RandomValue {
+    value: u32,
+}
+
+impl RandomValue {
+    /// Generate a new random value.
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        let value = unsafe { sys_math::rand() };
+        Self { value }
+    }
+    /// Generate a random value from 0 to the upper bound.
+    ///
+    /// Note that depending on the exact bound, this value is usually not exactly uniformly distributed.
+    /// This may be fine for simple applications.
+    /// Use [`Rng`] with [`rand::RngExt::random_range`] instead if you want uniformly distributed values.
+    /// 
+    /// Furthermore, values above 2^31 - 1 cannot be generated.
+    #[allow(clippy::missing_const_for_fn)] // doesn’t make sense for a runtime value
+    pub fn range(&self, upper_bound: u32) -> u32 {
+        self.value % upper_bound
     }
 }
 

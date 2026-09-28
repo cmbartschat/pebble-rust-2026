@@ -1,3 +1,7 @@
 /target
 tmp
 .DS_Store
+
+/examples/*/target
+/examples/*/build
+/examples/*/Cargo.lock
