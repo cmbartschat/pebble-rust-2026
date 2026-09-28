@@ -1,0 +1,37 @@
+{
+	"author": "",
+	"dependencies": {
+		"base-x": "^5.0.1"
+	},
+	"keywords": [
+		"pebble-app"
+	],
+	"name": "random",
+	"pebble": {
+		"capabilities": [
+			"configurable"
+		],
+		"displayName": "Random Example",
+		"enableMultiJS": true,
+		"messageKeys": [],
+		"projectType": "native",
+		"resources": {
+			"media": []
+		},
+		"sdkVersion": "3",
+		"targetPlatforms": [
+			"aplite",
+			"basalt",
+			"chalk",
+			"diorite",
+			"emery",
+			"flint",
+			"gabbro"
+		],
+		"uuid": "d9654684-a32a-466d-90e3-38c8b1aceabb",
+		"watchapp": {
+			"watchface": false
+		}
+	},
+	"version": "0.1.0"
+}

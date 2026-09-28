@@ -63,7 +63,14 @@ extern "C" fn global_compass_handler(event: sys::CompassHeadingData) {
 }
 
 /// Possible compass data.
-// TODO: Add Into<Option<Angle>>
+/// You can attempt to convert this into an [`Angle`], if you don’t care about the detailed state:
+///
+/// ```rust,ignore
+/// let invalid_heading = CompassHeading::Unavailable;
+/// let south = CompassHeading::Calibrated(Angle::from_degrees(180));
+/// assert!(Angle::try_from(invalid_heading).is_err());
+/// assert!(Angle::try_from(south) == Ok(Angle::from_degrees(180)));
+/// ```
 pub enum CompassHeading {
     /// Compass heading is unavailable.
     Unavailable,
@@ -73,6 +80,18 @@ pub enum CompassHeading {
     Calibrating(Angle),
     /// Compass heading is fully calibrated.
     Calibrated(Angle),
+}
+
+/// Retrieves the angle from the compass heading, if possible.
+impl TryFrom<CompassHeading> for Angle {
+    type Error = ();
+
+    fn try_from(value: CompassHeading) -> Result<Self, Self::Error> {
+        match value {
+            CompassHeading::Unavailable | CompassHeading::Invalid => Err(()),
+            CompassHeading::Calibrated(angle) | CompassHeading::Calibrating(angle) => Ok(angle),
+        }
+    }
 }
 
 impl From<sys::CompassHeadingData> for CompassHeading {

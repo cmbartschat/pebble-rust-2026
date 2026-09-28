@@ -12,17 +12,47 @@ pub struct Wakeup;
 
 static HANDLER: GlobalCallback<WakeupEvent, ()> = GlobalCallback::new();
 
+/// Possible errors that can happen when scheduling a wakeup.
+#[derive(Copy, Clone, PartialEq)]
+#[repr(i8)]
+pub enum WakeupSchedulingError {
+    /// The wakeup is too close to an existing one.
+    /// There must be a distance of at least 1 minute between wakeups.
+    TooCloseToExisting = StatusError::Range as i8,
+    /// The wakeup you tried to schedule lies in the past.
+    InThePast = StatusError::InvalidArgument as i8,
+    /// The app has already scheduled 8 wakeups, more are not possible.
+    MaximumWakeupsReached = StatusError::OutOfResources as i8,
+    /// An internal unknown error.
+    Internal = StatusError::Internal as i8,
+}
+
+impl From<StatusError> for WakeupSchedulingError {
+    fn from(value: StatusError) -> Self {
+        match value {
+            StatusError::InvalidArgument => Self::InThePast,
+            StatusError::Range => Self::TooCloseToExisting,
+            StatusError::OutOfResources => Self::MaximumWakeupsReached,
+            _ => Self::Internal,
+        }
+    }
+}
+
 impl Wakeup {
     pub(crate) const fn new() -> Self {
         Self
     }
 
     /// Schedule a wakeup at the specified time for the specified reason.
-    /// Every app can schedule up to 8 wakeup events.
-    /// Also, you cannot schedule a wakeup event within 1 minute of another.
-    pub fn schedule(&self, time: Time, reason: i32) -> Result<PendingWakeup, StatusError> {
+    /// Every app can schedule up to 8 wakeup events ([`WakeupSchedulingError::MaximumWakeupsReached`]).
+    /// Also, you cannot schedule a wakeup event within 1 minute of another ([`WakeupSchedulingError::TooCloseToExisting`]).
+    pub fn schedule(
+        &self,
+        time: Time,
+        reason: i32,
+    ) -> Result<PendingWakeup, WakeupSchedulingError> {
         let res = unsafe { sys::wakeup_schedule(time.epoch_seconds(), reason, false) };
-        parse_status_result(res.min(0) as i8)?;
+        parse_status_result(res.min(0))?;
         Ok(PendingWakeup { time, id: res })
     }
 

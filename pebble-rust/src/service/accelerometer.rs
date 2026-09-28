@@ -180,7 +180,6 @@ extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32)
     };
 
     TAP_HANDLER.dispatch(axis);
-    todo!()
 }
 
 extern "C" fn global_accel_raw_data_handler(
