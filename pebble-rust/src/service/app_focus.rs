@@ -6,7 +6,9 @@ use crate::{
 /// Allows you to detect when the app gains or loses focus.
 pub struct AppFocus;
 
-static HANDLER: GlobalCallbacks<(bool,)> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(bool,)> = GlobalCallbacks::new(|| unsafe {
+    sys::app_focus_service_unsubscribe();
+});
 
 impl AppFocus {
     pub(crate) const fn new() -> Self {
@@ -15,7 +17,11 @@ impl AppFocus {
 
     /// Add a focus event handler.
     /// The callback function receives a boolean specifying whether the app has focus or not.
-    pub fn subscribe(&self, handler: impl Into<Callback<(bool,)>>) -> CallbackHandle<(bool,)> {
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe(
+        &'static self,
+        handler: impl Into<Callback<(bool,)>>,
+    ) -> CallbackHandle<'static, (bool,)> {
         let handle = HANDLER.add(handler.into());
         unsafe {
             // NOTE(christoph): Equivalent to sys::app_focus_service_subscribe
@@ -25,16 +31,6 @@ impl AppFocus {
             });
         }
         handle
-    }
-
-    /// Remove the focus event handler.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(bool,)>) {
-        HANDLER.remove(handle);
-        if HANDLER.is_empty() {
-            unsafe {
-                sys::app_focus_service_unsubscribe();
-            }
-        }
     }
 }
 

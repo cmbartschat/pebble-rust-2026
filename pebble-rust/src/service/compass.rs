@@ -7,7 +7,9 @@ use crate::{
 /// Accessor for compass data.
 pub struct Compass(());
 
-static HANDLER: GlobalCallbacks<(CompassHeading,)> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(CompassHeading,)> = GlobalCallbacks::new(|| unsafe {
+    sys::compass_service_unsubscribe();
+});
 
 impl Compass {
     pub(crate) const fn new() -> Self {
@@ -33,25 +35,16 @@ impl Compass {
     /// Subscribe to compass events.
     /// The function receives the current compass heading, see [`CompassHeading`] for details.
     /// This overrides any previous handler that is subscribed to these events.
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe(
-        &self,
+        &'static self,
         handler: impl Into<Callback<(CompassHeading,)>>,
-    ) -> CallbackHandle<(CompassHeading,)> {
+    ) -> CallbackHandle<'static, (CompassHeading,)> {
         let handle = HANDLER.add(handler.into());
         unsafe {
             sys::compass_service_subscribe(Some(global_compass_handler));
         }
         handle
-    }
-
-    /// Unsubscribe from compass events.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(CompassHeading,)>) {
-        HANDLER.remove(handle);
-        if HANDLER.is_empty() {
-            unsafe {
-                sys::compass_service_unsubscribe();
-            }
-        }
     }
 
     /// Retrieve the current compass heading.

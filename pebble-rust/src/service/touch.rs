@@ -14,7 +14,17 @@ pub struct Touch {
 impl Touch {
     pub(crate) const fn new() -> Self {
         Self {
-            callback: GlobalCallbacks::new(),
+            callback: GlobalCallbacks::new(|| {
+                #[cfg(not(any(
+                    platform = "aplite",
+                    platform = "basalt",
+                    platform = "chalk",
+                    platform = "diorite"
+                )))]
+                unsafe {
+                    sys::touch_service_unsubscribe();
+                }
+            }),
         }
     }
 
@@ -36,10 +46,11 @@ impl Touch {
     /// Adds a handler for touch events.
     /// The handler function receives the touch event.
     /// This function is a noop on platforms without touch.
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe(
-        &self,
+        &'static self,
         handler: impl Into<Callback<(TouchEvent,)>>,
-    ) -> CallbackHandle<(TouchEvent,)> {
+    ) -> CallbackHandle<'static, (TouchEvent,)> {
         let handle = self.callback.add(handler.into());
         // No touch on these platforms, therefore subscribing to touch events is a noop.
         #[cfg(not(any(
@@ -54,22 +65,6 @@ impl Touch {
             }
         }
         handle
-    }
-
-    /// Removes the touch event handler.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(TouchEvent,)>) {
-        self.callback.remove(handle);
-        if self.callback.is_empty() {
-            #[cfg(not(any(
-                platform = "aplite",
-                platform = "basalt",
-                platform = "chalk",
-                platform = "diorite"
-            )))]
-            unsafe {
-                sys::touch_service_unsubscribe();
-            }
-        }
     }
 }
 

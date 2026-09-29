@@ -8,7 +8,7 @@ use crate::{
 /// Allows you to configure watch wakeup and retrieve information about the last wakeup that occurred.
 pub struct Wakeup;
 
-static HANDLER: GlobalCallbacks<(WakeupEvent,)> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(WakeupEvent,)> = GlobalCallbacks::new(|| ());
 
 /// Possible errors that can happen when scheduling a wakeup.
 #[derive(Copy, Clone, PartialEq)]
@@ -71,20 +71,16 @@ impl Wakeup {
     }
     /// Sets or overrides a handler for wakeup events.
     /// When the app is woken up, the handler is called with the [`WakeupEvent`].
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe(
         &self,
         handler: impl Into<Callback<(WakeupEvent,)>>,
-    ) -> CallbackHandle<(WakeupEvent,)> {
+    ) -> CallbackHandle<'static, (WakeupEvent,)> {
         let handle = HANDLER.add(handler.into());
         unsafe {
             sys::wakeup_service_subscribe(Some(global_wakeup_handler));
         }
         handle
-    }
-
-    /// Removes a handler for wakeup events.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(WakeupEvent,)>) {
-        HANDLER.remove(handle);
     }
 }
 

@@ -297,7 +297,7 @@ mod sys_math {
 /// let chosen = [1, 2, 3, 4].choose(&mut Rng);
 /// ```
 ///
-/// For a simpler API, you can use [`Random`], but note that its functionality is expected to be less correct than anything available through `rand`.
+/// For a simpler API, you can use [`RandomValue`], but note that its functionality is usually less correct than anything available through `rand`.
 pub struct Rng;
 
 impl rand::TryRng for Rng {
@@ -340,7 +340,7 @@ impl Rng {
 /// but also frequently uses less code[^code-size].
 /// It is generally recommended to use [`Rng`] instead, unless you know what you are doing.
 ///
-/// [^code-size]: In one test, [`RandomValue::uniform`] used 170 fewer code bytes than `Rng.random_range`.
+/// [^code-size]: In one test, [`RandomValue::range`] used 170 fewer code bytes than `Rng.random_range`.
 #[repr(transparent)]
 pub struct RandomValue {
     value: u32,
@@ -358,7 +358,7 @@ impl RandomValue {
     /// Note that depending on the exact bound, this value is usually not exactly uniformly distributed.
     /// This may be fine for simple applications.
     /// Use [`Rng`] with [`rand::RngExt::random_range`] instead if you want uniformly distributed values.
-    /// 
+    ///
     /// Furthermore, values above 2^31 - 1 cannot be generated.
     #[allow(clippy::missing_const_for_fn)] // doesn’t make sense for a runtime value
     pub fn range(&self, upper_bound: u32) -> u32 {

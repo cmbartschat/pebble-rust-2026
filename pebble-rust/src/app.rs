@@ -168,9 +168,7 @@ impl App {
     pub fn set_message_handler(&self, callback: impl FnMut(&mut DictionaryView) + 'static) {
         unsafe {
             with_state(|state| {
-                state
-                    .inbox_received_callback
-                    .set(Box::new(callback));
+                state.inbox_received_callback.set(Box::new(callback));
                 sys::app_message_register_inbox_received(Some(global_message_handler));
             });
         }

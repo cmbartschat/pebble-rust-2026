@@ -67,7 +67,7 @@ fn main() -> i32 {
         b.single(
             Button::Up,
             move |_| {
-                APP.touch.unsubscribe(graphics_handler);
+                graphics_handler.remove();
             },
             None,
         );
@@ -78,8 +78,8 @@ fn main() -> i32 {
         Box::new(move || {
             // During unload, unsubscribe from touch events.
             // Otherwise, the event handlers are leaked.
-            APP.touch.unsubscribe(graphics_handler);
-            APP.touch.unsubscribe(logging_handler);
+            graphics_handler.remove();
+            logging_handler.remove();
         })
     }));
 

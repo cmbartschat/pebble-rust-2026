@@ -1,4 +1,4 @@
-use alloc::rc::Rc;
+use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     ClickConfigBuilder, GColor, GRect,
@@ -6,7 +6,6 @@ use crate::{
     handle::{Handle, WeakObject, new_handle},
     input::context::InputReceiver,
     layer::ChildLayer,
-    service::{Callback, CallbackHandle},
     sys,
     window::inner::WindowInner,
 };
@@ -50,50 +49,48 @@ impl Window {
         WeakWindow::from(Rc::downgrade(&self.handle))
     }
 
-    /// Adds a handler for when the window is loaded, i.e. pushed to the screen while it is not loaded.
-    pub fn add_load_handler(
-        &mut self,
-        callback: impl Into<Callback<()>>,
-    ) -> CallbackHandle<()> {
-        self.handle.borrow_mut().add_load_handler(callback)
+    /// Sets the handler for when the window is loaded, i.e. pushed to the screen while it is not loaded.
+    pub fn set_load_handler(&self, mut callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow()
+            .set_load_handler(Box::new(move |_| callback()));
+    }
+    /// Removes the window load handler.
+    pub fn clear_load_handler(&self) {
+        self.handle.borrow().clear_load_handler();
     }
 
-    /// Removes a load handler.
-    pub fn remove_load_handler(&mut self, handle: CallbackHandle<()>) {
-        self.handle.borrow_mut().remove_load_handler(handle);
+    /// Sets the handler for when the window is unloaded, i.e. no longer visible and uninitialized to free resources.
+    pub fn set_unload_handler(&mut self, mut callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow_mut()
+            .set_unload_handler(Box::new(move |_| callback()))
+    }
+    /// Removes the window unload handler.
+    pub fn clear_unload_handler(&self) {
+        self.handle.borrow().clear_unload_handler();
     }
 
-    /// Adds a handler for when the window is unloaded, i.e. no longer visible and uninitialized to free resources.
-    pub fn add_unload_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
-        self.handle.borrow_mut().add_unload_handler(callback)
+    /// Sets the handler for when the window comes up on screen.
+    pub fn set_appear_handler(&mut self, mut callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow_mut()
+            .set_appear_handler(Box::new(move |_| callback()))
+    }
+    /// Removes the window appear handler.
+    pub fn clear_appear_handler(&self) {
+        self.handle.borrow().clear_appear_handler();
     }
 
-    /// Removes an unload handler.
-    pub fn remove_unload_handler(&mut self, handle: CallbackHandle<()>) {
-        self.handle.borrow_mut().remove_unload_handler(handle);
+    /// Sets the handler for when the window disappears from screen.
+    pub fn set_disappear_handler(&mut self, mut callback: impl FnMut() + 'static) {
+        self.handle
+            .borrow()
+            .set_disappear_handler(Box::new(move |_| callback()))
     }
-
-    /// Adds a handler for when the window comes up on screen.
-    pub fn add_appear_handler(&mut self, callback: impl Into<Callback<()>>) -> CallbackHandle<()> {
-        self.handle.borrow_mut().add_appear_handler(callback)
-    }
-
-    /// Removes an appear handler.
-    pub fn remove_appear_handler(&mut self, handle: CallbackHandle<()>) {
-        self.handle.borrow_mut().remove_appear_handler(handle);
-    }
-
-    /// Adds a handler for when the window disappears from screen.
-    pub fn add_disappear_handler(
-        &mut self,
-        callback: impl Into<Callback<()>>,
-    ) -> CallbackHandle<()> {
-        self.handle.borrow_mut().add_disappear_handler(callback)
-    }
-
-    /// Removes a disappear handler.
-    pub fn remove_dsappear_handler(&mut self, handle: CallbackHandle<()>) {
-        self.handle.borrow_mut().remove_disappear_handler(handle);
+    /// Removes the window disappear handler.
+    pub fn clear_disappear_handler(&self) {
+        self.handle.borrow().clear_disappear_handler();
     }
 
     /// Sets the click handlers.

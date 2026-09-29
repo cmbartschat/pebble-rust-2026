@@ -1,17 +1,17 @@
 use core::cell::RefCell;
 
-use crate::{effect::Effect, service::GlobalCallbacks};
+use crate::{effect::Effect, service::SingleCallbackFn};
 
 pub(crate) struct WindowUserData {
-    pub(crate) load_handler: GlobalCallbacks<()>,
-    pub(crate) appear_handler: GlobalCallbacks<()>,
-    pub(crate) disappear_handler: GlobalCallbacks<()>,
-    pub(crate) unload_handler: GlobalCallbacks<()>,
+    pub(crate) load_handler: SingleCallbackFn<()>,
+    pub(crate) appear_handler: SingleCallbackFn<()>,
+    pub(crate) disappear_handler: SingleCallbackFn<()>,
+    pub(crate) unload_handler: SingleCallbackFn<()>,
     pub(crate) appear_effect: RefCell<Effect>,
     pub(crate) load_effect: RefCell<Effect>,
 }
 
-fn dispatch_handler(handler: &GlobalCallbacks<()>) {
+fn dispatch_handler(handler: &SingleCallbackFn<()>) {
     handler.dispatch(());
 }
 

@@ -56,12 +56,19 @@ pub enum AccelerometerSamplingRate {
     Hz100 = sys::AccelSamplingRate_ACCEL_SAMPLING_100HZ,
 }
 
-static TAP_HANDLER: GlobalCallbacks<(AccelerometerAxis,)> = GlobalCallbacks::new();
-static DATA_HANDLER: GlobalCallbacks<(&[AccelerometerData],)> = GlobalCallbacks::new();
+static TAP_HANDLER: GlobalCallbacks<(AccelerometerAxis,)> = GlobalCallbacks::new(|| unsafe {
+    sys::accel_tap_service_unsubscribe();
+});
+static DATA_HANDLER: GlobalCallbacks<(&[AccelerometerData],)> = GlobalCallbacks::new(|| {
+    critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, false));
+    unsafe {
+        sys::accel_data_service_unsubscribe();
+    }
+});
 // FIXME: Workaround for crashes when we set the global accelerometer handler more than once without unsetting it.
 //        This should be a general feature for GlobalCallbacks that allows them to intelligently only set the handler once.
 static DATA_HANDLER_IS_INITIALIZED: Mutex<RefCell<bool>> = Mutex::new(RefCell::new(false));
-static RAW_HANDLER: GlobalCallbacks<(&AccelerometerRawData,)> = GlobalCallbacks::new();
+static RAW_HANDLER: GlobalCallbacks<(&AccelerometerRawData,)> = GlobalCallbacks::new(|| ());
 
 impl Accelerometer {
     pub(crate) const fn new() -> Self {
@@ -113,9 +120,12 @@ impl Accelerometer {
     /// Subscribe to accelerometer events.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
-    // NOTE: The 'static on the handle type is fake to make the borrow checker shut up;
-    //       it doesn’t actually matter since these are phantom type parameters for CallbackHandle.
-    pub fn subscribe<H>(&self, handler: H) -> CallbackHandle<(&'static [AccelerometerData],)>
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    // NOTE: The 'static on the handle type is fake to make the borrow checker shut up; it doesn’t actually matter.
+    pub fn subscribe<H>(
+        &'static self,
+        handler: H,
+    ) -> CallbackHandle<'static, (&'static [AccelerometerData],)>
     where
         H: for<'a> Into<Callback<(&'a [AccelerometerData],)>>,
     {
@@ -134,24 +144,14 @@ impl Accelerometer {
         handle
     }
 
-    /// Unsubscribe from accelerometer events.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(&'static [AccelerometerData],)>) {
-        DATA_HANDLER.remove(handle);
-        if DATA_HANDLER.is_empty() {
-            critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, false));
-            unsafe {
-                sys::accel_data_service_unsubscribe();
-            }
-        }
-    }
-
     /// Subscribe to tap events.
     /// These are emitted whenever the watch is tapped or shaken along an axis.
     /// The handler is a function that receives the accelerometer axis as its only argument.
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe_to_tap(
-        &self,
+        &'static self,
         handler: impl Into<Callback<(AccelerometerAxis,)>>,
-    ) -> CallbackHandle<(AccelerometerAxis,)> {
+    ) -> CallbackHandle<'static, (AccelerometerAxis,)> {
         let handle = TAP_HANDLER.add(handler.into());
         unsafe {
             sys::accel_tap_service_subscribe(Some(global_accel_tap_handler));
@@ -159,24 +159,15 @@ impl Accelerometer {
         handle
     }
 
-    /// Unsubscribe from tap events.
-    pub fn unsubscribe_from_tap(&self, handle: CallbackHandle<(AccelerometerAxis,)>) {
-        TAP_HANDLER.remove(handle);
-        if TAP_HANDLER.is_empty() {
-            unsafe {
-                sys::accel_tap_service_unsubscribe();
-            }
-        }
-    }
-
     /// Subscribe to raw accelerometer events.
     /// These events omit the timestamp and the vibration information.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe_to_raw<H>(
-        &self,
+        &'static self,
         handler: H,
-    ) -> CallbackHandle<(&'static AccelerometerRawData,)>
+    ) -> CallbackHandle<'static, (&'static AccelerometerRawData,)>
     where
         H: for<'a> Into<Callback<(&'a AccelerometerRawData,)>>,
     {
@@ -188,11 +179,6 @@ impl Accelerometer {
             );
         }
         handle
-    }
-
-    /// Remove a raw accelerometer event handler.
-    pub fn unsubscribe_from_raw(handle: CallbackHandle<(&'static AccelerometerRawData,)>) {
-        RAW_HANDLER.remove(handle);
     }
 }
 

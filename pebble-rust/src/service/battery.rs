@@ -6,7 +6,9 @@ use crate::{
 /// Accessor for the battery charge state.
 pub struct BatteryState(());
 
-static HANDLER: GlobalCallbacks<(BatteryChargeState,)> = GlobalCallbacks::new();
+static HANDLER: GlobalCallbacks<(BatteryChargeState,)> = GlobalCallbacks::new(|| unsafe {
+    sys::battery_state_service_unsubscribe();
+});
 
 /// The actual state of the battery charge.
 /// This has fields for the battery percentage, whether the battery is being charged, and whether it is plugged in.
@@ -19,25 +21,16 @@ impl BatteryState {
 
     /// Subscribe to battery state events.
     /// The handler is a function that receives the battery charge state.
+    /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe(
-        &self,
+        &'static self,
         handler: impl Into<Callback<(BatteryChargeState,)>>,
-    ) -> CallbackHandle<(BatteryChargeState,)> {
+    ) -> CallbackHandle<'static, (BatteryChargeState,)> {
         let handle = HANDLER.add(handler.into());
         unsafe {
             sys::battery_state_service_subscribe(Some(global_battery_handler));
         }
         handle
-    }
-
-    /// Unsubscribe the handler from battery state events.
-    pub fn unsubscribe(&self, handle: CallbackHandle<(BatteryChargeState,)>) {
-        HANDLER.remove(handle);
-        if HANDLER.is_empty() {
-            unsafe {
-                sys::battery_state_service_unsubscribe();
-            }
-        }
     }
 
     /// Retrieve the current battery charge state.

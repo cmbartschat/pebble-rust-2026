@@ -12,14 +12,23 @@ pub struct UnobstructedArea {
 impl UnobstructedArea {
     pub(crate) const fn new() -> Self {
         Self {
-            callback: GlobalCallbacks::new(),
+            callback: GlobalCallbacks::new(|| {
+                #[cfg(not(platform = "aplite"))]
+                unsafe {
+                    sys::unobstructed_area_service_unsubscribe();
+                }
+            }),
         }
     }
 
     /// Adds a handler for unobstructed area events.
     /// The handler function receives the new unobstructed area.
     /// This function is a noop on platforms without unobstructed area functionality.
-    pub fn subscribe(&self, handler: impl Into<Callback<GRect>>) -> CallbackHandle<GRect> {
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe(
+        &'static self,
+        handler: impl Into<Callback<GRect>>,
+    ) -> CallbackHandle<'static, GRect> {
         let handle = self.callback.add(handler.into());
         #[cfg(not(platform = "aplite"))]
         unsafe {
@@ -33,17 +42,6 @@ impl UnobstructedArea {
             );
         }
         handle
-    }
-
-    /// Removes the unobstructed area change handler.
-    pub fn unsubscribe(&self, handle: CallbackHandle<GRect>) {
-        self.callback.remove(handle);
-        if self.callback.is_empty() {
-            #[cfg(not(platform = "aplite"))]
-            unsafe {
-                sys::unobstructed_area_service_unsubscribe();
-            }
-        }
     }
 }
 

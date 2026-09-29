@@ -161,6 +161,7 @@ impl Layer {
         unsafe { sys::layer_set_bounds(self.as_ptr(), bounds) };
     }
 
+    #[allow(clippy::type_complexity)] // internal API
     fn modify_update_handlers_inner(
         &mut self,
         proc: Option<unsafe extern "C" fn(layer: *mut sys::Layer, ctx: *mut sys::GContext)>,
