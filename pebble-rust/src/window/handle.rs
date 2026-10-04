@@ -13,7 +13,6 @@ use crate::{
 /// The window represents the entire screen of the watch, and is the entry point for all graphics APIs.
 /// An app can consist of a stack of windows.
 /// See also the [Pebble documentation for windows](https://developer.repebble.com/docs/c/User_Interface/Window/).
-#[derive(Clone)]
 pub struct Window {
     pub(crate) handle: Handle<WindowInner>,
 }
@@ -122,6 +121,16 @@ impl Window {
     /// Set the effect for loading the window, see [`EffectCallback`].
     pub fn set_load_effect(&mut self, callback: EffectCallback) {
         self.handle.borrow_mut().set_load_effect(callback);
+    }
+
+    /// Create a clone of the window handle. Cloning window handles can create circular
+    /// references if a window contains a callback (either directly, or through a layer) that
+    /// captures a reference back to the window. To avoid memory leaks, it is recommended to use
+    ///  [`Window::downgrade`] wherever possible.
+    pub fn clone_handle(handle: &Window) -> Self {
+        Self {
+            handle: handle.handle.clone(),
+        }
     }
 }
 
