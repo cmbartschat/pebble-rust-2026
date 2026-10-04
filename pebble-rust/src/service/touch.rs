@@ -1,18 +1,30 @@
 use core::ffi::c_void;
 
-use alloc::boxed::Box;
-
-use crate::{GPoint, log_c_str, service::global_callback::GlobalCallback, sys};
+use crate::{
+    GPoint, log_c_str,
+    service::global_callback::{Callback, CallbackHandle, GlobalCallbacks},
+    sys,
+};
 
 /// Allows you to subscribe to touch events.
 pub struct Touch {
-    callback: GlobalCallback<TouchEvent, ()>,
+    callback: GlobalCallbacks<(TouchEvent,)>,
 }
 
 impl Touch {
     pub(crate) const fn new() -> Self {
         Self {
-            callback: GlobalCallback::new(),
+            callback: GlobalCallbacks::new(|| {
+                #[cfg(not(any(
+                    platform = "aplite",
+                    platform = "basalt",
+                    platform = "chalk",
+                    platform = "diorite"
+                )))]
+                unsafe {
+                    sys::touch_service_unsubscribe();
+                }
+            }),
         }
     }
 
@@ -31,11 +43,15 @@ impl Touch {
         false
     }
 
-    /// Sets or overwrites the handler for touch events.
+    /// Adds a handler for touch events.
     /// The handler function receives the touch event.
     /// This function is a noop on platforms without touch.
-    pub fn subscribe(&self, handler: Box<dyn FnMut(TouchEvent)>) {
-        self.callback.set(handler);
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe(
+        &'static self,
+        handler: impl Into<Callback<(TouchEvent,)>>,
+    ) -> CallbackHandle<'static, (TouchEvent,)> {
+        let handle = self.callback.add(handler.into());
         // No touch on these platforms, therefore subscribing to touch events is a noop.
         #[cfg(not(any(
             platform = "aplite",
@@ -48,20 +64,7 @@ impl Touch {
                 sys::touch_service_subscribe(Some(global_touch_handler), self.callback.as_void());
             }
         }
-    }
-
-    /// Removes the touch event handler.
-    pub fn unsubscribe(&self) {
-        #[cfg(not(any(
-            platform = "aplite",
-            platform = "basalt",
-            platform = "chalk",
-            platform = "diorite"
-        )))]
-        {
-            unsafe { sys::touch_service_unsubscribe() }
-        }
-        self.callback.clear()
+        handle
     }
 }
 
@@ -70,11 +73,12 @@ extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut 
     log_c_str(c"touch received");
     unsafe {
         let event = TouchEvent::try_from(event.as_ref().unwrap()).unwrap();
-        GlobalCallback::<TouchEvent, ()>::dispatch_callback(context, event);
+        GlobalCallbacks::<(TouchEvent,)>::dispatch_callback(context, (event,));
     }
 }
 
 /// The different kinds of touch event.
+#[derive(Clone, Copy)]
 pub enum TouchEvent {
     /// Touch started at the given coordinate.
     TouchDown(GPoint),

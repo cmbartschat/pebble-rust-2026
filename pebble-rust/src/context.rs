@@ -6,6 +6,7 @@ use crate::{Angle, TextAlignment, TextAttributes, sys};
 use crate::{GColor, GPoint, GRect};
 
 /// A graphics drawing context, to use graphics functionality on any layer.
+#[derive(Clone, Copy)] // This is a non-owned pointer which is safe to copy
 pub struct GContext {
     raw: NonNull<sys::GContext>,
 }

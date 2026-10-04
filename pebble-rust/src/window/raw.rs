@@ -1,15 +1,11 @@
 use core::{ffi::c_void, ptr::NonNull};
 
-use alloc::boxed::Box;
-
 use crate::{
     GColor, GRect,
     input::{context::InputContext, handlers::global_click_config_handler},
     sys,
     window::{callbacks, user_data::WindowUserData},
 };
-
-pub type Callback = Box<dyn FnMut() + 'static>;
 
 pub(crate) struct WindowRaw {
     raw: NonNull<sys::Window>,

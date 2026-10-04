@@ -1,9 +1,12 @@
 use core::{cell::RefCell, slice};
 
-use alloc::boxed::Box;
 use critical_section::Mutex;
 
-use crate::{log_c_str, service::global_callback::GlobalCallback, sys};
+use crate::{
+    log_c_str,
+    service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
+    sys,
+};
 
 /// Accessor for the accelerometer data.
 /// See the member functions for details.
@@ -53,13 +56,19 @@ pub enum AccelerometerSamplingRate {
     Hz100 = sys::AccelSamplingRate_ACCEL_SAMPLING_100HZ,
 }
 
-static TAP_HANDLER: GlobalCallback<AccelerometerAxis, ()> = GlobalCallback::new();
-static DATA_HANDLER: GlobalCallback<&[AccelerometerData], ()> = GlobalCallback::new();
-static RAW_HANDLER: GlobalCallback<&AccelerometerRawData, ()> = GlobalCallback::new();
-
-/// The handler for accelerometer events.
-/// This is a function that takes in a slice of [`AccelerometerData`].
-pub type AccelerometerHandler = Box<dyn FnMut(&[AccelerometerData])>;
+static TAP_HANDLER: GlobalCallbacks<(AccelerometerAxis,)> = GlobalCallbacks::new(|| unsafe {
+    sys::accel_tap_service_unsubscribe();
+});
+static DATA_HANDLER: GlobalCallbacks<(&[AccelerometerData],)> = GlobalCallbacks::new(|| {
+    critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, false));
+    unsafe {
+        sys::accel_data_service_unsubscribe();
+    }
+});
+// FIXME: Workaround for crashes when we set the global accelerometer handler more than once without unsetting it.
+//        This should be a general feature for GlobalCallbacks that allows them to intelligently only set the handler once.
+static DATA_HANDLER_IS_INITIALIZED: Mutex<RefCell<bool>> = Mutex::new(RefCell::new(false));
+static RAW_HANDLER: GlobalCallbacks<(&AccelerometerRawData,)> = GlobalCallbacks::new(|| ());
 
 impl Accelerometer {
     pub(crate) const fn new() -> Self {
@@ -111,59 +120,71 @@ impl Accelerometer {
     /// Subscribe to accelerometer events.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
-    pub fn subscribe(&self, handler: AccelerometerHandler) {
-        DATA_HANDLER.set(handler);
-        unsafe {
-            sys::accel_data_service_subscribe(
-                self.get_samples_per_update(),
-                Some(global_accel_data_handler),
-            );
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    // NOTE: The 'static on the handle type is fake to make the borrow checker shut up; it doesn’t actually matter.
+    pub fn subscribe<H>(
+        &'static self,
+        handler: H,
+    ) -> CallbackHandle<'static, (&'static [AccelerometerData],)>
+    where
+        H: for<'a> Into<Callback<(&'a [AccelerometerData],)>>,
+    {
+        let handle = DATA_HANDLER.add(handler.into());
+        // Poor man’s compare-exchange :)
+        let is_initialized =
+            critical_section::with(|cs| DATA_HANDLER_IS_INITIALIZED.replace(cs, true));
+        if !is_initialized {
+            unsafe {
+                sys::accel_data_service_subscribe(
+                    self.get_samples_per_update(),
+                    Some(global_accel_data_handler),
+                );
+            }
         }
-    }
-
-    /// Unsubscribe from accelerometer events.
-    pub fn unsubscribe(&self) {
-        unsafe { sys::accel_data_service_unsubscribe() };
-        DATA_HANDLER.clear()
+        handle
     }
 
     /// Subscribe to tap events.
     /// These are emitted whenever the watch is tapped or shaken along an axis.
     /// The handler is a function that receives the accelerometer axis as its only argument.
-    /// This overrides any previous handler that is subscribed to these events.
-    pub fn subscribe_to_tap(&self, handler: Box<dyn FnMut(AccelerometerAxis)>) {
-        TAP_HANDLER.set(handler);
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe_to_tap(
+        &'static self,
+        handler: impl Into<Callback<(AccelerometerAxis,)>>,
+    ) -> CallbackHandle<'static, (AccelerometerAxis,)> {
+        let handle = TAP_HANDLER.add(handler.into());
         unsafe {
             sys::accel_tap_service_subscribe(Some(global_accel_tap_handler));
         }
-    }
-
-    /// Unsubscribe from tap events.
-    pub fn unsubscribe_from_tap(&self) {
-        unsafe { sys::accel_tap_service_unsubscribe() };
-        TAP_HANDLER.clear()
+        handle
     }
 
     /// Subscribe to raw accelerometer events.
     /// These events omit the timestamp and the vibration information.
     /// To configure the sample rate, or the number of samples per update, use [`Self::set_sampling_rate`] and [`Self::set_samples_per_update`], which is also possible after the handler has been already set.
     /// This overrides any previous handler that is subscribed to these events.
-    ///
-    /// Note: You cannot unsubscribe from raw events, since this functionality is unfortunately not available from the C API.
-    pub fn subscribe_to_raw(&self, handler: Box<dyn FnMut(&AccelerometerRawData)>) {
-        RAW_HANDLER.set(handler);
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe_to_raw<H>(
+        &'static self,
+        handler: H,
+    ) -> CallbackHandle<'static, (&'static AccelerometerRawData,)>
+    where
+        H: for<'a> Into<Callback<(&'a AccelerometerRawData,)>>,
+    {
+        let handle = RAW_HANDLER.add(handler.into());
         unsafe {
             sys::accel_raw_data_service_subscribe(
                 self.get_samples_per_update(),
                 Some(global_accel_raw_data_handler),
             );
         }
+        handle
     }
 }
 
 extern "C" fn global_accel_data_handler(data: *mut AccelerometerData, num_samples: u32) {
     let slice = unsafe { slice::from_raw_parts(data, num_samples as usize) };
-    DATA_HANDLER.dispatch(slice);
+    DATA_HANDLER.dispatch((slice,));
 }
 
 extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32) {
@@ -179,7 +200,7 @@ extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32)
         }
     };
 
-    TAP_HANDLER.dispatch(axis);
+    TAP_HANDLER.dispatch((axis,));
 }
 
 extern "C" fn global_accel_raw_data_handler(
@@ -188,6 +209,6 @@ extern "C" fn global_accel_raw_data_handler(
     _timestamp_ms: u64,
 ) {
     unsafe {
-        RAW_HANDLER.dispatch(data.as_ref().unwrap());
+        RAW_HANDLER.dispatch((data.as_ref().unwrap(),));
     }
 }

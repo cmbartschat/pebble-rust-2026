@@ -1,0 +1,32 @@
+{
+	"author": "",
+	"dependencies": {
+		"base-x": "^5.0.1"
+	},
+	"keywords": [
+		"pebble-app"
+	],
+	"name": "multiple-touch-handlers",
+	"pebble": {
+		"capabilities": [
+			"configurable"
+		],
+		"displayName": "Multiple Touch Handlers Example",
+		"enableMultiJS": true,
+		"messageKeys": [],
+		"projectType": "native",
+		"resources": {
+			"media": []
+		},
+		"sdkVersion": "3",
+		"targetPlatforms": [
+			"emery",
+			"gabbro"
+		],
+		"uuid": "c89a1b56-ec0e-4a76-ae62-e23ef6dd15f7",
+		"watchapp": {
+			"watchface": false
+		}
+	},
+	"version": "0.1.0"
+}

@@ -8,12 +8,9 @@ use crate::{
     handle::new_handle,
     input::context::{InputContext, InputReceiver},
     layer::{ChildLayer, LayerInner},
-    service::GlobalCallbackInner,
+    service::SingleCallback,
     sys,
-    window::{
-        raw::{Callback, WindowRaw},
-        user_data::WindowUserData,
-    },
+    window::{raw::WindowRaw, user_data::WindowUserData},
 };
 
 struct ConnectedInput {
@@ -37,10 +34,10 @@ impl WindowInner {
         let layer = unsafe { LayerInner::from_ptr(raw.get_root_layer(), false)? };
 
         let user_data = Box::pin(WindowUserData {
-            load_handler: RefCell::new(GlobalCallbackInner::new()),
-            appear_handler: RefCell::new(GlobalCallbackInner::new()),
-            disappear_handler: RefCell::new(GlobalCallbackInner::new()),
-            unload_handler: RefCell::new(GlobalCallbackInner::new()),
+            load_handler: SingleCallback::new(),
+            appear_handler: SingleCallback::new(),
+            disappear_handler: SingleCallback::new(),
+            unload_handler: SingleCallback::new(),
             appear_effect: RefCell::new(Effect::None),
             load_effect: RefCell::new(Effect::None),
         });
@@ -84,45 +81,36 @@ impl WindowInner {
         self.root_layer.remove_child_layers();
     }
 
-    pub fn set_load_handler(&mut self, callback: Callback) {
-        self.user_data.load_handler.borrow_mut().set(Some(callback));
+    pub fn set_load_handler(&self, callback: Box<dyn FnMut(()) + 'static>) {
+        self.user_data.load_handler.set(callback);
     }
 
-    pub fn clear_load_handler(&mut self) {
-        self.user_data.load_handler.borrow_mut().set(None);
+    pub fn clear_load_handler(&self) {
+        self.user_data.load_handler.clear();
     }
 
-    pub fn set_unload_handler(&mut self, callback: Callback) {
-        self.user_data
-            .unload_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn set_unload_handler(&self, callback: Box<dyn FnMut(()) + 'static>) {
+        self.user_data.unload_handler.set(callback);
     }
 
-    pub fn clear_unload_handler(&mut self) {
-        self.user_data.unload_handler.borrow_mut().set(None);
+    pub fn clear_unload_handler(&self) {
+        self.user_data.unload_handler.clear();
     }
 
-    pub fn set_appear_handler(&mut self, callback: Callback) {
-        self.user_data
-            .appear_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn set_appear_handler(&self, callback: Box<dyn FnMut(()) + 'static>) {
+        self.user_data.appear_handler.set(callback);
     }
 
-    pub fn clear_appear_handler(&mut self) {
-        self.user_data.appear_handler.borrow_mut().set(None);
+    pub fn clear_appear_handler(&self) {
+        self.user_data.appear_handler.clear();
     }
 
-    pub fn set_disappear_handler(&mut self, callback: Callback) {
-        self.user_data
-            .disappear_handler
-            .borrow_mut()
-            .set(Some(callback));
+    pub fn set_disappear_handler(&self, callback: Box<dyn FnMut(()) + 'static>) {
+        self.user_data.disappear_handler.set(callback);
     }
 
-    pub fn clear_disappear_handler(&mut self) {
-        self.user_data.disappear_handler.borrow_mut().set(None);
+    pub fn clear_disappear_handler(&self) {
+        self.user_data.disappear_handler.clear();
     }
 
     pub(crate) fn is_equal(&self, other: *const sys::Window) -> bool {

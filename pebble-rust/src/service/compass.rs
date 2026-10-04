@@ -1,11 +1,15 @@
-use alloc::boxed::Box;
-
-use crate::{Angle, log_c_str, service::global_callback::GlobalCallback, sys};
+use crate::{
+    Angle, log_c_str,
+    service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
+    sys,
+};
 
 /// Accessor for compass data.
 pub struct Compass(());
 
-static HANDLER: GlobalCallback<CompassHeading, ()> = GlobalCallback::new();
+static HANDLER: GlobalCallbacks<(CompassHeading,)> = GlobalCallbacks::new(|| unsafe {
+    sys::compass_service_unsubscribe();
+});
 
 impl Compass {
     pub(crate) const fn new() -> Self {
@@ -31,17 +35,16 @@ impl Compass {
     /// Subscribe to compass events.
     /// The function receives the current compass heading, see [`CompassHeading`] for details.
     /// This overrides any previous handler that is subscribed to these events.
-    pub fn subscribe(&self, handler: Box<dyn FnMut(CompassHeading)>) {
-        HANDLER.set(handler);
+    /// The returned handle can be used to unsubscribe the callback from the events.
+    pub fn subscribe(
+        &'static self,
+        handler: impl Into<Callback<(CompassHeading,)>>,
+    ) -> CallbackHandle<'static, (CompassHeading,)> {
+        let handle = HANDLER.add(handler.into());
         unsafe {
             sys::compass_service_subscribe(Some(global_compass_handler));
         }
-    }
-
-    /// Unsubscribe from compass events.
-    pub fn unsubscribe(&self) {
-        unsafe { sys::compass_service_unsubscribe() }
-        HANDLER.clear()
+        handle
     }
 
     /// Retrieve the current compass heading.
@@ -59,7 +62,7 @@ impl Compass {
 
 extern "C" fn global_compass_handler(event: sys::CompassHeadingData) {
     let event = CompassHeading::from(event);
-    HANDLER.dispatch(event);
+    HANDLER.dispatch((event,));
 }
 
 /// Possible compass data.
@@ -71,6 +74,7 @@ extern "C" fn global_compass_handler(event: sys::CompassHeadingData) {
 /// assert!(Angle::try_from(invalid_heading).is_err());
 /// assert!(Angle::try_from(south) == Ok(Angle::from_degrees(180)));
 /// ```
+#[derive(Clone, Copy)]
 pub enum CompassHeading {
     /// Compass heading is unavailable.
     Unavailable,
