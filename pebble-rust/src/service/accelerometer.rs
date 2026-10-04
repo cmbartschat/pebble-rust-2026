@@ -33,6 +33,8 @@ pub enum AccelerometerAxis {
     NegY,
     /// Positive Z, towards the bottom of the watch.
     NegZ,
+    /// Unspecified axis, see https://github.com/coredevices/PebbleOS/blob/9ca5706b8e521277fc686130f7b1084faceea1ed/src/fw/drivers/imu/lsm6dso/lsm6dso.c#L447-L449
+    Unspecified,
 }
 
 /// An accelerometer sample, including timestamp and vibration rumble status.
@@ -195,9 +197,7 @@ extern "C" fn global_accel_tap_handler(axis: sys::AccelAxisType, direction: i32)
         (sys::AccelAxisType_ACCEL_AXIS_Y, 1) => AccelerometerAxis::PosY,
         (sys::AccelAxisType_ACCEL_AXIS_Z, -1) => AccelerometerAxis::NegZ,
         (sys::AccelAxisType_ACCEL_AXIS_Z, 1) => AccelerometerAxis::PosZ,
-        _ => {
-            return;
-        }
+        _ => AccelerometerAxis::Unspecified,
     };
 
     TAP_HANDLER.dispatch((axis,));
