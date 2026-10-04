@@ -221,31 +221,65 @@ impl<P> GlobalCallbacks<P> {
     }
 }
 
+struct SingleCallbackInner<F: ?Sized> {
+    value: Option<Box<F>>,
+    configured_during_dispatch: bool,
+}
+
+impl<F: ?Sized> SingleCallbackInner<F> {
+    pub const fn new() -> Self {
+        Self {
+            value: None,
+            configured_during_dispatch: false,
+        }
+    }
+
+    pub fn set(&mut self, value: Option<Box<F>>) {
+        self.value = value;
+        self.configured_during_dispatch = true;
+    }
+
+    pub const fn take(&mut self) -> Option<Box<F>> {
+        self.configured_during_dispatch = false;
+        self.value.take()
+    }
+
+    pub fn maybe_restore(&mut self, value: Box<F>) {
+        if self.configured_during_dispatch {
+            // NOTE(christoph): A value configured while in the process of being dispatched
+            // should not be restored to the previous value, it should retain the new value.
+            self.configured_during_dispatch = false;
+            return;
+        }
+        self.value = Some(value);
+    }
+}
+
 /// Callback storage when there is only one event handler.
 /// F is always `dyn FnMut(Args)`, but we can’t say that here or risk making lifetimes in `Args` invariant.
 /// If you don’t need to worry about higher-ranked trait bounds (HRTBs), aka. `for<'a> FnMut(&'a SomeArgument)`, just use [`SingleCallbackFn`].
 /// (See [here](https://doc.rust-lang.org/stable/nomicon/hrtb.html) for more information.)
 pub struct SingleCallback<F: ?Sized> {
     /// Actual function.
-    function: Mutex<RefCell<Option<Box<F>>>>,
+    function: Mutex<RefCell<SingleCallbackInner<F>>>,
 }
 
 impl<F: ?Sized> SingleCallback<F> {
     pub fn set(&self, value: Box<F>) {
         MutexToken::with(|token| {
-            *self.function.borrow_mut(token) = Some(value);
+            self.function.borrow_mut(token).set(Some(value));
         });
     }
 
     pub fn clear(&self) {
         MutexToken::with(|token| {
-            *self.function.borrow_mut(token) = None;
+            self.function.borrow_mut(token).set(None);
         });
     }
 
     pub const fn new() -> Self {
         Self {
-            function: Mutex::new(RefCell::new(None)),
+            function: Mutex::new(RefCell::new(SingleCallbackInner::new())),
         }
     }
 
@@ -260,7 +294,7 @@ impl<F: ?Sized> SingleCallback<F> {
         if let Some(mut function) = function {
             function(args);
             MutexToken::with(|token| {
-                *self.function.borrow_mut(token) = Some(function);
+                self.function.borrow_mut(token).maybe_restore(function);
             });
         }
     }
