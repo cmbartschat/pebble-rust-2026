@@ -4,8 +4,8 @@ use alloc::{boxed::Box, rc::Rc};
 
 use crate::{
     handle::{Handle, WeakHandle, new_handle},
-    log_c_str,
     raw_timer::RawTimer,
+    warn,
 };
 
 struct OnceContext {
@@ -19,7 +19,7 @@ impl OnceContext {
             handle.take();
         }
         let Some(callback) = self.callback.take() else {
-            log_c_str(c"Unexpected: OnceContext dispatch missing callback");
+            warn!("Unexpected: OnceContext dispatch missing callback");
             return;
         };
 
@@ -60,7 +60,7 @@ impl RepeatContext {
         );
 
         if new_timer.is_none() {
-            log_c_str(c"Unexpected: repeated timer failed to repeat");
+            warn!("Unexpected: repeated timer failed to repeat");
             return RepeatState::Stopped;
         }
 
@@ -146,7 +146,7 @@ fn drop_timer_once_context(data: *mut c_void) {
 extern "C" fn global_timer_repeat_handler(data: *mut c_void) {
     match unsafe {
         let Some(data) = (data as *mut RepeatContext).as_mut() else {
-            log_c_str(c"Unexpected: Repeat handler called without context");
+            warn!("Unexpected: Repeat handler called without context");
             return;
         };
         data.dispatch()

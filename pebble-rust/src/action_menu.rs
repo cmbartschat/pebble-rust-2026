@@ -10,8 +10,9 @@ use alloc::{boxed::Box, ffi::CString, vec::Vec};
 use crate::{
     GColor,
     color::{GCOLOR_BLACK, GCOLOR_DUKE_BLUE},
+    error,
     handle::{Handle, new_handle},
-    log_c_str, sys,
+    sys,
 };
 
 struct ActionData {
@@ -262,7 +263,7 @@ extern "C" fn global_handle_action_perform(
 ) {
     let data_ptr = unsafe { sys::action_menu_item_get_action_data(action) };
     if data_ptr.is_null() {
-        log_c_str(c"unexpected perform on null action");
+        error!("unexpected perform on null action");
         return;
     }
     let mut data = unsafe { Box::from_raw(data_ptr as *mut ActionData) };

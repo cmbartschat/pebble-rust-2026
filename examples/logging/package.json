@@ -1,0 +1,37 @@
+{
+	"author": "",
+	"dependencies": {
+		"base-x": "^5.0.1"
+	},
+	"keywords": [
+		"pebble-app"
+	],
+	"name": "logging",
+	"pebble": {
+		"capabilities": [
+			"configurable"
+		],
+		"displayName": "Logging Example",
+		"enableMultiJS": true,
+		"messageKeys": [],
+		"projectType": "native",
+		"resources": {
+			"media": []
+		},
+		"sdkVersion": "3",
+		"targetPlatforms": [
+			"aplite",
+			"basalt",
+			"chalk",
+			"diorite",
+			"emery",
+			"flint",
+			"gabbro"
+		],
+		"uuid": "94002571-5923-42d1-8eba-e9f0156b0a08",
+		"watchapp": {
+			"watchface": false
+		}
+	},
+	"version": "0.1.0"
+}

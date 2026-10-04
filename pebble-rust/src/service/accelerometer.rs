@@ -3,9 +3,8 @@ use core::{cell::RefCell, slice};
 use critical_section::Mutex;
 
 use crate::{
-    log_c_str,
     service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
-    sys,
+    sys, warn,
 };
 
 /// Accessor for the accelerometer data.
@@ -104,7 +103,7 @@ impl Accelerometer {
     /// More than 25 is not possible.
     pub fn set_samples_per_update(&self, mut samples_per_update: u32) {
         if samples_per_update > 25 {
-            log_c_str(c"Unexpected: samples_per_update should be 0-25");
+            warn!("Unexpected: samples_per_update should be 0-25");
             samples_per_update = 25;
         }
         critical_section::with(|cs| {

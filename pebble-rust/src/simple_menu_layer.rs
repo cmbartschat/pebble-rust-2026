@@ -12,7 +12,7 @@ use crate::{
     handle::{Handle, WeakObject, new_handle},
     input::context::InputReceiver,
     layer::{ChildLayer, LayerInner},
-    log_c_str, sys,
+    sys, warn,
     window::WeakWindow,
 };
 
@@ -118,7 +118,7 @@ extern "C" fn global_simple_menu_select_handler(index: i32, context: *mut c_void
             count += 1;
         }
     }
-    log_c_str(c"no matched callback for index");
+    warn!("no matched callback for index");
 }
 
 impl SimpleMenuItem {

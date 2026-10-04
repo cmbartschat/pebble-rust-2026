@@ -10,9 +10,9 @@ use crate::{
     TimeUnits, Window,
     app_message_result::{AppMessageResult, app_message_result_from_raw},
     dictionary::{DictionaryBuilder, DictionaryView},
-    log::log_c_str,
+    error,
     service::{self, SingleCallback, SingleCallbackFn},
-    sys,
+    sys, trace,
 };
 
 pub(crate) struct AppState {
@@ -69,7 +69,7 @@ extern "C" fn global_message_handler(
     _data: *mut ffi::c_void,
 ) {
     let Some(mut message) = DictionaryView::from_raw(message) else {
-        log_c_str(c"Unexpected null message in inbox");
+        error!("Unexpected null message in inbox");
         return;
     };
     unsafe {
@@ -95,7 +95,7 @@ extern "C" fn tick_handler(_tick_time: *mut sys::tm, _units_changed: sys::TimeUn
 }
 
 extern "C" fn global_inbox_dropped_handler(_: u16, _: *mut c_void) {
-    log_c_str(c"inbox_dropped");
+    trace!("inbox_dropped");
 }
 
 extern "C" fn global_outbox_failed_handler(
@@ -103,28 +103,28 @@ extern "C" fn global_outbox_failed_handler(
     reason: sys::AppMessageResult,
     _context: *mut ::core::ffi::c_void,
 ) {
-    log_c_str(c"outbox failed");
+    error!("outbox failed");
     if let Err(err) = app_message_result_from_raw(reason) {
         match err {
-            crate::AppMessageError::AlreadyReleased => log_c_str(c"  reason: already released"),
-            crate::AppMessageError::AppNotRunning => log_c_str(c"  reason: not running"),
-            crate::AppMessageError::BufferOverflow => log_c_str(c"  reason: buffer overflow"),
-            crate::AppMessageError::Busy => log_c_str(c"  reason: busy"),
+            crate::AppMessageError::AlreadyReleased => error!("  reason: already released"),
+            crate::AppMessageError::AppNotRunning => error!("  reason: not running"),
+            crate::AppMessageError::BufferOverflow => error!("  reason: buffer overflow"),
+            crate::AppMessageError::Busy => error!("  reason: busy"),
             crate::AppMessageError::CallbackAlreadyRegistered => {
-                log_c_str(c"  reason: callback already registered")
+                error!("  reason: callback already registered")
             }
             crate::AppMessageError::CallbackNotRegistered => {
-                log_c_str(c"  reason: no callback registered")
+                error!("  reason: no callback registered")
             }
-            crate::AppMessageError::Closed => log_c_str(c"  reason: closed"),
-            crate::AppMessageError::InternalError => log_c_str(c"  reason: internal error"),
-            crate::AppMessageError::InvalidArgs => log_c_str(c"  reason: invalid arguments (?)"),
-            crate::AppMessageError::InvalidState => log_c_str(c"  reason: invalid state"),
-            crate::AppMessageError::NotConnected => log_c_str(c"  reason: not connected"),
-            crate::AppMessageError::OutOfMemory => log_c_str(c"  reason: out of memory"),
-            crate::AppMessageError::SendRejected => log_c_str(c"  reason: send rejected"),
-            crate::AppMessageError::SendTimeout => log_c_str(c"  reason: timeout"),
-            crate::AppMessageError::Unknown => log_c_str(c"  reason: unknown"),
+            crate::AppMessageError::Closed => error!("  reason: closed"),
+            crate::AppMessageError::InternalError => error!("  reason: internal error"),
+            crate::AppMessageError::InvalidArgs => error!("  reason: invalid arguments (?)"),
+            crate::AppMessageError::InvalidState => error!("  reason: invalid state"),
+            crate::AppMessageError::NotConnected => error!("  reason: not connected"),
+            crate::AppMessageError::OutOfMemory => error!("  reason: out of memory"),
+            crate::AppMessageError::SendRejected => error!("  reason: send rejected"),
+            crate::AppMessageError::SendTimeout => error!("  reason: timeout"),
+            crate::AppMessageError::Unknown => error!("  reason: unknown"),
         };
     }
 }
@@ -134,7 +134,7 @@ extern "C" fn global_outbox_sent_handler(
     _iterator: *mut sys::DictionaryIterator,
     _context: *mut ::core::ffi::c_void,
 ) {
-    // log_c_str(c"global_outbox_sent_handler");
+    trace!("global_outbox_sent_handler");
 }
 
 impl App {
@@ -234,7 +234,7 @@ impl App {
             let mut b = null_mut::<sys::DictionaryIterator>();
             app_message_result_from_raw(sys::app_message_outbox_begin(&mut b))?;
             let Some(mut dict) = DictionaryBuilder::from_ptr(b) else {
-                log_c_str(c"outbox begin gave back null.");
+                error!("outbox begin gave back null.");
                 return Err(crate::AppMessageError::SendRejected);
             };
             builder_callback(&mut dict)?;

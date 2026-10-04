@@ -1,8 +1,11 @@
 use core::ffi::c_void;
 
-use crate::service::global_callback::{Callback, CallbackHandle};
 #[allow(unused)]
-use crate::{GRect, log_c_str, service::global_callback::GlobalCallbacks, sys};
+use crate::{GRect, service::global_callback::GlobalCallbacks, sys};
+use crate::{
+    service::global_callback::{Callback, CallbackHandle},
+    trace,
+};
 
 /// Allows you to subscribe to changes to the unobstructed area.
 pub struct UnobstructedArea {
@@ -47,7 +50,7 @@ impl UnobstructedArea {
 
 #[allow(unused)] // platforms which don’t have unobstructed area logic
 unsafe extern "C" fn global_unobstructed_area_handler(rect: GRect, context: *mut c_void) {
-    log_c_str(c"unobstructed_area received");
+    trace!("unobstructed_area received");
     unsafe {
         GlobalCallbacks::<(GRect,)>::dispatch_callback(context, (rect,));
     }

@@ -3,7 +3,7 @@ use embedded_alloc::LlffHeap as Heap;
 
 use super::c_malloc::*;
 #[allow(unused)]
-use crate::{heap, log_c_str, log_fmt};
+use crate::{error, heap, info};
 
 /// An allocator using an [`embedded_alloc::LlffHeap`].
 /// Upon startup ([`Self::initialize`]), this allocator reserves up to `MAX_HEAP` bytes from the C heap.
@@ -74,7 +74,7 @@ impl<const MAX_HEAP: usize> Allocator<MAX_HEAP> {
         // SAFETY: `malloc` is safe to call with a nonzero argument.
         let heap_mem = unsafe { malloc(to_allocate) };
         if heap_mem.is_null() {
-            log_c_str(c"EmbeddedAllocator: malloc returned null!");
+            error!("malloc returned null!");
             return;
         }
 
@@ -84,16 +84,10 @@ impl<const MAX_HEAP: usize> Allocator<MAX_HEAP> {
             // - "size is correct": We requested to_allocate from malloc, and malloc guarantees that the allocation is at least of this size.
             self.heap.init(heap_mem as usize, to_allocate);
 
-            #[cfg(debug_assertions)]
-            {
-                // SAFETY: We pass three arguments formatted as `long int`, which are i32s on ARM T32.
-                log_fmt!(
-                    c"EmbeddedAllocator: allocated heap at %lx size %ld from free %ld",
-                    heap_mem as isize as i32,
-                    to_allocate as i32,
-                    free_heap as i32
-                );
-            }
+            info!(
+                "allocated heap at {:x} size {} from free {}",
+                heap_mem as usize, to_allocate, free_heap,
+            );
         }
     }
 }

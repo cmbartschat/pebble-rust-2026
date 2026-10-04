@@ -4,8 +4,9 @@ use core::{
     slice,
 };
 
+use crate::error;
+
 use super::c_malloc::*;
-use crate::log::log_c_str;
 
 /// An allocator that calls into PebbleOS’s `malloc`/`realloc`/`free`.
 /// Available with the "malloc-allocator" feature.
@@ -39,7 +40,7 @@ impl Allocator {
                 .checked_add(layout.align())
                 .and_then(|f| f.checked_add(size_of::<*mut u8>()))
             else {
-                log_c_str(c"Unexpected: Requested memory overflows including padding and metadata");
+                error!("Unexpected: Requested memory overflows including padding and metadata");
                 return null_mut();
             };
             let base = alloc(required_size);
@@ -49,7 +50,7 @@ impl Allocator {
             debug_assert!((base as usize).is_multiple_of(NATIVE_ALIGN));
             let align_offset = match base.align_offset(layout.align()) {
                 usize::MAX => {
-                    log_c_str(c"Unexpected: Unable to locate valid alignment");
+                    error!("Unexpected: Unable to locate valid alignment");
                     unsafe { free(base) };
                     return null_mut();
                 }

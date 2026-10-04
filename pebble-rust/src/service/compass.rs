@@ -1,7 +1,7 @@
 use crate::{
-    Angle, log_c_str,
+    Angle,
     service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
-    sys,
+    sys, warn,
 };
 
 /// Accessor for compass data.
@@ -24,7 +24,7 @@ impl Compass {
     pub fn set_minimum_angle_change(&self, mut minimum_angle_change: Angle) {
         minimum_angle_change.normalize();
         if minimum_angle_change > Angle::from_degrees(180) {
-            log_c_str(c"Unexpected: minimum angle change should not be over 180 degrees");
+            warn!("Unexpected: minimum angle change should not be over 180 degrees");
             minimum_angle_change = Angle::from_degrees(180);
         }
         unsafe {

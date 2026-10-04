@@ -34,7 +34,7 @@ There are two main ways of selecting a platform to compile for:
 
 `pebble-rust-2026` does not work without a global allocator. A lot of functionality needs to perform (usually small) allocations as part of its normal operation. There are two available allocators: a malloc-based one, selected via `malloc-allocator` (enabled by default), or one based on embedded-alloc, selected via `embedded-allocator`. The malloc allocator is easiest to use and recommended as a start. Simply add these lines to the top of your `lib.rs`:
 
-```rust
+```rust,ignore
 use pebble_rust_2026::MallocAllocator;
 
 #[global_allocator]
@@ -47,7 +47,7 @@ If you use a different allocator, including a fully custom one, make sure to ful
 
 `pebble-rust-2026` requires a C-like entry point to be declared:
 
-```rust
+```rust,ignore
 #[unsafe(no_mangle)]
 fn main() -> i32 {
     // Application logic goes here...

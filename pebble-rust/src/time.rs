@@ -2,14 +2,14 @@ use core::ffi::CStr;
 
 use alloc::{ffi::CString, vec};
 
-use crate::{log::log_c_str, sys};
+use crate::{error, sys};
 
 /// A global time.
 ///
 /// Note: This is a fairly inaccurate type, owing to the C API restrictions.
 ///       For more complex time calculations including timezone handling,
 ///       we recommend using a Rust crate which more accurately accounts for real world problems, like [jiff](https://crates.io/crates/jiff).
-///       For interacting with such types, it’s usually enough to given them the current Unix timestamp, i.e. [`Self::epoch_seconds`].
+///       For interacting with such types, it’s usually enough to give them the current Unix timestamp, i.e. [`Self::epoch_seconds`].
 #[derive(Debug, Copy, Clone)]
 pub struct Time {
     value: sys::time_t,
@@ -109,7 +109,7 @@ impl LocalTime {
             )
         };
         if written == 0 {
-            log_c_str(c"LocalTime::to_string failed to write");
+            error!("LocalTime::to_string failed to write");
             panic!("Time overflowed buffer");
         }
         CString::new(&buffer[0..written]).unwrap()
