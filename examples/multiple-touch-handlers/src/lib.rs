@@ -31,7 +31,7 @@ fn main() -> i32 {
         });
     }
 
-    let graphics_handler = {
+    let graphics_callback = {
         let last_touch_pos = last_touch_pos.clone();
         // This first handler stores the touch start position for use by the circle drawing above.
         APP.touch.subscribe(move |touch| {
@@ -46,7 +46,7 @@ fn main() -> i32 {
     };
 
     // This second handler just logs touch events.
-    let logging_handler = APP.touch.subscribe(move |touch| unsafe {
+    let logging_callback = APP.touch.subscribe(move |touch| unsafe {
         match touch {
             TouchEvent::TouchDown(gpoint) => {
                 log_fmt!(c"touch down at %ld %ld", gpoint.x as i32, gpoint.y as i32)
@@ -67,7 +67,7 @@ fn main() -> i32 {
         b.single(
             Button::Up,
             move |_| {
-                graphics_handler.remove();
+                graphics_callback.cancel();
             },
             None,
         );
@@ -78,8 +78,8 @@ fn main() -> i32 {
         Box::new(move || {
             // During unload, unsubscribe from touch events.
             // Otherwise, the event handlers are leaked.
-            graphics_handler.remove();
-            logging_handler.remove();
+            graphics_callback.cancel();
+            logging_callback.cancel();
         })
     }));
 

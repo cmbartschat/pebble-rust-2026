@@ -61,7 +61,7 @@ intrusive_adapter!(LinkedCallback<Args> = Box<Callback<Args>>:
 
 /// Handle to a subscribed callback.
 ///
-/// This handle can later be used to remove the callback again via [`CallbackHandle::remove`].
+/// This handle can later be used to remove the callback again via [`CallbackHandle::cancel`].
 /// This is very important if you frequently add and remove callbacks, such as in sub-windows.
 /// If you do not remove a callback after you don’t use it anymore, it will remain leaked in memory.
 // Implementation note: when using arguments with non-static lifetime (usually temporary shared references),
@@ -82,7 +82,7 @@ pub struct CallbackHandle<'a, Args> {
 impl<'a, Args> CallbackHandle<'a, Args> {
     /// Removes this callback from its event, so it will no longer be triggered.
     /// The callback is dropped.
-    pub fn remove(self) {
+    pub fn cancel(self) {
         self.parent.remove(self);
     }
 }
