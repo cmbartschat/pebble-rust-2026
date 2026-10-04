@@ -24,7 +24,7 @@ fn main() -> i32 {
 
     {
         let last_touch_pos = last_touch_pos.clone();
-        let _ = custom_layer.set_update_handler(move |_, mut ctx: GContext| {
+        custom_layer.set_update_handler(move |_, mut ctx: GContext| {
             // Draw a green circle at the current position.
             ctx.set_fill_color(hex_color!("#000"));
             ctx.fill_circle(*last_touch_pos.clone().borrow(), 10);
@@ -35,11 +35,8 @@ fn main() -> i32 {
         let last_touch_pos = last_touch_pos.clone();
         // This first handler stores the touch start position for use by the circle drawing above.
         APP.touch.subscribe(move |touch| {
-            match touch {
-                TouchEvent::TouchDown(touch) => {
-                    last_touch_pos.replace(touch);
-                }
-                _ => {}
+            if let TouchEvent::TouchDown(touch) = touch {
+                last_touch_pos.replace(touch);
             }
             custom_layer.mark_dirty();
         })
