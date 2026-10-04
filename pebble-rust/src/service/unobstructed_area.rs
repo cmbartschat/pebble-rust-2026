@@ -6,7 +6,7 @@ use crate::{GRect, log_c_str, service::global_callback::GlobalCallbacks, sys};
 
 /// Allows you to subscribe to changes to the unobstructed area.
 pub struct UnobstructedArea {
-    callback: GlobalCallbacks<GRect>,
+    callback: GlobalCallbacks<(GRect,)>,
 }
 
 impl UnobstructedArea {
@@ -27,8 +27,8 @@ impl UnobstructedArea {
     /// The returned handle can be used to unsubscribe the callback from the events.
     pub fn subscribe(
         &'static self,
-        handler: impl Into<Callback<GRect>>,
-    ) -> CallbackHandle<'static, GRect> {
+        handler: impl Into<Callback<(GRect,)>>,
+    ) -> CallbackHandle<'static, (GRect,)> {
         let handle = self.callback.add(handler.into());
         #[cfg(not(platform = "aplite"))]
         unsafe {
