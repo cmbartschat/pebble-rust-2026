@@ -172,6 +172,8 @@ impl Layer {
         unsafe { sys::layer_mark_dirty(inner.raw.as_ptr()) };
         if let Some(callback) = callback {
             inner.render.set(callback);
+        } else {
+            inner.render.clear();
         }
     }
 
@@ -197,7 +199,7 @@ impl Layer {
 
     /// Clear the layer update handler.
     pub fn clear_update_handler(&mut self) {
-        self.handle.borrow_mut().render.clear();
+        self.modify_update_handlers_inner(None, None);
     }
 
     unsafe fn as_ptr(&self) -> *mut sys::Layer {
