@@ -12,6 +12,7 @@ mod bitmap_layer;
 pub mod color;
 mod content_indicator;
 mod context;
+mod dictation;
 mod dictionary;
 mod effect;
 mod fmt;
@@ -54,6 +55,7 @@ pub use crate::content_indicator::{
     ConfigConflict, ContentIndicator, ContentIndicatorConfig, ContentIndicatorDirection,
 };
 pub use crate::context::{CompOp, CornerMask, GContext};
+pub use crate::dictation::{DictationError, DictationSession};
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::effect::{EffectCallback, EffectCleanup};
 pub use crate::font::{Font, SystemFont};
