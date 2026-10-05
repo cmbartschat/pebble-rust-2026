@@ -31,7 +31,7 @@
 //       which necessitates liberal use of #[doc(hidden)].
 //       As is usual in Rust, these are not considered part of the public API and allowed to break semver rules.
 
-use core::{convert::Infallible, ffi::c_int, str::FromStr};
+use core::{convert::Infallible, ffi::c_int};
 
 use crate::sys::{
     self, AppLogLevel_APP_LOG_LEVEL_DEBUG, AppLogLevel_APP_LOG_LEVEL_DEBUG_VERBOSE,
@@ -39,8 +39,8 @@ use crate::sys::{
     AppLogLevel_APP_LOG_LEVEL_WARNING,
 };
 
-use alloc::{ffi::CString, string::String};
 use ufmt::derive::uDebug;
+
 // Do not require users to directly depend on these if they don’t need to.
 // This re-export allows us to access the required crates through pebble_rust_2026 in the log macros.
 #[doc(hidden)]
@@ -125,9 +125,9 @@ macro_rules! log {
         use $crate::log::internal_ufmt as ufmt;
         if log::is_level_enabled($level) {
             const LINE: u32 = ::core::panic::Location::caller().line();
-            let mut output = ::alloc::string::String::new();
-            let _ = log::internal_ufmt::uwrite!(log::StringWrite(&mut output), $format, $($arg)*);
-            log::do_log($level, ::core::module_path!(), LINE, &output);
+            let mut output = log::CStringWriter::new();
+            let _ = log::internal_ufmt::uwrite!(&mut output, $format, $($arg)*);
+            log::do_log($level, ::core::module_path!(), LINE, output.as_ref());
         }
     }};
 }
@@ -277,33 +277,106 @@ pub const fn is_level_enabled(level: Level) -> bool {
     !LOG_IS_OFF && level.le(&CONFIGURED_LOG_LEVEL)
 }
 
+/// Code-size-optimized output for ufmt.
 #[doc(hidden)]
-pub struct StringWrite<'a>(pub &'a mut String);
+pub struct CStringWriter {
+    /// The Pebble C API only outputs ~100 characters, so we limit ourselves too.
+    buffer: [u8; 128],
+    /// Invariant: used_len <= buffer.len()
+    used_len: usize,
+}
 
-impl<'a> ufmt::uWrite for StringWrite<'a> {
+// Warning: All of the functions in here are extremely optimization-sensitive.
+// The ultimate goal of these weird shenanigans is to avoid the compiler inserting calls to functions like memcpy and memclr,
+// which are extremely large without build_std.
+// We can probably replace all of them with simple memcpy calls (e.g. `copy_from_slice`) once build_std is stable.
+// Here are some things that influence whether this gets "optimized" badly:
+// - Using core::hint::black_box in strategic places.
+// - Avoiding #[inline] as much as necessary.
+// - Using unsafe code (mainly switching between get and get_unchecked for indexing).
+// Please check any changes against nm and objcopy and look at the generated assembly.
+impl CStringWriter {
+    #[doc(hidden)]
+    pub const fn new() -> Self {
+        Self {
+            buffer: [0; _],
+            used_len: 0,
+        }
+    }
+
+    const fn capacity(&self) -> usize {
+        self.buffer.len()
+    }
+
+    fn copy(&mut self, string: &str) {
+        let buf = string.as_bytes();
+        // Maximum number of data we can copy from the buffer.
+        let limit = buf.len().min(self.capacity() - self.used_len);
+        // Hand-rolled memcpy, since calls to Rust’s iterator functionality will result in the large memcpy implementations in compiler_builtins
+        let mut idx = 0;
+        while idx < limit {
+            debug_assert!(self.used_len < self.capacity());
+            // SAFETY: the limit calculation ensured that used_len is never too big and idx neither.
+            unsafe {
+                *self.buffer.get_unchecked_mut(self.used_len) =
+                    core::hint::black_box(*buf.get_unchecked(idx))
+            };
+            self.used_len += 1;
+            idx += 1;
+        }
+    }
+
+    fn copy_char(&mut self, chr: char) {
+        let mut dst = [0u8; 4];
+        let string = chr.encode_utf8(&mut dst);
+        self.copy(string);
+    }
+}
+
+impl ufmt::uWrite for CStringWriter {
     type Error = Infallible;
 
+    #[inline]
     fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
-        self.0.push_str(s);
+        self.copy(s);
         Ok(())
     }
 
+    #[inline]
     fn write_char(&mut self, c: char) -> Result<(), Self::Error> {
-        self.0.push(c);
+        self.copy_char(c);
         Ok(())
+    }
+}
+
+impl AsRef<str> for CStringWriter {
+    fn as_ref(&self) -> &str {
+        // SAFETY: We were the only ones writing to the buffer, and we only ever wrote valid UTF-8 strings into it.
+        // Besides, this doesn’t really matter, since we pass this str into a C API soon enough.
+        unsafe { str::from_utf8_unchecked(&self.buffer) }
     }
 }
 
 #[doc(hidden)]
 #[inline(always)]
 pub fn do_log(level: Level, module: &str, line: u32, message: &str) {
-    // The allocation here is required because the file name is passed as a null-terminated string,
-    // but Rust has no API to acquire the module path as a C string directly.
-    // The unwrap is warranted because module names cannot contain null bytes anyways.
-    let module_c_str = CString::from_str(module).unwrap();
+    // Manually make a null-terminated string from the module.
+    // Since the Pebble API truncates these at 15/16 bytes anyways, we can use a stack buffer and copy as much as necessary.
+    // We use a 32-byte buffer (with one extra null byte) just in case they decide to increase the limit in the future.
+    let mut module_buffer = [0u8; 33];
+    let len = module.len().min(32);
+    // Print the end of the module name, so truncation works correctly.
+    let truncated_module = &module.as_bytes()[module.len()-len..];
+    // Manual memcpy should reduce code size.
+    for i in 0..len {
+        // SAFETY: `len` never exceeds either buffer’s size.
+        unsafe {
+            *module_buffer.get_unchecked_mut(i) = *truncated_module.get_unchecked(i);
+        }
+    }
 
     // SAFETY: Ultimately we have very little information on how this C API can cause UB in detail, but the basics are covered:
-    // - src_filename is a valid C string pointer, guaranteed by Rust’s CString type
+    // - src_filename is a valid C string pointer, see above.
     // - If `line` wrapped during the cast, it yields bogus line numbers but no UB.
     // - The format string is a static C string pointer and obviously valid.
     // - The format "%.*s" demands two arguments: the maximum number of characters (=minimum field width or precision) to be copied from a C string,
@@ -316,7 +389,7 @@ pub fn do_log(level: Level, module: &str, line: u32, message: &str) {
     unsafe {
         sys::app_log(
             level as sys::AppLogLevel,
-            module_c_str.as_ptr(),
+            module_buffer.as_ptr(),
             line as c_int,
             c"%.*s".as_ptr(),
             message.len() as c_int,
