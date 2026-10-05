@@ -5,6 +5,7 @@ use core::{
 };
 
 use alloc::{boxed::Box, vec::Vec};
+use ufmt::derive::uDebug;
 
 use crate::{
     TimeUnits, Window,
@@ -291,7 +292,7 @@ impl App {
 
 /// The requested data size of the inbox.
 /// This is used for [`App::open_inbox`].
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, uDebug)]
 pub enum InboxSize {
     /// Request exactly these data sizes from the C API.
     /// Using this variant is not recommended.

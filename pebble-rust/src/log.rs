@@ -40,6 +40,7 @@ use crate::sys::{
 };
 
 use alloc::{ffi::CString, string::String};
+use ufmt::derive::uDebug;
 // Do not require users to directly depend on these if they don’t need to.
 // This re-export allows us to access the required crates through pebble_rust_2026 in the log macros.
 #[doc(hidden)]
@@ -59,7 +60,7 @@ pub use crate::{debug, error, info, log, trace, warn};
 ///
 /// When comparing log levels, note that more critical levels are considered "below" less critical level.
 /// As such, when setting the maximum log level to `X`, all logs with `Level <= X` are printed.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, uDebug)]
 #[repr(u8)]
 pub enum Level {
     /// Errors.

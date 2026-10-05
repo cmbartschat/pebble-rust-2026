@@ -1,5 +1,7 @@
 use core::ptr::{NonNull, null_mut};
 
+use ufmt::derive::uDebug;
+
 use crate::{Font, GPoint, GRect, sys};
 
 /// Attributes for painting text.
@@ -90,7 +92,7 @@ impl TextAttributes {
 /// Behavior for how the text should overflow if it’s too large for the boundaries.
 /// In all cases, text is first wrapped at word boundaries.
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum TextOverflowMode {
     /// Abbreviate text beyond the last line with a trailing ellipsis (…)
     TrailingEllipsis = sys::GTextOverflowMode_GTextOverflowModeTrailingEllipsis,
@@ -102,7 +104,7 @@ pub enum TextOverflowMode {
 
 /// How to align text in its bounding box.
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum TextAlignment {
     /// Left-aligned.
     Left = sys::GTextAlignment_GTextAlignmentLeft,

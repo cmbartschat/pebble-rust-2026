@@ -1,11 +1,12 @@
 use core::{ffi::CStr, marker::PhantomData, ptr::NonNull};
 
 use alloc::slice;
+use ufmt::{derive::uDebug, uDebug};
 
-use crate::{key::MessageKey, sys};
+use crate::{fmt::CStrFormatter, key::MessageKey, sys};
 
 /// Errors that can happen when writing to a [`DictionaryView`].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, uDebug)]
 #[repr(u8)]
 pub enum DictionaryWriteError {
     /// Other error.
@@ -100,6 +101,23 @@ impl<'a> From<&'a CStr> for Value<'a> {
     }
 }
 
+impl<'a> uDebug for Value<'a> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match self {
+            Self::Bytes(items) => f.debug_tuple("Value::Bytes")?.field(items)?.finish(),
+            Self::CStr(cstr) => f
+                .debug_tuple("Value::CStr")?
+                .field(&CStrFormatter(cstr))?
+                .finish(),
+            Self::Uint(uint) => f.debug_tuple("Value::Uint")?.field(uint)?.finish(),
+            Self::Int(int) => f.debug_tuple("Value::Int")?.field(int)?.finish(),
+        }
+    }
+}
+
 /// A key-value dictionary tuple.
 pub struct Tuple<'a> {
     raw: NonNull<sys::Tuple>,
@@ -182,6 +200,18 @@ impl<'a> Tuple<'a> {
 impl<'a> From<Tuple<'a>> for (u32, Value<'a>) {
     fn from(val: Tuple<'a>) -> Self {
         (val.key(), val.value())
+    }
+}
+
+impl<'a> uDebug for Tuple<'a> {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_tuple("Tuple")?
+            .field(&self.key())?
+            .field(&self.value())?
+            .finish()
     }
 }
 

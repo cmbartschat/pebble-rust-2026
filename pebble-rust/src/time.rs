@@ -1,8 +1,9 @@
 use core::ffi::CStr;
 
 use alloc::{ffi::CString, vec};
+use ufmt::{derive::uDebug, uDebug};
 
-use crate::{error, sys};
+use crate::{error, fmt::StrFormatter, sys};
 
 /// A global time.
 ///
@@ -10,7 +11,7 @@ use crate::{error, sys};
 ///       For more complex time calculations including timezone handling,
 ///       we recommend using a Rust crate which more accurately accounts for real world problems, like [jiff](https://crates.io/crates/jiff).
 ///       For interacting with such types, it’s usually enough to give them the current Unix timestamp, i.e. [`Self::epoch_seconds`].
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, uDebug)]
 pub struct Time {
     value: sys::time_t,
 }
@@ -126,6 +127,30 @@ impl LocalTime {
     }
 }
 
+impl uDebug for LocalTime {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let tzone = str::from_utf8(&self.value.tm_zone);
+        let mut debug = f.debug_struct("LocalTime")?;
+        debug
+            .field("second", &self.value.tm_sec)?
+            .field("minute", &self.value.tm_min)?
+            .field("hour", &self.value.tm_hour)?
+            .field("day", &self.value.tm_mday)?
+            .field("month", &self.value.tm_mon)?
+            .field("weekday", &self.value.tm_wday)?
+            .field("day_of_year", &self.value.tm_yday)?
+            .field("is_dst", &self.value.tm_isdst)?
+            .field("utc_offset", &self.value.tm_gmtoff)?;
+        if let Ok(tzone) = tzone {
+            debug.field("timezone", &StrFormatter(tzone))?;
+        }
+        debug.finish()
+    }
+}
+
 impl From<Time> for LocalTime {
     fn from(value: Time) -> Self {
         value.to_local()
@@ -176,5 +201,34 @@ bitflags::bitflags! {
         const Month = sys::TimeUnits_MONTH_UNIT;
         /// Every year.
         const Year = sys::TimeUnits_YEAR_UNIT;
+    }
+}
+
+impl uDebug for TimeUnits {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let mut debug = f.debug_tuple("TimeUnits")?;
+        if self.contains(TimeUnits::Second) {
+            debug.field(&StrFormatter("Second"))?;
+        }
+        if self.contains(TimeUnits::Minute) {
+            debug.field(&StrFormatter("Minute"))?;
+        }
+        if self.contains(TimeUnits::Hour) {
+            debug.field(&StrFormatter("Hour"))?;
+        }
+        if self.contains(TimeUnits::Day) {
+            debug.field(&StrFormatter("Day"))?;
+        }
+        if self.contains(TimeUnits::Month) {
+            debug.field(&StrFormatter("Month"))?;
+        }
+        if self.contains(TimeUnits::Year) {
+            debug.field(&StrFormatter("Year"))?;
+        }
+
+        debug.finish()
     }
 }

@@ -1,3 +1,5 @@
+use ufmt::uDebug;
+
 use crate::*;
 
 impl GRect {
@@ -120,5 +122,17 @@ impl GRect {
 impl PartialEq for GRect {
     fn eq(&self, other: &Self) -> bool {
         unsafe { sys::grect_equal(self, other) }
+    }
+}
+
+impl uDebug for GRect {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("GRect")?
+            .field("origin", &self.origin)?
+            .field("size", &self.size)?
+            .finish()
     }
 }

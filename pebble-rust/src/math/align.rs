@@ -1,7 +1,10 @@
+use ufmt::derive::uDebug;
+
 use crate::sys;
 
 /// Graphics alignment.
 /// The values represent all possible 2D alignments, which are 9 possible positions: vertically top, center, bottom, combined with horizontally left, center, right.
+#[derive(uDebug)]
 #[repr(u8)]
 pub enum GAlign {
     /// Vertically and horizontally centered.

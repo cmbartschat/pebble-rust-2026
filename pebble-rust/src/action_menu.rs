@@ -6,11 +6,13 @@ use core::{
 };
 
 use alloc::{boxed::Box, ffi::CString, vec::Vec};
+use ufmt::{derive::uDebug, uDebug};
 
 use crate::{
     GColor,
     color::{GCOLOR_BLACK, GCOLOR_DUKE_BLUE},
     error,
+    fmt::{CStrFormatter, StrFormatter},
     handle::{Handle, new_handle},
     sys,
 };
@@ -18,6 +20,21 @@ use crate::{
 struct ActionData {
     label: Pin<Box<CStr>>,
     callback: Option<Box<dyn FnOnce() + 'static>>,
+}
+
+impl uDebug for ActionData {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let mut debug = f.debug_struct("ActionData")?;
+        debug.field("label", &CStrFormatter(&self.label.as_ref()))?;
+        match self.callback {
+            Some(ref cb) => debug.field("callback", &&raw const cb),
+            None => debug.field("callback", &StrFormatter("None")),
+        }?
+        .finish()
+    }
 }
 
 impl ActionData {
@@ -40,10 +57,23 @@ struct ActionMenuChildLevel {
     level: ActionMenuLevel,
 }
 
+impl uDebug for ActionMenuChildLevel {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("ActionMenuChildLevel")?
+            .field("label", &CStrFormatter(&self.label.as_ref()))?
+            .field("level", &self.level)?
+            .finish()
+    }
+}
+
 enum ActionMenuItem {
     ChildLevel(ActionMenuChildLevel),
     Action(Box<ActionData>),
 }
+
 impl From<ActionData> for ActionMenuItem {
     fn from(value: ActionData) -> Self {
         ActionMenuItem::Action(Box::new(value))
@@ -56,10 +86,40 @@ impl From<ActionMenuChildLevel> for ActionMenuItem {
     }
 }
 
+impl uDebug for ActionMenuItem {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match self {
+            ActionMenuItem::ChildLevel(action_menu_child_level) => f
+                .debug_tuple("ActionMenuItem::ChildLevel")?
+                .field(action_menu_child_level)?
+                .finish(),
+            ActionMenuItem::Action(action_data) => f
+                .debug_tuple("ActionMenuItem::Action")?
+                .field(action_data.as_ref())?
+                .finish(),
+        }
+    }
+}
+
 /// A level of an [`ActionMenu`].
 pub struct ActionMenuLevel {
     items: Vec<ActionMenuItem>,
     display_mode: ActionMenuLevelDisplayMode,
+}
+
+impl uDebug for ActionMenuLevel {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("ActionMenuLevel")?
+            .field("items", &self.items.as_slice())?
+            .field("display_mode", &self.display_mode)?
+            .finish()
+    }
 }
 
 impl Default for ActionMenuLevel {
@@ -130,6 +190,7 @@ impl ActionMenuLevel {
 }
 
 /// The builder for an [`ActionMenu`].
+#[derive(uDebug)]
 pub struct ActionMenuBuilder {
     foreground_color: GColor,
     background_color: GColor,
@@ -228,7 +289,7 @@ impl ActionMenu {
 
 /// Alignment of the list elements in the action menu.
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum ActionMenuAlign {
     /// Align to the top of the screen.
     Top = sys::ActionMenuAlign_ActionMenuAlignTop,
@@ -238,7 +299,7 @@ pub enum ActionMenuAlign {
 
 /// How to display the action menu level.
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum ActionMenuLevelDisplayMode {
     /// Fill the entire screen.
     Wide = sys::ActionMenuLevelDisplayMode_ActionMenuLevelDisplayModeWide,

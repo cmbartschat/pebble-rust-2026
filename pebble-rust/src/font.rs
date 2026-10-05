@@ -1,5 +1,7 @@
 use core::ptr::NonNull;
 
+use ufmt::derive::uDebug;
+
 use crate::{
     handle::{Handle, new_handle},
     key::ResourceId,
@@ -51,7 +53,7 @@ impl Font {
 /// The selection of system fonts.
 /// Note that some fonts are not available on all platforms.
 /// See the [system fonts list](https://developer.repebble.com/guides/app-resources/system-fonts/) for details on each font.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, uDebug)]
 pub enum SystemFont {
     /// Bitham, 30px, Black.
     Bitham30Black,

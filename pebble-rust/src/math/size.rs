@@ -1,6 +1,8 @@
 use core::ops::Div;
 use core::ops::Mul;
 
+use ufmt::uDebug;
+
 use crate::*;
 
 impl GSize {
@@ -73,5 +75,17 @@ impl From<GPoint> for GSize {
 impl From<GSize> for GPoint {
     fn from(val: GSize) -> Self {
         val.as_point()
+    }
+}
+
+impl uDebug for GSize {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("GSize")?
+            .field("w", &self.w)?
+            .field("h", &self.h)?
+            .finish()
     }
 }

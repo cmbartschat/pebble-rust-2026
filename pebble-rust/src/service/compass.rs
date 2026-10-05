@@ -1,3 +1,5 @@
+use ufmt::derive::uDebug;
+
 use crate::{
     Angle,
     service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
@@ -74,7 +76,7 @@ extern "C" fn global_compass_handler(event: sys::CompassHeadingData) {
 /// assert!(Angle::try_from(invalid_heading).is_err());
 /// assert!(Angle::try_from(south) == Ok(Angle::from_degrees(180)));
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum CompassHeading {
     /// Compass heading is unavailable.
     Unavailable,

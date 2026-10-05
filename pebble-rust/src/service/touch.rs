@@ -1,5 +1,7 @@
 use core::ffi::c_void;
 
+use ufmt::derive::uDebug;
+
 use crate::{
     GPoint,
     service::global_callback::{Callback, CallbackHandle, GlobalCallbacks},
@@ -78,7 +80,7 @@ extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut 
 }
 
 /// The different kinds of touch event.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum TouchEvent {
     /// Touch started at the given coordinate.
     TouchDown(GPoint),

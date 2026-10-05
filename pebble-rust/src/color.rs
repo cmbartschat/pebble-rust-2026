@@ -1,6 +1,10 @@
 //! Color constants.
 //! The constant names match the ones from the [color picker tool](https://developer.repebble.com/guides/tools-and-resources/color-picker/).
+//!
+//! To create a [`GColor`], you can use the [`crate::hex_color`] macro.
 #![allow(missing_docs)]
+
+use ufmt::uDebug;
 
 use crate::GColor;
 use crate::sys;
@@ -173,5 +177,19 @@ impl GColor {
     /// - 0b11 = 0xff
     pub const fn blue(&self) -> u8 {
         Self::TWO_BIT_LUT[self.blue_2bit() as usize]
+    }
+}
+
+impl uDebug for GColor {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("GColor")?
+            .field("alpha", &self.alpha_2bit())?
+            .field("red", &self.red_2bit())?
+            .field("green", &self.green_2bit())?
+            .field("blue", &self.blue_2bit())?
+            .finish()
     }
 }
