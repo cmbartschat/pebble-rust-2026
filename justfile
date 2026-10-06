@@ -37,3 +37,13 @@ test-all:
 	cargo test --features emery,embedded-allocator,malloc-allocator --target thumbv8m.main-none-eabi --target-dir target/emery
 	cargo test --features flint,embedded-allocator,malloc-allocator --target thumbv7em-none-eabi --target-dir target/flint
 	cargo test --features gabbro,embedded-allocator,malloc-allocator --target thumbv8m.main-none-eabi --target-dir target/gabbro
+
+# Allows you to check that the logging infrastructure does not contain expensive calls to memcpy.
+no-memcpy-in-logging:
+	#!/usr/bin/env bash
+	cd examples/logging
+	cargo pebble build
+	if arm-none-eabi-nm -CSn --size-sort target/pebble/build/aplite/logging.elf | grep memcpy; then
+		echo 'memcpy found in the logging example!'
+		exit 1
+	fi
