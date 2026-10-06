@@ -123,7 +123,7 @@ macro_rules! log {
         use $crate::log::internal_ufmt as ufmt;
         if log::is_level_enabled($level) {
             const LINE: u32 = ::core::panic::Location::caller().line();
-            let mut output = log::CStringWriter::new();
+            let mut output = log::TruncatedStringWriter::new();
             let _ = ufmt::uwrite!(&mut output, $format, $($arg)*);
             log::do_log($level, ::core::module_path!(), LINE, output.as_ref());
         }
@@ -279,7 +279,7 @@ pub const fn is_level_enabled(level: Level) -> bool {
 
 /// Code-size-optimized output for ufmt.
 #[doc(hidden)]
-pub struct CStringWriter {
+pub struct TruncatedStringWriter {
     /// The Pebble C API only outputs ~100 characters, so we limit ourselves too.
     buffer: [u8; 128],
     /// Invariant: used_len <= buffer.len()
@@ -296,7 +296,7 @@ pub struct CStringWriter {
 // - Using unsafe code (mainly switching between get and get_unchecked for indexing).
 // Please check any changes against nm and objcopy and look at the generated assembly.
 // See `just no-memcpy-in-logging` for a useful script.
-impl CStringWriter {
+impl TruncatedStringWriter {
     #[doc(hidden)]
     pub const fn new() -> Self {
         Self {
@@ -334,7 +334,7 @@ impl CStringWriter {
     }
 }
 
-impl ufmt::uWrite for CStringWriter {
+impl ufmt::uWrite for TruncatedStringWriter {
     type Error = Infallible;
 
     #[inline]
@@ -350,7 +350,7 @@ impl ufmt::uWrite for CStringWriter {
     }
 }
 
-impl AsRef<str> for CStringWriter {
+impl AsRef<str> for TruncatedStringWriter {
     fn as_ref(&self) -> &str {
         // SAFETY: We were the only ones writing to the buffer, and we only ever wrote valid UTF-8 strings into it.
         // Besides, this doesn’t really matter, since we pass this str into a C API soon enough.

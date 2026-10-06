@@ -7,7 +7,7 @@ use core::{
 
 use alloc::{boxed::Box, rc::Rc};
 
-use crate::{handle::Handle, log_c_str, sys};
+use crate::{handle::Handle, sys, warn};
 
 type DictationResult<T> = Result<T, DictationError>;
 
@@ -35,7 +35,7 @@ extern "C" fn global_handle_dictation_end(
 ) {
     let context = unsafe { (context as *mut DictationContext).as_mut() };
     let Some(context) = context else {
-        log_c_str(c"Unexpected: missing dictation context");
+        warn!("Unexpected: missing dictation context");
         return;
     };
 
@@ -162,7 +162,7 @@ impl DictationSession {
         handler: impl FnMut(Result<&str, DictationError>) + 'static,
     ) -> Option<Self> {
         if max_bytes == 0 {
-            log_c_str(c"Unexpected: max_bytes cannot be 0");
+            warn!("Unexpected: max_bytes cannot be 0");
             return None;
         }
         Some(Self {

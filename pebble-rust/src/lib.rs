@@ -58,6 +58,7 @@ pub use crate::context::{CompOp, CornerMask, GContext};
 pub use crate::dictation::{DictationError, DictationSession};
 pub use crate::dictionary::{DictionaryBuilder, DictionaryView, Tuple, Value};
 pub use crate::effect::{EffectCallback, EffectCleanup};
+pub use crate::fmt::StringWriter;
 pub use crate::font::{Font, SystemFont};
 pub use crate::handle::WeakObject;
 pub use crate::input::button::Button;

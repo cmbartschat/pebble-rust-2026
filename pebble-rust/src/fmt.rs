@@ -1,7 +1,8 @@
 //! Auxiliary formatting wrappers for types that ufmt doesn’t support directly.
 
-use core::ffi::CStr;
+use core::{ffi::CStr, fmt::Write};
 
+use alloc::string::String;
 use ufmt::{uDebug, uDisplay};
 
 pub(crate) struct CStrFormatter<'a>(pub(crate) &'a CStr);
@@ -64,4 +65,45 @@ impl<'a> uDebug for StrFormatter<'a> {
         f.write_str(unsafe { self.0.get_unchecked(from..) })?;
         f.write_str("\"")
     }
+}
+
+#[doc = "hidden"]
+pub struct StringWriter(String);
+
+impl Default for StringWriter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl StringWriter {
+    #[doc = "hidden"]
+    pub fn new() -> Self {
+        Self(String::with_capacity(64))
+    }
+
+    #[doc = "hidden"]
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+impl ufmt::uWrite for StringWriter {
+    type Error = alloc::fmt::Error;
+
+    #[inline]
+    fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
+        self.0.write_str(s)
+    }
+}
+
+/// Equivalent of the format! macro in std
+#[macro_export]
+macro_rules! fmt {
+    ($format:literal, $($arg:tt)+) => {{
+        use $crate::log::internal_ufmt as ufmt;
+        let mut output = $crate::StringWriter::new();
+        let _ = ufmt::uwrite!(&mut output, $format, $($arg)*);
+        output.into_inner()
+    }}
 }

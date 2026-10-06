@@ -59,5 +59,5 @@ Also, make sure to `use pebble_rust_2026 as _;`, which ensures the panic handlin
 
 ## Known Issues
 
-- Using `format!()` or related Display traits frequently causes a crash, use `fmt` or `log_fmt` to convert data to strings.
+- Using `format!()` or related Display traits frequently causes a crash, use `fmt!` to convert data to strings, or the log::info, etc macros for logging.
 - Without some call to `APP.event_loop()`, the application is likely to not build properly or crash immediately on startup.
