@@ -1,6 +1,7 @@
 use core::{cell::RefCell, ffi::c_void, pin::Pin, ptr::NonNull};
 
 use alloc::{boxed::Box, rc::Rc};
+use ufmt::derive::uDebug;
 
 use crate::{
     ClickConfigBuilder, GColor, Window,
@@ -151,7 +152,7 @@ impl InputReceiver for ActionBarLayer {
 
 /// The possible action buttons that can be used to trigger actions via an [`ActionBarLayer`].
 #[repr(u8)]
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Copy, Clone, Hash, Eq, PartialEq, uDebug)]
 pub enum ActionButton {
     /// The up button.
     Up = sys::ButtonId_BUTTON_ID_UP,

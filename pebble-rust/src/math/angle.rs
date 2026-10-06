@@ -8,13 +8,14 @@ use rand::distr::{
     Distribution, StandardUniform, Uniform,
     uniform::{SampleUniform, UniformInt, UniformSampler},
 };
+use ufmt::derive::uDebug;
 
 use crate::{GSize, sys};
 
 /// A fixed-point angle.
 ///
 /// To generate random angles, use the uniform sampling support from [`rand`].
-#[derive(Copy, Clone, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, uDebug)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct Angle {
     pub(crate) value: i32,
@@ -241,7 +242,7 @@ impl DivAssign<i32> for Angle {
 
 /// A fixed-point ratio.
 /// This is most importantly the result type of trigonometric functions on [`Angle`].
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, uDebug)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct Ratio {
     value: i32,
@@ -369,7 +370,7 @@ impl RandomValue {
 const _: () = assert!(u16::MAX as u32 == sys::TRIG_MAX_ANGLE - 1);
 
 /// An absolute angle that always wraps at 360 degrees.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug, uDebug)]
 #[repr(transparent)] // ensure optimal ABI
 pub struct AbsoluteAngle {
     value: u16,

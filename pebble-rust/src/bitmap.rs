@@ -1,6 +1,7 @@
 use core::{cell::RefCell, ptr::NonNull};
 
 use alloc::rc::Rc;
+use ufmt::{derive::uDebug, uDebug};
 
 use crate::{GRect, GSize, key::ResourceId, sys};
 
@@ -76,7 +77,19 @@ impl Bitmap {
     }
 }
 
+impl uDebug for Bitmap {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_tuple("Bitmap")?
+            .field(&self.handle.borrow().raw.as_ptr())?
+            .finish()
+    }
+}
+
 /// The bitmap pixel formats.
+#[derive(uDebug)]
 #[repr(u8)]
 pub enum BitmapFormat {
     /// 1-bit black-and-white bitmap.

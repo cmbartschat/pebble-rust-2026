@@ -1,7 +1,9 @@
+use ufmt::derive::uDebug;
+
 use crate::{dictionary::DictionaryWriteError, sys};
 
 /// Errors that can occur when app messages are attempted to be retrieved.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, uDebug)]
 #[repr(u16)] // match C API
 pub enum AppMessageError {
     /// An unknown error.

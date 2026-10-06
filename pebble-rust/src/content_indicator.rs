@@ -1,5 +1,7 @@
 use core::ptr::{NonNull, null};
 
+use ufmt::{derive::uDebug, uDebug};
+
 use crate::{GAlign, GColor, Layer, color, sys};
 
 /// Indicator for the content of a [`crate::ScrollLayer`].
@@ -105,11 +107,11 @@ impl ContentIndicator {
 }
 
 /// Error for [`ContentIndicator::configure_direction`].
-#[derive(Debug)]
+#[derive(Debug, uDebug)]
 pub struct ConfigConflict(());
 
 /// Which direction a content indicator applies to.
-#[derive(Copy, Clone, PartialEq, Hash, Eq)]
+#[derive(Copy, Clone, PartialEq, Hash, Eq, uDebug)]
 #[repr(u8)]
 pub enum ContentIndicatorDirection {
     /// The up direction.
@@ -142,5 +144,20 @@ impl ContentIndicatorConfig {
             foreground: color::GCOLOR_BLACK,
             background: color::GCOLOR_WHITE,
         }
+    }
+}
+
+impl uDebug for ContentIndicatorConfig {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("ContentIndicatorConfig")?
+            .field("layer", &self.layer.handle.as_ptr())?
+            .field("times_out", &self.times_out)?
+            .field("alignment", &self.alignment)?
+            .field("foreground", &self.foreground)?
+            .field("background", &self.background)?
+            .finish()
     }
 }

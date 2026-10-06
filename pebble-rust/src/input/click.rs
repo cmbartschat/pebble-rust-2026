@@ -2,7 +2,7 @@ use core::{ffi::c_void, marker::PhantomData, ops::RangeInclusive, time::Duration
 
 use alloc::boxed::Box;
 
-use crate::{Button, log_c_str, sys};
+use crate::{Button, sys, warn};
 
 pub(crate) type ClickCallback = Box<dyn FnMut(&ClickRecognizer) + 'static>;
 
@@ -95,7 +95,7 @@ impl<'a> ClickConfigBuilder<'a> {
             &mut ButtonClickConfig,
         ) = match button {
             Button::Back => {
-                log_c_str(c"Long press cannot be registered for Back button");
+                warn!("Long press cannot be registered for Back button");
                 return;
             }
             Button::Up => (
@@ -152,11 +152,11 @@ impl<'a> ClickConfigBuilder<'a> {
         let mut min_clicks = *range.start();
         let mut max_clicks = *range.end();
         if min_clicks < 2 {
-            log_c_str(c"At least 2 clicks are required for the multi-click handler");
+            warn!("At least 2 clicks are required for the multi-click handler");
             min_clicks = 2;
         }
         if max_clicks < min_clicks {
-            log_c_str(c"Maximum clicks must not be smaller than minimum clicks");
+            warn!("Maximum clicks must not be smaller than minimum clicks");
             // As per C API: "A value of 0 means use "min" also as "max"."
             max_clicks = 0;
         }

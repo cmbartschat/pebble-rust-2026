@@ -8,6 +8,7 @@ See the [demo app](https://github.com/cmbartschat/pebble-rust-demo) for a larger
 | ---------------------------------------------------- | -------------------------------------------------------------------- | -------------- |
 | [random](./random)                                   | Using RNG functionality                                              | All            |
 | [multiple-touch-handlers](./multiple-touch-handlers) | Adding multiple handlers to global events, in this case touch events | All with touch |
+| [logging](./logging)                                 | Logging macros and ufmt functionality                                | All            |
 
 ## Contributing
 

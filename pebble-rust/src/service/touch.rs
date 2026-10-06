@@ -1,9 +1,11 @@
 use core::ffi::c_void;
 
+use ufmt::derive::uDebug;
+
 use crate::{
-    GPoint, log_c_str,
+    GPoint,
     service::global_callback::{Callback, CallbackHandle, GlobalCallbacks},
-    sys,
+    sys, trace,
 };
 
 /// Allows you to subscribe to touch events.
@@ -70,7 +72,7 @@ impl Touch {
 
 #[allow(unused)] // platforms which don’t have touch
 extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut c_void) {
-    log_c_str(c"touch received");
+    trace!("touch received");
     unsafe {
         let event = TouchEvent::try_from(event.as_ref().unwrap()).unwrap();
         GlobalCallbacks::<(TouchEvent,)>::dispatch_callback(context, (event,));
@@ -78,7 +80,7 @@ extern "C" fn global_touch_handler(event: *const sys::TouchEvent, context: *mut 
 }
 
 /// The different kinds of touch event.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub enum TouchEvent {
     /// Touch started at the given coordinate.
     TouchDown(GPoint),

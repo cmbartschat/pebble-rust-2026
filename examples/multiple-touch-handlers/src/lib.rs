@@ -43,17 +43,15 @@ fn main() -> i32 {
     };
 
     // This second handler just logs touch events.
-    let logging_callback = APP.touch.subscribe(move |touch| unsafe {
-        match touch {
-            TouchEvent::TouchDown(gpoint) => {
-                log_fmt!(c"touch down at %ld %ld", gpoint.x as i32, gpoint.y as i32)
-            }
-            TouchEvent::TouchMove(gpoint) => {
-                log_fmt!(c"touch move at %ld %ld", gpoint.x as i32, gpoint.y as i32)
-            }
-            TouchEvent::TouchUp(gpoint) => {
-                log_fmt!(c"touch up at %ld %ld", gpoint.x as i32, gpoint.y as i32)
-            }
+    let logging_callback = APP.touch.subscribe(move |touch| match touch {
+        TouchEvent::TouchDown(gpoint) => {
+            debug!("touch down at {} {}", gpoint.x, gpoint.y)
+        }
+        TouchEvent::TouchMove(gpoint) => {
+            debug!("touch move at {} {}", gpoint.x, gpoint.y)
+        }
+        TouchEvent::TouchUp(gpoint) => {
+            debug!("touch up at {} {}", gpoint.x, gpoint.y)
         }
     });
 

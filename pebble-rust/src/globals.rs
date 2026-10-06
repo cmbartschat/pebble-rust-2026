@@ -4,9 +4,7 @@ extern crate alloc;
 
 use core::panic::PanicInfo;
 
-use alloc::{ffi::CString, vec::Vec};
-
-use crate::log::log_c_str;
+use crate::{error, info};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _close(_fd: i32) -> i32 {
@@ -43,7 +41,7 @@ pub extern "C" fn _write(_fd: i32, _buf: *const u8, len: i32) -> i32 {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _exit(_status: i32) -> ! {
-    log_c_str(c"_exit called");
+    info!("_exit called");
     #[allow(clippy::empty_loop)]
     loop {}
 }
@@ -65,21 +63,15 @@ pub extern "C" fn _sbrk(_incr: i32) -> *mut u8 {
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    match info.message().as_str() {
-        Some(e) => {
-            log_c_str(c"panic called, message:");
-            let bytes: Vec<_> = e.bytes().collect::<Vec<_>>();
-            let str = CString::new(bytes).unwrap_or(CString::from(c"failed"));
-            log_c_str(str.as_c_str());
-        }
-        None => {
-            log_c_str(c"panic called, no message");
-        }
+    error!("panic!");
+    if let Some(e) = info.message().as_str() {
+        // Avoid calling into expensive formatting machinery.
+        crate::log::do_log(crate::log::Level::Error, module_path!(), 1, e);
     };
 
     match info.location() {
-        Some(l) => log_c_str(l.file_as_c_str()),
-        None => log_c_str(c"no location"),
+        Some(l) => error!("{}:{}", &l.file(), l.line()),
+        None => error!("no location"),
     }
 
     loop {}

@@ -1,5 +1,7 @@
 use core::ops::{Add, Sub};
 
+use ufmt::uDebug;
+
 use crate::*;
 
 impl GPoint {
@@ -80,5 +82,17 @@ impl Sub for GPoint {
 
     fn sub(self, rhs: Self) -> Self::Output {
         self.subtract(rhs)
+    }
+}
+
+impl uDebug for GPoint {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("GPoint")?
+            .field("x", &self.x)?
+            .field("y", &self.y)?
+            .finish()
     }
 }

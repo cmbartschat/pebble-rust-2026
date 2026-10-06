@@ -1,3 +1,5 @@
+use ufmt::derive::uDebug;
+
 use crate::{
     Time,
     service::global_callback::{Callback, CallbackHandle, GlobalCallbacks},
@@ -11,7 +13,7 @@ pub struct Wakeup;
 static HANDLER: GlobalCallbacks<(WakeupEvent,)> = GlobalCallbacks::new(|| ());
 
 /// Possible errors that can happen when scheduling a wakeup.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, uDebug)]
 #[repr(i8)]
 pub enum WakeupSchedulingError {
     /// The wakeup is too close to an existing one.
@@ -90,7 +92,7 @@ extern "C" fn global_wakeup_handler(id: sys::WakeupId, reason: i32) {
 }
 
 /// A wakeup event.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, uDebug)]
 pub struct WakeupEvent {
     /// The raw wakeup reason.
     /// This is the value that was specified in the [`Wakeup::schedule`] function.
@@ -101,6 +103,7 @@ pub struct WakeupEvent {
 
 /// A pending wakeup that was scheduled by [`Wakeup::schedule`].
 /// You can drop this structure and the event will still occur, but you won’t be able to cancel it.
+#[derive(uDebug)]
 pub struct PendingWakeup {
     /// At which time the wakeup should occur.
     pub time: Time,

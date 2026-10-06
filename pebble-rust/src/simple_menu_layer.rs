@@ -6,13 +6,15 @@ use core::{
 };
 
 use alloc::{boxed::Box, ffi::CString, rc::Rc, vec::Vec};
+use ufmt::uDebug;
 
 use crate::{
     Bitmap, GRect, Layer, Window,
+    fmt::CStrFormatter,
     handle::{Handle, WeakObject, new_handle},
     input::context::InputReceiver,
     layer::{ChildLayer, LayerInner},
-    log_c_str, sys,
+    sys, warn,
     window::WeakWindow,
 };
 
@@ -118,7 +120,7 @@ extern "C" fn global_simple_menu_select_handler(index: i32, context: *mut c_void
             count += 1;
         }
     }
-    log_c_str(c"no matched callback for index");
+    warn!("no matched callback for index");
 }
 
 impl SimpleMenuItem {
@@ -155,10 +157,40 @@ impl SimpleMenuItem {
     }
 }
 
+impl uDebug for SimpleMenuItem {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let mut debug = f.debug_struct("SimpleMenuItem")?;
+        debug.field("title", &CStrFormatter(&self.title))?;
+        if let Some(ref subtitle) = self.subtitle {
+            debug.field("subtitle", &CStrFormatter(subtitle))?;
+        }
+        if let Some(ref icon) = self.icon {
+            debug.field("icon", &icon)?;
+        }
+        debug.field("callback", &&raw const self.callback)?.finish()
+    }
+}
+
 /// Section of a [`SimpleMenuLayer`].
 pub struct SimpleMenuSection {
     title: Option<CString>,
     items: Vec<SimpleMenuItem>,
+}
+
+impl uDebug for SimpleMenuSection {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let mut debug = f.debug_struct("SimpleMenuSection")?;
+        if let Some(ref title) = self.title {
+            debug.field("title", &CStrFormatter(title))?;
+        }
+        debug.field("items", &self.items.as_slice())?.finish()
+    }
 }
 
 impl SimpleMenuSection {

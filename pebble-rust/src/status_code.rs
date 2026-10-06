@@ -1,10 +1,12 @@
+use ufmt::derive::uDebug;
+
 use crate::sys;
 
 /// An error returned by some C APIs.
 // NOTE: Unfortunately this has to be a public API, since some C APIs don’t specify what errors they return exactly and why.
 //       So we have to assume that these APIs could return any StatusError, and it’s more convenient to just expose the type.
 //       Whenever a C API limits its (usual) error codes, create a custom error type instead.
-#[derive(Copy, Clone, Debug, Hash, PartialEq)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, uDebug)]
 #[repr(i8)]
 pub enum StatusError {
     /// Try operation again.

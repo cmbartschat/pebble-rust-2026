@@ -1,7 +1,11 @@
 use core::ffi::{CStr, c_int};
 use core::ptr::NonNull;
 
+use ufmt::derive::uDebug;
+use ufmt::uDebug;
+
 use crate::bitmap::Bitmap;
+use crate::fmt::StrFormatter;
 use crate::{Angle, TextAlignment, TextAttributes, sys};
 use crate::{GColor, GPoint, GRect};
 
@@ -232,6 +236,7 @@ impl GContext {
 }
 
 /// Compositing modes.
+#[derive(uDebug)]
 #[repr(u8)]
 pub enum CompOp {
     /// Overwrite all destination pixels with the source pixels.
@@ -282,5 +287,31 @@ bitflags::bitflags! {
         const Left = sys::GCornerMask_GCornersLeft;
         /// Right corners rounded.
         const Right = sys::GCornerMask_GCornersRight;
+    }
+}
+
+impl uDebug for CornerMask {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        let mut debug = f.debug_tuple("CornerMask")?;
+        if self.contains(CornerMask::TopLeft) {
+            debug.field(&StrFormatter("TopLeft"))?;
+        }
+        if self.contains(CornerMask::TopRight) {
+            debug.field(&StrFormatter("TopRight"))?;
+        }
+        if self.contains(CornerMask::BottomLeft) {
+            debug.field(&StrFormatter("BottomLeft"))?;
+        }
+        if self.contains(CornerMask::BottomRight) {
+            debug.field(&StrFormatter("BottomRight"))?;
+        }
+        if self == &CornerMask::None {
+            debug.field(&StrFormatter("None"))?;
+        }
+
+        debug.finish()
     }
 }

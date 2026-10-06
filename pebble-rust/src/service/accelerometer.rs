@@ -1,11 +1,11 @@
 use core::{cell::RefCell, slice};
 
 use critical_section::Mutex;
+use ufmt::derive::uDebug;
 
 use crate::{
-    log_c_str,
     service::{Callback, CallbackHandle, global_callback::GlobalCallbacks},
-    sys,
+    sys, warn,
 };
 
 /// Accessor for the accelerometer data.
@@ -19,7 +19,7 @@ pub struct Accelerometer {
 /// - X is towards the right of the watch.
 /// - Y is towards the top of the watch.
 /// - Z is vertically out of the watch screen.
-#[derive(Copy, Clone, PartialEq, Hash)]
+#[derive(Copy, Clone, PartialEq, Hash, uDebug)]
 pub enum AccelerometerAxis {
     /// Positive X, towards the right of the watch.
     PosX,
@@ -44,7 +44,7 @@ pub type AccelerometerRawData = sys::AccelRawData;
 
 /// The possible accelerometer data sampling rates.
 /// All sampling rates are in Hz, or samples per second.
-#[derive(Clone, Copy, PartialEq, Hash)]
+#[derive(Clone, Copy, PartialEq, Hash, uDebug)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum AccelerometerSamplingRate {
@@ -104,7 +104,7 @@ impl Accelerometer {
     /// More than 25 is not possible.
     pub fn set_samples_per_update(&self, mut samples_per_update: u32) {
         if samples_per_update > 25 {
-            log_c_str(c"Unexpected: samples_per_update should be 0-25");
+            warn!("Unexpected: samples_per_update should be 0-25");
             samples_per_update = 25;
         }
         critical_section::with(|cs| {

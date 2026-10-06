@@ -3,9 +3,8 @@ use core::{mem::swap, ptr::NonNull};
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 
 use crate::{
-    GContext, GPoint, GRect,
+    GContext, GPoint, GRect, error,
     handle::{Handle, WeakHandle, new_handle},
-    log_c_str,
     service::{SingleCallback, SingleCallbackFn},
     sys,
 };
@@ -278,16 +277,16 @@ impl Layer {
 extern "C" fn global_layer_update_handler(layer: *mut sys::Layer, ctx: *mut sys::GContext) {
     let ptr = unsafe { (sys::layer_get_data(layer) as *mut LayerContext).as_ref() };
     let Some(inner_ref) = ptr.as_ref() else {
-        log_c_str(c"Unexpected: Layer data is null");
+        error!("Unexpected: Layer data is null");
         return;
     };
     let ctx = unsafe { GContext::from_raw(ctx) };
     let Some(ctx) = ctx else {
-        log_c_str(c"Unexpected: Layer context is null");
+        error!("Unexpected: Layer context is null");
         return;
     };
     let Some(inner_ref) = inner_ref.back_to_self.upgrade() else {
-        log_c_str(c"Unexpected: Layer inner is destroyed");
+        error!("Unexpected: Layer inner is destroyed");
         return;
     };
 

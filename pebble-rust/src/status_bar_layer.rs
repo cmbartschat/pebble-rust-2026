@@ -1,5 +1,7 @@
 use core::ptr::NonNull;
 
+use ufmt::derive::uDebug;
+
 use crate::{
     GColor, GPoint, GRect, Layer,
     handle::{Handle, new_handle},
@@ -125,7 +127,7 @@ impl StatusBarLayer {
 
 /// How elements in a status bar are separated.
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, uDebug)]
 pub enum StatusBarSeparatorMode {
     /// Not separated.
     None = sys::StatusBarLayerSeparatorMode_StatusBarLayerSeparatorModeNone,

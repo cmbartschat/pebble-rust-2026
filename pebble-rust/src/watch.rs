@@ -1,7 +1,9 @@
+use ufmt::{derive::uDebug, uDebug};
+
 use crate::sys::*;
 
 /// Pebble watch information.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, uDebug)]
 #[non_exhaustive]
 pub struct WatchInfo {
     /// The watch platform.
@@ -18,7 +20,7 @@ pub struct WatchInfo {
 ///
 /// All of the functionality of this type is available at compile time, since the platform is fixed at that point.
 /// Use [`Platform::current`] to retrieve the platform in const context.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, uDebug)]
 #[repr(u8)]
 pub enum Platform {
     /// Classic, Steel
@@ -81,7 +83,7 @@ impl Platform {
 /// Pebble watch color.
 /// This is the detailed color, with different values for each watch.
 /// For a simplified color enum that unifies all common colors, see [`WatchColor::simple_color`].
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, uDebug)]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum WatchColor {
@@ -280,7 +282,7 @@ impl From<WatchColor> for SimpleWatchColor {
 }
 
 /// Simplified and slightly opinionated version of [`WatchColor`].
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, uDebug)]
 #[non_exhaustive]
 pub enum SimpleWatchColor {
     /// Black (including matte black).
@@ -309,7 +311,7 @@ pub enum SimpleWatchColor {
 
 /// Pebble watch model.
 /// For generic properties like whether this is a round watch, or whether it has colors, see [`Platform`], where that data is represented more accurately.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, uDebug)]
 #[non_exhaustive]
 #[repr(u8)]
 pub enum WatchModel {
@@ -374,5 +376,18 @@ impl WatchInfo {
             color: WatchColor::try_from(color).ok(),
             model: WatchModel::try_from(model).ok(),
         }
+    }
+}
+
+impl uDebug for WatchInfoVersion {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("WatchInfoVersion")?
+            .field("major", &self.major)?
+            .field("minor", &self.minor)?
+            .field("patch", &self.patch)?
+            .finish()
     }
 }

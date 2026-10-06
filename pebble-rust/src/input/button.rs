@@ -1,8 +1,10 @@
+use ufmt::derive::uDebug;
+
 use crate::sys;
 
 /// The watch buttons.
 #[repr(u8)]
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, uDebug)]
 pub enum Button {
     /// The back button, which exits the current menu or app.
     Back = sys::ButtonId_BUTTON_ID_BACK,

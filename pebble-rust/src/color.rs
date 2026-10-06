@@ -1,6 +1,10 @@
 //! Color constants.
 //! The constant names match the ones from the [color picker tool](https://developer.repebble.com/guides/tools-and-resources/color-picker/).
+//!
+//! To create a [`GColor`], you can use the [`crate::hex_color`] macro.
 #![allow(missing_docs)]
+
+use ufmt::uDebug;
 
 use crate::GColor;
 use crate::sys;
@@ -81,5 +85,111 @@ impl GColor {
     /// Returns a color that is maximally legible over the given background color.
     pub fn legible_over(other: Self) -> GColor {
         unsafe { sys::gcolor_legible_over(other) }
+    }
+
+    /// Converts this color to standard 32-bit sRGB color representation,
+    /// where each byte represents one of the four channels R, G, B, A.
+    /// This color is little-endian, so R occupies the MSB while A occupies the LSB.
+    pub const fn rgba_32bit(&self) -> u32 {
+        let red = self.red() as u32;
+        let green = self.green() as u32;
+        let blue = self.blue() as u32;
+        let alpha = self.alpha() as u32;
+        red << 24 | green << 16 | blue << 8 | alpha
+    }
+
+    const ALPHA_MASK: u8 = 0b11000000;
+    const RED_MASK: u8 = 0b00110000;
+    const GREEN_MASK: u8 = 0b00001100;
+    const BLUE_MASK: u8 = 0b00000011;
+    const ALPHA_SHIFT: u8 = 6;
+    const RED_SHIFT: u8 = 3;
+    const GREEN_SHIFT: u8 = 2;
+    const BLUE_SHIFT: u8 = 0;
+
+    /// Inverse of the LUT in `proc::get_2bit_value`
+    const TWO_BIT_LUT: [u8; 4] = [0x00, 0x55, 0xaa, 0xff];
+
+    /// Returns the inner 8-bit color.
+    /// The color format is ARGB (from MSBit to LSBit), where each channel occupies two bits.
+    pub const fn argb(&self) -> u8 {
+        // SAFETY: The union only contains one field, accessing it is always sound.
+        unsafe { self.argb }
+    }
+
+    /// Returns the 2-bit alpha component of this color.
+    pub const fn alpha_2bit(&self) -> u8 {
+        (self.argb() & Self::ALPHA_MASK) >> Self::ALPHA_SHIFT
+    }
+    /// Returns the 2-bit red component of this color.
+    pub const fn red_2bit(&self) -> u8 {
+        (self.argb() & Self::RED_MASK) >> Self::RED_SHIFT
+    }
+    /// Returns the 2-bit green component of this color.
+    pub const fn green_2bit(&self) -> u8 {
+        (self.argb() & Self::GREEN_MASK) >> Self::GREEN_SHIFT
+    }
+    /// Returns the 2-bit blue component of this color.
+    pub const fn blue_2bit(&self) -> u8 {
+        (self.argb() & Self::BLUE_MASK) >> Self::BLUE_SHIFT
+    }
+
+    /// Returns the alpha component of the color, as an 8-bit value.
+    /// 0 = fully transparent, 255 = fully opaque, as usual.
+    /// Note that the mapping from 4-bit to 8-bit-color is nonlinear and matches the [`crate::hex_color`] macro’s inputs:
+    ///
+    /// - 0b00 = 0x00
+    /// - 0b01 = 0x55
+    /// - 0b10 = 0xaa
+    /// - 0b11 = 0xff
+    pub const fn alpha(&self) -> u8 {
+        Self::TWO_BIT_LUT[self.alpha_2bit() as usize]
+    }
+    /// Returns the red component of the color, as an 8-bit value.
+    /// 0 = no red, 255 = fully red, as usual.
+    /// Note that the mapping from 4-bit to 8-bit-color is nonlinear and matches the [`crate::hex_color`] macro’s inputs:
+    ///
+    /// - 0b00 = 0x00
+    /// - 0b01 = 0x55
+    /// - 0b10 = 0xaa
+    /// - 0b11 = 0xff
+    pub const fn red(&self) -> u8 {
+        Self::TWO_BIT_LUT[self.red_2bit() as usize]
+    }
+    /// Returns the green component of the color, as an 8-bit value.
+    /// 0 = no green, 255 = fully green, as usual.
+    /// Note that the mapping from 4-bit to 8-bit-color is nonlinear and matches the [`crate::hex_color`] macro’s inputs:
+    ///
+    /// - 0b00 = 0x00
+    /// - 0b01 = 0x55
+    /// - 0b10 = 0xaa
+    /// - 0b11 = 0xff
+    pub const fn green(&self) -> u8 {
+        Self::TWO_BIT_LUT[self.green_2bit() as usize]
+    }
+    /// Returns the blue component of the color, as an 8-bit value.
+    /// 0 = no blue, 255 = fully blue, as usual.
+    /// Note that the mapping from 4-bit to 8-bit-color is nonlinear and matches the [`crate::hex_color`] macro’s inputs:
+    ///
+    /// - 0b00 = 0x00
+    /// - 0b01 = 0x55
+    /// - 0b10 = 0xaa
+    /// - 0b11 = 0xff
+    pub const fn blue(&self) -> u8 {
+        Self::TWO_BIT_LUT[self.blue_2bit() as usize]
+    }
+}
+
+impl uDebug for GColor {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        f.debug_struct("GColor")?
+            .field("alpha", &self.alpha_2bit())?
+            .field("red", &self.red_2bit())?
+            .field("green", &self.green_2bit())?
+            .field("blue", &self.blue_2bit())?
+            .finish()
     }
 }

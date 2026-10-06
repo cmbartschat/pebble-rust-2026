@@ -1,0 +1,23 @@
+[package]
+name = "logging"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib"]
+test = false
+doctest = false
+bench = false
+
+[dependencies]
+pebble_rust_2026 = { path = "../../pebble-rust" }
+ufmt = "0.2.0"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+codegen-units = 1
+
+[profile.dev]
+panic = "abort"
