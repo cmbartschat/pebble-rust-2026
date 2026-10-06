@@ -5,3 +5,5 @@ tmp
 /examples/*/target
 /examples/*/build
 /examples/*/Cargo.lock
+
+.vscode/
