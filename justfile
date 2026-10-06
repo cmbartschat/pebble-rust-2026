@@ -1,8 +1,4 @@
-_check-example example_name:
-	cd examples/{{example_name}} && cargo check
-	cd examples/{{example_name}} && cargo clippy
-
-check-all: && (_check-example "random") (_check-example "multiple-touch-handlers") (_check-example "logging")
+check-all: && (_check-example "random") (_check-example "multiple-touch-handlers") (_check-example "logging") (no-memcpy-in-logging)
 	cargo check --features aplite --target thumbv7m-none-eabi --target-dir target/aplite
 	cargo check --features basalt --target thumbv7em-none-eabi --target-dir target/basalt
 	cargo check --features chalk --target thumbv7em-none-eabi --target-dir target/chalk
@@ -42,7 +38,11 @@ no-memcpy-in-logging:
 	#!/usr/bin/env bash
 	cd examples/logging
 	cargo pebble build
-	if arm-none-eabi-nm -CSn --size-sort target/pebble/build/aplite/logging.elf | grep memcpy; then
+	if "$(pebble sdk include-path emery)/../../../../toolchain/arm-none-eabi/arm-none-eabi/bin/nm" -CSn --size-sort target/pebble/build/aplite/logging.elf | grep memcpy; then
 		echo 'memcpy found in the logging example!'
 		exit 1
 	fi
+
+_check-example example_name:
+	cd examples/{{example_name}} && cargo check
+	cd examples/{{example_name}} && cargo clippy
