@@ -247,6 +247,13 @@ const CONFIGURED_LOG_LEVEL: Level = {
             && level_flag_bytes[4].eq_ignore_ascii_case(&b'r')
         {
             Level::Error
+        } else if level_flag_bytes.len() == 3
+            && level_flag_bytes[0].eq_ignore_ascii_case(&b'o')
+            && level_flag_bytes[1].eq_ignore_ascii_case(&b'f')
+            && level_flag_bytes[2].eq_ignore_ascii_case(&b'f')
+        {
+            // 'off' is checked separately below, so it’s safe to fall back to default here, we definitely don’t want to panic
+            default_level
         } else {
             panic!(
                 "Invalid value for the `PEBBLE_LOG` environment variable, use error, warn, info, debug, trace, or off."
