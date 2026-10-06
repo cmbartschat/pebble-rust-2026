@@ -1,4 +1,8 @@
-check-all:
+_check-example example_name:
+	cd examples/{{example_name}} && cargo check
+	cd examples/{{example_name}} && cargo clippy
+
+check-all: && (_check-example "random") (_check-example "multiple-touch-handlers") (_check-example "logging")
 	cargo check --features aplite --target thumbv7m-none-eabi --target-dir target/aplite
 	cargo check --features basalt --target thumbv7em-none-eabi --target-dir target/basalt
 	cargo check --features chalk --target thumbv7em-none-eabi --target-dir target/chalk
@@ -6,8 +10,6 @@ check-all:
 	cargo check --features emery --target thumbv8m.main-none-eabi --target-dir target/emery
 	cargo check --features flint --target thumbv7em-none-eabi --target-dir target/flint
 	cargo check --features gabbro --target thumbv8m.main-none-eabi --target-dir target/gabbro
-	(cd examples/multiple-touch-handlers && cargo check)
-	(cd examples/random && cargo check)
 	cargo clippy --features aplite --target thumbv7m-none-eabi
 	cargo clippy --features basalt --target thumbv7em-none-eabi
 	cargo clippy --features chalk --target thumbv7em-none-eabi
@@ -15,19 +17,16 @@ check-all:
 	cargo clippy --features emery --target thumbv8m.main-none-eabi
 	cargo clippy --features flint --target thumbv7em-none-eabi
 	cargo clippy --features gabbro --target thumbv8m.main-none-eabi
-	(cd examples/multiple-touch-handlers && cargo clippy)
-	(cd examples/random && cargo clippy)
 
-fix-all:
+_fix-example example_name:
+	cd examples/{{example_name}} && cargo clippy --fix --allow-dirty --allow-staged -q --all-targets
+	cd examples/{{example_name}} && cargo fix --allow-dirty --allow-staged -q --all-targets
+	cd examples/{{example_name}} && cargo fmt
+
+fix-all: && (_fix-example "random") (_fix-example "multiple-touch-handlers") (_fix-example "logging")
 	cargo clippy --fix --allow-dirty --allow-staged -q --all-targets
 	cargo fix --allow-dirty --allow-staged -q --all-targets
 	cargo fmt
-	(cd examples/multiple-touch-handlers && cargo clippy --fix --allow-dirty --allow-staged -q --all-targets)
-	(cd examples/multiple-touch-handlers && cargo fix --allow-dirty --allow-staged -q --all-targets)
-	(cd examples/multiple-touch-handlers && cargo fmt)
-	(cd examples/random && cargo clippy --fix --allow-dirty --allow-staged -q --all-targets)
-	(cd examples/random && cargo fix --allow-dirty --allow-staged -q --all-targets)
-	(cd examples/random && cargo fmt)
 
 test-all:
 	cargo test --features aplite,embedded-allocator,malloc-allocator --target thumbv7m-none-eabi --target-dir target/aplite
