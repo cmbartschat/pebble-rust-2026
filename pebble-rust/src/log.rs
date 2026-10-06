@@ -45,8 +45,6 @@ use ufmt::derive::uDebug;
 // This re-export allows us to access the required crates through pebble_rust_2026 in the log macros.
 #[doc(hidden)]
 pub use ufmt as internal_ufmt;
-#[doc(hidden)]
-pub use ufmt_utils as internal_ufmt_utils;
 
 // Re-export the macros here for convenience; it doesn’t really matter from where people call them.
 pub use crate::{debug, error, info, log, trace, warn};
@@ -126,7 +124,7 @@ macro_rules! log {
         if log::is_level_enabled($level) {
             const LINE: u32 = ::core::panic::Location::caller().line();
             let mut output = log::CStringWriter::new();
-            let _ = log::internal_ufmt::uwrite!(&mut output, $format, $($arg)*);
+            let _ = ufmt::uwrite!(&mut output, $format, $($arg)*);
             log::do_log($level, ::core::module_path!(), LINE, output.as_ref());
         }
     }};
@@ -250,7 +248,9 @@ const CONFIGURED_LOG_LEVEL: Level = {
         {
             Level::Error
         } else {
-            default_level
+            panic!(
+                "Invalid value for the `PEBBLE_LOG` environment variable, use error, warn, info, debug, trace, or off."
+            );
         }
     } else {
         default_level
@@ -295,6 +295,7 @@ pub struct CStringWriter {
 // - Avoiding #[inline] as much as necessary.
 // - Using unsafe code (mainly switching between get and get_unchecked for indexing).
 // Please check any changes against nm and objcopy and look at the generated assembly.
+// See `just no-memcpy-in-logging` for a useful script.
 impl CStringWriter {
     #[doc(hidden)]
     pub const fn new() -> Self {
@@ -366,7 +367,7 @@ pub fn do_log(level: Level, module: &str, line: u32, message: &str) {
     let mut module_buffer = [0u8; 33];
     let len = module.len().min(32);
     // Print the end of the module name, so truncation works correctly.
-    let truncated_module = &module.as_bytes()[module.len()-len..];
+    let truncated_module = &module.as_bytes()[module.len() - len..];
     // Manual memcpy should reduce code size.
     for i in 0..len {
         // SAFETY: `len` never exceeds either buffer’s size.
