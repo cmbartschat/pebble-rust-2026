@@ -36,17 +36,6 @@ fn main() -> i32 {
     info!("There are {} bugs in my code", "some");
     info!("I have a cool struct: {:?}", MyStruct { x: 1, y: 1700 });
 
-    let mut window = Window::new().unwrap();
-    let mut layer = TextLayer::new(window.get_bounds()).unwrap();
-
-    let output = fmt!("I have some numbers here:\n{}, {}, {}", 1, 2, 3);
-    error!("output is {} bytes", output.len());
-
-    layer.set_text(output.as_ref());
-    window.add_child(&mut layer);
-
-    APP.show(window);
-
     APP.event_loop();
     0
 }
