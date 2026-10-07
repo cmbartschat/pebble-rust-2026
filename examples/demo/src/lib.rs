@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use pebble_rust_2026::MallocAllocator;
+use pebble_sdk::MallocAllocator;
 
 #[global_allocator]
 static ALLOCATOR: MallocAllocator = MallocAllocator;
@@ -23,7 +23,7 @@ mod time;
 mod windows;
 
 use crate::app::run_app;
-use pebble_rust_2026 as _;
+use pebble_sdk as _;
 
 #[unsafe(no_mangle)]
 fn main() -> i32 {

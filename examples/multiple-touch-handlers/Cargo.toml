@@ -10,7 +10,7 @@ doctest = false
 bench = false
 
 [dependencies]
-pebble_rust_2026 = { path = "../../pebble-rust" }
+pebble-sdk = { path = "../../pebble-sdk" }
 rand = { version = "0.10", default-features = false }
 
 [profile.release]

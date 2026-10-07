@@ -224,7 +224,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pebble_rust_2026"
+name = "pebble-sdk"
 version = "0.1.0"
 dependencies = [
  "bindgen",
@@ -233,9 +233,20 @@ dependencies = [
  "critical-section",
  "embedded-alloc",
  "intrusive-collections",
- "proc",
+ "pebble-sdk-macros",
  "rand",
  "ufmt",
+]
+
+[[package]]
+name = "pebble-sdk-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -245,17 +256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "proc"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
  "syn 2.0.117",
 ]
 

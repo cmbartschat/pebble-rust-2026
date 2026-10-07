@@ -2,7 +2,7 @@
 //! See the [Pebble developer docs](https://developer.repebble.com/guides/debugging/debugging-with-app-logs)
 //! and the battery usage warning below for important information on logging.
 //!
-//! All logging in `pebble_rust_2026` utilizes [`ufmt`] for formatting.
+//! All logging in `pebble_sdk` utilizes [`ufmt`] for formatting.
 //! See the ufmt documentation for details.
 //!
 //! Logs of certain lower levels can be disabled by setting the `PEBBLE_LOG` environment variable during compilation.
@@ -42,7 +42,7 @@ use crate::sys::{
 use ufmt::derive::uDebug;
 
 // Do not require users to directly depend on these if they don’t need to.
-// This re-export allows us to access the required crates through pebble_rust_2026 in the log macros.
+// This re-export allows us to access the required crates through pebble_sdk in the log macros.
 #[doc(hidden)]
 pub use ufmt as internal_ufmt;
 
@@ -88,7 +88,7 @@ impl Level {
 /// # #![no_std]
 /// # #![no_main]
 /// # extern crate alloc;
-/// # use pebble_rust_2026::{*, log::*};
+/// # use pebble_sdk::{*, log::*};
 /// # #[global_allocator]
 /// # static ALLOCATOR: MallocAllocator = MallocAllocator;
 /// # fn dummy() {

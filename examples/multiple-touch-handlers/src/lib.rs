@@ -6,7 +6,7 @@ extern crate alloc;
 use alloc::{boxed::Box, rc::Rc};
 use core::cell::RefCell;
 
-use pebble_rust_2026::{self as _, color::*, *};
+use pebble_sdk::{self as _, color::*, *};
 
 #[global_allocator]
 static ALLOCATOR: MallocAllocator = MallocAllocator;

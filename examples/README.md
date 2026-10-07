@@ -1,4 +1,4 @@
-# Basic `pebble_rust_2026` examples
+# Basic `pebble_sdk` examples
 
 This directory contains various small example apps that demonstrate how to use certain parts of the API.
 

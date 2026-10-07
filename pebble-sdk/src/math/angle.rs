@@ -289,7 +289,7 @@ mod sys_math {
 /// Some usage examples:
 ///
 /// ```rust,ignore
-/// use pebble_rust_2026::Rng;
+/// use pebble_sdk::Rng;
 /// use rand::{RngExt, seq::IndexedRandom};
 ///
 /// Rng.seed(42);

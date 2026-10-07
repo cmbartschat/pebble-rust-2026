@@ -21,7 +21,7 @@ use super::c_malloc::*;
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
-/// use pebble_rust_2026::MallocAllocator;
+/// use pebble_sdk::MallocAllocator;
 ///
 /// #[global_allocator]
 /// static ALLOCATOR: MallocAllocator = MallocAllocator;

@@ -1,7 +1,7 @@
 use core::{cell::RefCell, time::Duration};
 
 use alloc::rc::Rc;
-use pebble_rust_2026::{
+use pebble_sdk::{
     Button, ClickRecognizer, GPoint, GRect, TextLayer, Window,
     color::{GCOLOR_GREEN, GCOLOR_WHITE},
     log::info,

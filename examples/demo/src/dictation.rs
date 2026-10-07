@@ -1,5 +1,5 @@
 use alloc::format;
-use pebble_rust_2026::{Button, DictationSession, TextLayer, Window};
+use pebble_sdk::{Button, DictationSession, TextLayer, Window};
 
 pub fn dictation() -> Window {
     let mut window = Window::new().unwrap();

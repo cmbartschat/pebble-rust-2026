@@ -20,7 +20,7 @@ use crate::{error, heap, info};
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
-/// use pebble_rust_2026::EmbeddedAllocator;
+/// use pebble_sdk::EmbeddedAllocator;
 ///
 /// #[global_allocator]
 /// static ALLOCATOR: EmbeddedAllocator = EmbeddedAllocator::new();
@@ -36,7 +36,7 @@ use crate::{error, heap, info};
 /// ```rust,no_run
 /// # #![no_std]
 /// # #![no_main]
-/// # use pebble_rust_2026::EmbeddedAllocator;
+/// # use pebble_sdk::EmbeddedAllocator;
 /// // 64 KiB heap maximum.
 /// #[global_allocator]
 /// static ALLOCATOR: EmbeddedAllocator<{ 1024 * 64 }> = EmbeddedAllocator::new();

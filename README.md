@@ -1,4 +1,4 @@
-# Pebble Rust (2026 edition)
+# Pebble Rust SDK
 
 Rust bindings and safe rust wrappers for the Pebble Smartwatch SDK.
 
@@ -23,7 +23,7 @@ The information below is mainly relevant for manual setups, or if you want to un
 
 ### Selecting the target platform (watch model)
 
-`pebble-rust-2026` supports all [Pebble platforms](https://developer.repebble.com/guides/tools-and-resources/hardware-information/). Some features are only available on some platforms, and some functionality is a noop on certain platforms (e.g. setting touch handlers on platforms which don’t have touch input). For these reasons, it is required to set the target platform during compilation, or the build will error out. Note that compiling for more than one platform at once is _not_ possible. For multi-platform support, you have to compile your application multiple times, once for each target.
+`pebble-sdk` supports all [Pebble platforms](https://developer.repebble.com/guides/tools-and-resources/hardware-information/). Some features are only available on some platforms, and some functionality is a noop on certain platforms (e.g. setting touch handlers on platforms which don’t have touch input). For these reasons, it is required to set the target platform during compilation, or the build will error out. Note that compiling for more than one platform at once is _not_ possible. For multi-platform support, you have to compile your application multiple times, once for each target.
 
 There are two main ways of selecting a platform to compile for:
 
@@ -32,10 +32,10 @@ There are two main ways of selecting a platform to compile for:
 
 ### Setting a Global Allocator
 
-`pebble-rust-2026` does not work without a global allocator. A lot of functionality needs to perform (usually small) allocations as part of its normal operation. There are two available allocators: a malloc-based one, selected via `malloc-allocator` (enabled by default), or one based on embedded-alloc, selected via `embedded-allocator`. The malloc allocator is easiest to use and recommended as a start. Simply add these lines to the top of your `lib.rs`:
+`pebble-sdk` does not work without a global allocator. A lot of functionality needs to perform (usually small) allocations as part of its normal operation. There are two available allocators: a malloc-based one, selected via `malloc-allocator` (enabled by default), or one based on embedded-alloc, selected via `embedded-allocator`. The malloc allocator is easiest to use and recommended as a start. Simply add these lines to the top of your `lib.rs`:
 
 ```rust,ignore
-use pebble_rust_2026::MallocAllocator;
+use pebble_sdk::MallocAllocator;
 
 #[global_allocator]
 static ALLOCATOR: MallocAllocator = MallocAllocator;
@@ -45,7 +45,7 @@ If you use a different allocator, including a fully custom one, make sure to ful
 
 ### Entry point and Panic Handling
 
-`pebble-rust-2026` requires a C-like entry point to be declared:
+`pebble-sdk` requires a C-like entry point to be declared:
 
 ```rust,ignore
 #[unsafe(no_mangle)]
@@ -55,7 +55,7 @@ fn main() -> i32 {
 }
 ```
 
-Also, make sure to `use pebble_rust_2026 as _;`, which ensures the panic handling machinery is present.
+Also, make sure to `use pebble_sdk as _;`, which ensures the panic handling machinery is present.
 
 ## Known Issues
 

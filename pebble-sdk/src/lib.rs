@@ -85,7 +85,7 @@ pub use crate::time::{LocalTime, Time, TimeUnits};
 pub use crate::timer::Timer;
 pub use crate::watch::{Platform, SimpleWatchColor, WatchColor, WatchInfo, WatchModel};
 pub use crate::window::Window;
-pub use proc::*;
+pub use pebble_sdk_macros::*;
 
 // sanity check the existence of the appropriate config
 #[cfg(not(any(

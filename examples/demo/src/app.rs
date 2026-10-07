@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use pebble_rust_2026::{APP, SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection, Window, info};
+use pebble_sdk::{APP, SimpleMenuItem, SimpleMenuLayer, SimpleMenuSection, Window, info};
 
 use crate::windows::WINDOWS;
 
