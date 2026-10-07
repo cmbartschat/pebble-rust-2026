@@ -1,4 +1,4 @@
-check-all: && (_check-example "random") (_check-example "multiple-touch-handlers") (_check-example "logging") (no-memcpy-in-logging)
+check-all: && (_check-example "random") (_check-example "multiple-touch-handlers") (_check-example "logging") (_check-example "demo") (no-memcpy-in-logging)
 	cargo check --features aplite --target thumbv7m-none-eabi --target-dir target/aplite
 	cargo check --features basalt --target thumbv7em-none-eabi --target-dir target/basalt
 	cargo check --features chalk --target thumbv7em-none-eabi --target-dir target/chalk
@@ -19,7 +19,7 @@ _fix-example example_name:
 	cd examples/{{example_name}} && cargo fix --allow-dirty --allow-staged -q --all-targets
 	cd examples/{{example_name}} && cargo fmt
 
-fix-all: && (_fix-example "random") (_fix-example "multiple-touch-handlers") (_fix-example "logging")
+fix-all: && (_fix-example "random") (_fix-example "multiple-touch-handlers") (_fix-example "logging") (_fix-example "demo")
 	cargo clippy --fix --allow-dirty --allow-staged -q --all-targets
 	cargo fix --allow-dirty --allow-staged -q --all-targets
 	cargo fmt

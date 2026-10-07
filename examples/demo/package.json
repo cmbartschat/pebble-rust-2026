@@ -1,0 +1,86 @@
+{
+	"author": "",
+	"dependencies": {
+		"base-x": "^5.0.1"
+	},
+	"keywords": [
+		"pebble-app"
+	],
+	"name": "demo",
+	"pebble": {
+		"capabilities": [
+			"configurable"
+		],
+		"displayName": "Demo",
+		"enableMultiJS": true,
+		"messageKeys": [],
+		"projectType": "native",
+		"resources": {
+			"media": [
+				{
+					"file": "images/hero.png",
+					"name": "HERO",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/up.png",
+					"name": "UP",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/down.png",
+					"name": "DOWN",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/color.png",
+					"name": "COLOR",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/bird1.png",
+					"name": "BIRD1",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/bird2.png",
+					"name": "BIRD2",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/bird3.png",
+					"name": "BIRD3",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				},
+				{
+					"file": "images/icon.png",
+					"menuIcon": true,
+					"name": "MENU_ICON",
+					"targetPlatforms": null,
+					"type": "bitmap"
+				}
+			]
+		},
+		"sdkVersion": "3",
+		"targetPlatforms": [
+			"basalt",
+			"chalk",
+			"diorite",
+			"emery",
+			"flint",
+			"gabbro"
+		],
+		"uuid": "f1f90241-9a1b-4bd2-96ff-68e028f43083",
+		"watchapp": {
+			"watchface": false
+		}
+	},
+	"version": "0.1.0"
+}
