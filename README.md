@@ -1,3 +1,6 @@
+> [!NOTE]
+> Migrated to https://codeberg.org/pebble-rust/pebble-sdk
+
 # Pebble Rust SDK
 
 Rust bindings and safe rust wrappers for the Pebble Smartwatch SDK.
