@@ -134,7 +134,7 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     if !SUPPORTED_TARGETS.contains(&target.as_str()) {
         println!(
-            "cargo::error=Only the Rust targets {SUPPORTED_TARGETS:?} are supported by pebble_rust_2026."
+            "cargo::error=Only the Rust targets {SUPPORTED_TARGETS:?} are supported by pebble_sdk."
         );
         panic!();
     }

@@ -1,4 +1,4 @@
-//! Procedural macros for pebble_rust_2026.
+//! Procedural macros for pebble_sdk.
 
 use proc_macro2::Span;
 use quote::{format_ident, quote};
@@ -276,7 +276,7 @@ pub fn hex_color(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStre
     let argb_token = proc_macro2::Literal::u8_suffixed(parsed.value);
 
     quote! {
-        pebble_rust_2026::GColor {
+        pebble_sdk::GColor {
             argb: #argb_token,
         }
     }

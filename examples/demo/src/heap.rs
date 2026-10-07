@@ -1,9 +1,7 @@
 use core::time::Duration;
 
 use alloc::{boxed::Box, vec};
-use pebble_rust_2026::{
-    APP, Button, GRect, TextLayer, Timer, Window, color::GCOLOR_WHITE, fmt, heap,
-};
+use pebble_sdk::{APP, Button, GRect, TextLayer, Timer, Window, color::GCOLOR_WHITE, fmt, heap};
 
 use crate::windows::WINDOWS;
 

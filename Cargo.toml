@@ -1,5 +1,5 @@
 [workspace]
-members = ["pebble-rust", "proc"]
+members = ["pebble-sdk", "pebble-sdk-macros"]
 # cargo-pebble does not handle workspaces, so the examples must not be in the workspace
 exclude = ["examples"]
 resolver = "3"

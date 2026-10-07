@@ -1,7 +1,7 @@
 use core::time::Duration;
 
 use alloc::boxed::Box;
-use pebble_rust_2026::{
+use pebble_sdk::{
     StatusBarLayer, StatusBarSeparatorMode, Timer, Window,
     color::{
         GCOLOR_BLUE, GCOLOR_GREEN, GCOLOR_ORANGE, GCOLOR_PURPLE, GCOLOR_RED, GCOLOR_WHITE,

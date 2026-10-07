@@ -1,4 +1,4 @@
-use pebble_rust_2026::Window;
+use pebble_sdk::Window;
 
 type WindowInfo = (&'static str, fn() -> Window);
 

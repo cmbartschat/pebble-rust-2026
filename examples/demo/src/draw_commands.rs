@@ -1,7 +1,7 @@
 use core::{cell::RefCell, time::Duration};
 
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
-use pebble_rust_2026::{
+use pebble_sdk::{
     APP, Bitmap, Button, CompOp, GContext, GPoint, GRect, Layer, MutexToken, RandomValue,
     TextLayer, TouchEvent, Window,
     color::{GCOLOR_DARK_GREEN, GCOLOR_GREEN, GCOLOR_SUNSET_ORANGE, GCOLOR_WHITE},

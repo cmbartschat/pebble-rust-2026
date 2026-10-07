@@ -6,7 +6,7 @@ extern crate alloc;
 use alloc::rc::Rc;
 use core::{cell::RefCell, time::Duration};
 
-use pebble_rust_2026::{self as _, color::*, *};
+use pebble_sdk::{self as _, color::*, *};
 use rand::RngExt;
 
 #[global_allocator]

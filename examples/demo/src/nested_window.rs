@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use pebble_rust_2026::{APP, Button, GColor, TextLayer, Window, color, fmt, hex_color, warn};
+use pebble_sdk::{APP, Button, GColor, TextLayer, Window, color, fmt, hex_color, warn};
 
 static COLORS: [GColor; 3] = [hex_color!("#ff0"), hex_color!("#f0f"), hex_color!("#0ff")];
 

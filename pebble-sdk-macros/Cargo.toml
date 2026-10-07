@@ -1,5 +1,5 @@
 [package]
-name = "proc"
+name = "pebble-sdk-macros"
 version.workspace = true
 edition.workspace = true
 

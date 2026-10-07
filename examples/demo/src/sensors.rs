@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, vec::Vec};
-use pebble_rust_2026::{
+use pebble_sdk::{
     APP, AccelerometerAxis, AccelerometerData, AccelerometerSamplingRate, BatteryChargeState,
     GRect, TextLayer, Window, color::GCOLOR_WHITE, fmt, hex_color,
 };

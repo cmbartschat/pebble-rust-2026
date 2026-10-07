@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use pebble_rust_2026::{self as _, log::*, *};
+use pebble_sdk::{self as _, log::*, *};
 use ufmt::derive::uDebug;
 
 #[global_allocator]

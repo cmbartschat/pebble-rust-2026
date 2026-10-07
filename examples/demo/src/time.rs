@@ -1,4 +1,4 @@
-use pebble_rust_2026::{APP, GRect, TextLayer, Time, TimeUnits, Window, color::GCOLOR_WHITE, fmt};
+use pebble_sdk::{APP, GRect, TextLayer, Time, TimeUnits, Window, color::GCOLOR_WHITE, fmt};
 
 pub fn time() -> Window {
     let mut window = Window::new().unwrap();

@@ -1,5 +1,5 @@
 [package]
-name = "pebble_rust_2026"
+name = "pebble-sdk"
 version.workspace = true
 edition.workspace = true
 
@@ -29,10 +29,12 @@ gabbro = []
 bitflags = "2.13.1"
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
 critical-section = "1.2.0"
-proc = { path = "../proc" }
+pebble-sdk-macros = { path = "../pebble-sdk-macros" }
 embedded-alloc = { version = "0.7", optional = true }
 rand = { version = "0.10", default-features = false }
-intrusive-collections = { version = "0.10", default-features = false, features = ["alloc"] }
+intrusive-collections = { version = "0.10", default-features = false, features = [
+  "alloc",
+] }
 ufmt = "0.2.0"
 
 [build-dependencies]

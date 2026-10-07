@@ -107,7 +107,7 @@ impl GColor {
     const GREEN_SHIFT: u8 = 2;
     const BLUE_SHIFT: u8 = 0;
 
-    /// Inverse of the LUT in `proc::get_2bit_value`
+    /// Inverse of the LUT in `pebble_sdk_macros::get_2bit_value`
     const TWO_BIT_LUT: [u8; 4] = [0x00, 0x55, 0xaa, 0xff];
 
     /// Returns the inner 8-bit color.

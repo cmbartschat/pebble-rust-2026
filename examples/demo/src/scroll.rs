@@ -1,4 +1,4 @@
-use pebble_rust_2026::{
+use pebble_sdk::{
     Button, ContentIndicatorConfig, ContentIndicatorDirection, GAlign, GRect, GSize, Layer,
     ScrollLayer, TextLayer, Window, hex_color, trace, warn,
 };

@@ -1,9 +1,7 @@
 use core::time::Duration;
 
 use alloc::{boxed::Box, vec::Vec};
-use pebble_rust_2026::{
-    Bitmap, BitmapLayer, GRect, Timer, Window, color::GCOLOR_WHITE, resource_ids,
-};
+use pebble_sdk::{Bitmap, BitmapLayer, GRect, Timer, Window, color::GCOLOR_WHITE, resource_ids};
 
 resource_ids!(resource_ids);
 

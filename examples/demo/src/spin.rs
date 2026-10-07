@@ -4,7 +4,7 @@ use core::{
 };
 
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
-use pebble_rust_2026::{
+use pebble_sdk::{
     APP, ActionBarLayer, ActionButton, ActionMenu, ActionMenuAlign, ActionMenuLevel,
     ActionMenuLevelDisplayMode, Angle, Bitmap, Button, CompassHeading, GColor, GContext, GPoint,
     GRect, GSize, Layer, Mutex, TextLayer, Timer, Window,
